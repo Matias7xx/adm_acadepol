@@ -3,6 +3,7 @@
 use App\Http\Middleware\HasAccessAdmin;
 use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
 
 Route::group([
     'namespace' => 'App\Http\Controllers\Admin',

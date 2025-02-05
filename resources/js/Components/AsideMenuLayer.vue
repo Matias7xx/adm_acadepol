@@ -29,7 +29,7 @@ const asideLgCloseClick = (event) => {
   emit('aside-lg-close-click', event)
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Vue Admin';
+const appName = import.meta.env.VITE_APP_NAME || 'ACADEPOL ADMIN';
 
 </script>
 
