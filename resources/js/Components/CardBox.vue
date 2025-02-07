@@ -67,6 +67,7 @@ const submit = e => {
     class="bg-white flex flex-col"
     @submit="submit"
   >
+  <!-- <div class="flex items-center mt-2 justify-center "><img :src="imgUrl" class=""/></div> -->
     <header
       v-if="title"
       class="flex items-stretch border-b border-gray-100 dark:border-slate-800"

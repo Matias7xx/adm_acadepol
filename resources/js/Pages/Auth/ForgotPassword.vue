@@ -52,13 +52,12 @@ const submit = () => {
 
         <FormField>
           <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.
-          </div>
+            Esqueceu sua senha? Sem problemas. Basta nos informar seu endereço de e-mail e enviaremos por e-mail um link de redefinição de senha que permitirá que você escolha uma nova.          </div>
         </FormField>
 
         <FormField
           label="Email"
-          help="Please enter your email"
+          help="Por favor, informe seu e-mail"
         >
           <FormControl
             v-model="form.email"
@@ -75,14 +74,14 @@ const submit = () => {
           <BaseButton
             type="submit"
             color="info"
-            label="Email link"
+            label="Enviar link"
             :class="{ 'opacity-25': form.processing }"
             :disabled="form.processing"
           />
           <Link
             :href="route('login')"
           >
-            Back to login
+            Voltar para login
           </Link>
         </BaseLevel>
       </CardBox>

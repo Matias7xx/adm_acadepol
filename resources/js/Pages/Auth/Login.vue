@@ -13,7 +13,7 @@ import BaseButtons from '@/Components/BaseButtons.vue'
 import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
-import imgUrl from '@/src/assets/logo-pcpb1.png'
+import imgUrl from '@/src/assets/logo-acadepol.png'
 
 const props = defineProps({
   canResetPassword: Boolean,
@@ -45,7 +45,7 @@ const submit = () => {
 <template>
   <LayoutGuest>
     <Head title="Login" />
-
+    
     <SectionFullScreen
       v-slot="{ cardClass }"
       bg="white"
@@ -55,6 +55,7 @@ const submit = () => {
         form
         @submit.prevent="submit"
       >
+      <div class="flex items-center mt-2 justify-center "><img :src="imgUrl" class=""/></div>
         <FormValidationErrors />
         <NotificationBarInCard 
           v-if="status"
