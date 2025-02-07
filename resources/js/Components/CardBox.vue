@@ -2,6 +2,7 @@
 import { mdiCog } from '@mdi/js'
 import { computed, useSlots } from 'vue'
 import BaseIcon from '@/Components/BaseIcon.vue'
+import imgUrl from '@/src/assets/logo-acadepol.png'
 
 const props = defineProps({
   title: {
@@ -99,6 +100,7 @@ const submit = e => {
       class="flex-1"
       :class="{'p-6':!hasTable}"
     >
+    <!-- <img :src="imgUrl" class="mx-14 pl-20 pr-20"/> -->
       <slot />
     </div>
     <div

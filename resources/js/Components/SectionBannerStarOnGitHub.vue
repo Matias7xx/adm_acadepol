@@ -5,7 +5,7 @@ import SectionBanner from '@/Components/SectionBanner.vue'
 
 </script>
 <template>
-  <SectionBanner bg="pinkRed">
+  <!--<SectionBanner bg="pinkRed">
     <h1 class="text-3xl text-white mb-6">
       Like the project? Please star on <b>GitHub</b> ;-)
     </h1>
@@ -18,5 +18,5 @@ import SectionBanner from '@/Components/SectionBanner.vue'
         rounded-full
       />
     </div>
-  </SectionBanner>  
+  </SectionBanner>-->
 </template>

@@ -92,18 +92,21 @@ class AdminCoreSeeder extends Seeder
         $user = \App\Models\User::factory()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@example.com',
+            'matricula' => '0000000'
         ]);
         $user->assignRole($role1);
 
         $user = \App\Models\User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
+            'matricula' => '0000001'
         ]);
         $user->assignRole($role2);
 
         $user = \App\Models\User::factory()->create([
             'name' => 'Example User',
             'email' => 'test@example.com',
+            'matricula' => '0000002'
         ]);
         $user->assignRole($role3);
 

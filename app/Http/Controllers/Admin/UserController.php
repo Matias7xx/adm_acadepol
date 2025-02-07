@@ -28,7 +28,9 @@ class UserController extends Controller
         $users = (new User)->newQuery();
 
         if (request()->has('search')) {
-            $users->where('name', 'Like', '%'.request()->input('search').'%');
+            $users->where('name', 'Like', '%'.request()->input('search').'%')
+            //->orWhere('matricula', 'Like', '%'.request()->input('search').'%')
+            ->orWhere('email', 'Like', '%'.request()->input('search').'%');
         }
 
         if (request()->query('sort')) {
@@ -84,7 +86,7 @@ class UserController extends Controller
         $userCreateAction->handle($data);
 
         return redirect()->route('admin.user.index')
-            ->with('message', __('User created successfully.'));
+            ->with('message', __('Usuário criado com sucesso.'));
     }
 
     /**
@@ -134,7 +136,7 @@ class UserController extends Controller
         $userUpdateAction->handle($data, $user);
 
         return redirect()->route('admin.user.index')
-            ->with('message', __('User updated successfully.'));
+            ->with('message', __('Usuário atualizado com sucesso.'));
     }
 
     /**
@@ -148,7 +150,7 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.user.index')
-            ->with('message', __('User deleted successfully'));
+            ->with('message', __('Usuário apagado com sucesso.'));
     }
 
     /**
@@ -174,15 +176,16 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'matricula' => ['required', 'string', 'min:7', 'unique:users,matricula'.\Auth::user()->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.\Auth::user()->id],
         ]);
 
         $user = \Auth::user()->update($request->except(['_token']));
 
         if ($user) {
-            $message = 'Account updated successfully.';
+            $message = 'Conta atualizada com sucesso.';
         } else {
-            $message = 'Error while saving. Please try again.';
+            $message = 'Erro no salvamento. Por favor, tente novamente.';
         }
 
         return redirect()->route('admin.account.info')->with('message', __($message));
@@ -207,7 +210,7 @@ class UserController extends Controller
             }
             if (! Hash::check($request->input('old_password'), \Auth::user()->password)) {
                 $validator->errors()->add(
-                    'old_password', __('Old password is incorrect.')
+                    'old_password', __('A senha antiga está incorreta.')
                 );
             }
         });
@@ -219,9 +222,9 @@ class UserController extends Controller
         ]);
 
         if ($user) {
-            $message = 'Password updated successfully.';
+            $message = 'Senha atualizada com sucesso.';
         } else {
-            $message = 'Error while saving. Please try again.';
+            $message = 'Erro no salvamento. Por favor, tente novamente.';
         }
 
         return redirect()->route('admin.account.info')->with('message', __($message));

@@ -1,7 +1,7 @@
 <script setup>
 import { useForm, usePage, Head } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from '@mdi/js'
+import { mdiAccount, mdiEmail, mdiFormTextboxPassword, mdiAccountTieHat } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
 import CardBox from '@/Components/CardBox.vue'
@@ -16,6 +16,7 @@ import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 const form = useForm({
   name: '',
   email: '',
+  matricula: '',
   password: '',
   password_confirmation: '',
   terms: [],
@@ -52,9 +53,9 @@ const submit = () => {
         <FormValidationErrors />
 
         <FormField
-          label="Name"
+          label="Nome"
           label-for="name"
-          help="Please enter your name"
+          help="Por favor, informe seu nome"
         >
           <FormControl
             v-model="form.name"
@@ -67,9 +68,9 @@ const submit = () => {
         </FormField>
 
         <FormField
-          label="Email"
+          label="E-mail"
           label-for="email"
-          help="Please enter your email"
+          help="Por favor, informe seu e-mail"
         >
           <FormControl
             v-model="form.email"
@@ -82,9 +83,24 @@ const submit = () => {
         </FormField>
 
         <FormField
-          label="Password"
+          label="Matrícula"
+          label-for="matricula"
+          help="Por favor, informe sua matrícula"
+        >
+          <FormControl
+            v-model="form.matricula"
+            id="matricula"
+            :icon="mdiAccountTieHat"
+            autocomplete="matricula"
+            type="text"
+            required
+          />
+        </FormField>
+
+        <FormField
+          label="Senha"
           label-for="password"
-          help="Please enter new password"
+          help="Por favor, informe uma senha"
         >
           <FormControl
             v-model="form.password"
@@ -97,9 +113,9 @@ const submit = () => {
         </FormField>
 
         <FormField
-          label="Confirm Password"
+          label="Confirme a Senha"
           label-for="password_confirmation"
-          help="Please confirm your password"
+          help="Por favor, confirme sua senha"
         >
           <FormControl
             v-model="form.password_confirmation"
@@ -124,7 +140,7 @@ const submit = () => {
           <BaseButton
             type="submit"
             color="info"
-            label="Register"
+            label="Registrar"
             :class="{ 'opacity-25': form.processing }"
             :disabled="form.processing"
           />

@@ -65,13 +65,13 @@ import {
       isDesktopNoLabel: true,
       isToggleLightDark: true
     },
-    {
+    /*{
       icon: mdiGithub,
       label: 'GitHub',
       isDesktopNoLabel: true,
       href: 'https://github.com/balajidharma/laravel-vue-admin-panel',
       target: '_blank'
-    },
+    },*/
     {
       icon: mdiLogout,
       label: 'Log out',

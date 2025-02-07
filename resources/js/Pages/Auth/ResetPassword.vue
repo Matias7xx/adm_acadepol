@@ -52,9 +52,9 @@ const submit = () => {
         <FormValidationErrors />
 
         <FormField
-          label="Email"
+          label="E-mail"
           label-for="email"
-          help="Please enter your email"
+          help="Por favor, informe seu email"
         >
           <FormControl
             v-model="form.email"
@@ -69,7 +69,7 @@ const submit = () => {
         <FormField
           label="Password"
           label-for="password"
-          help="Please enter new password"
+          help="Por favor, informe uma nova senha"
         >
           <FormControl
             v-model="form.password"
@@ -84,7 +84,7 @@ const submit = () => {
         <FormField
           label="Confirm Password"
           label-for="password_confirmation"
-          help="Please confirm new password"
+          help="Por favor, confirme a nova senha"
         >
           <FormControl
             v-model="form.password_confirmation"
@@ -101,7 +101,7 @@ const submit = () => {
         <BaseButton
           type="submit"
           color="info"
-          label="Reset password"
+          label="Resetar senha"
           :class="{ 'opacity-25': form.processing }"
           :disabled="form.processing"
         />

@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, Head, Link } from '@inertiajs/vue3'
-import { mdiAccount, mdiAsterisk } from '@mdi/js'
+import { mdiAccount, mdiAsterisk, mdiAccountTieHat } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
 import CardBox from '@/Components/CardBox.vue'
@@ -13,6 +13,7 @@ import BaseButtons from '@/Components/BaseButtons.vue'
 import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
+import imgUrl from '@/src/assets/logo-pcpb1.png'
 
 const props = defineProps({
   canResetPassword: Boolean,
@@ -23,7 +24,8 @@ const props = defineProps({
 })
 
 const form = useForm({
-  email: '',
+  //email: '',
+  matricula: '',
   password: '',
   remember: []
 })
@@ -54,7 +56,6 @@ const submit = () => {
         @submit.prevent="submit"
       >
         <FormValidationErrors />
-
         <NotificationBarInCard 
           v-if="status"
           color="info"
@@ -63,24 +64,24 @@ const submit = () => {
         </NotificationBarInCard>
 
         <FormField
-          label="Email"
-          label-for="email"
-          help="Please enter your email"
+          label="Matrícula"
+          label-for="matricula"
+          help="Por favor, informe sua matrícula"
         >
           <FormControl
-            v-model="form.email"
-            :icon="mdiAccount"
-            id="email"
-            autocomplete="email"
-            type="email"
+            v-model="form.matricula"
+            :icon="mdiAccountTieHat"
+            id="matricula"
+            autocomplete="matricula"
+            type="text"
             required
           />
         </FormField>
 
         <FormField
-          label="Password"
+          label="Senha"
           label-for="password"
-          help="Please enter your password"
+          help="Por favor, informe sua senha"
         >
           <FormControl
             v-model="form.password"
@@ -95,7 +96,7 @@ const submit = () => {
         <FormCheckRadioGroup
           v-model="form.remember"
           name="remember"
-          :options="{ remember: 'Remember' }"
+          :options="{ remember: 'Lembrar-me' }"
         />
 
         <BaseDivider />
@@ -114,13 +115,13 @@ const submit = () => {
               :route-name="route('password.request')"
               color="info"
               outline
-              label="Remind"
+              label="Esqueci a senha"
             />
           </BaseButtons>
           <Link
             :href="route('register')"
           >
-            Register
+            Cadastrar
           </Link>
         </BaseLevel>
       </CardBox>

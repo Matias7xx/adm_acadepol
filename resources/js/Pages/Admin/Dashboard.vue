@@ -116,7 +116,7 @@ const transactionBarItems = computed(() => mainStore.history)
         </div>
       </div>
 
-      <SectionBannerStarOnGitHub />
+      <!--<SectionBannerStarOnGitHub />-->
 
       <SectionTitleLineWithButton
         :icon="mdiChartPie"
