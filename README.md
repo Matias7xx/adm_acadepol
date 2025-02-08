@@ -38,9 +38,10 @@
 
 ### Without Docker Desktop
 - To get started, you need to install [PHP Composer](https://getcomposer.org/).
-- `composer create-project balajidharma/laravel-vue-admin-panel admin-app`
-- `cd admin-app`
-- Create a new MYSQL database and update database details in `.env` file
+- `Create a new MYSQL database and update database details in `.env` file: cp .env.example .env`
+- `Add your own database credentials in the .env file in DB_DATABASE, DB_USERNAME, DB_PASSWORD`
+- `Generate application key: php artisan key:generate`
+- `Install project dependencies: composer install`
 - `php artisan vendor:publish --tag=admin-core`
 - `php artisan migrate --seed --seeder=AdminCoreSeeder`
 - `php artisan storage:link`
