@@ -9,6 +9,7 @@ use BalajiDharma\LaravelAdminCore\Actions\User\UserCreateAction;
 use BalajiDharma\LaravelAdminCore\Actions\User\UserUpdateAction;
 use BalajiDharma\LaravelAdminCore\Data\User\UserCreateData;
 use BalajiDharma\LaravelAdminCore\Data\User\UserUpdateData;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -29,7 +30,7 @@ class UserController extends Controller
 
         if (request()->has('search')) {
             $users->where('name', 'Like', '%'.request()->input('search').'%')
-            //->orWhere('matricula', 'Like', '%'.request()->input('search').'%')
+            ->orWhere('matricula', 'Like', '%'.request()->input('search').'%')
             ->orWhere('email', 'Like', '%'.request()->input('search').'%');
         }
 

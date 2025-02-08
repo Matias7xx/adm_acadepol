@@ -39,7 +39,7 @@ const form = useForm({
 const formDelete = useForm({})
 
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
+  if (confirm("Tem certeza que deseja remover o usuário?")) {
     formDelete.delete(route("admin.user.destroy", id))
   }
 }
@@ -47,18 +47,18 @@ function destroy(id) {
 
 <template>
   <LayoutAuthenticated>
-    <Head title="Users" />
+    <Head title="Usuários" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiAccountKey"
-        title="Users"
+        title="Usuários"
         main
       >
         <BaseButton
           v-if="can.delete"
           :route-name="route('admin.user.create')"
           :icon="mdiPlus"
-          label="Add"
+          label="Cadastrar"
           color="info"
           rounded-full
           small
@@ -91,7 +91,7 @@ function destroy(id) {
                 placeholder="Search"
               />
               <BaseButton
-                label="Search"
+                label="Pesquisar"
                 type="submit"
                 color="info"
                 class="ml-4 inline-flex items-center px-4 py-2"
@@ -105,12 +105,15 @@ function destroy(id) {
           <thead>
             <tr>
               <th>
-                <Sort label="Name" attribute="name" />
+                <Sort label="Nome" attribute="name" />
               </th>
               <th>
-                <Sort label="Email" attribute="email" />
+                <Sort label="E-mail" attribute="email" />
               </th>
-              <th v-if="can.edit || can.delete">Actions</th>
+              <th>
+                <Sort label="Matrícula" attribute="matricula" />
+              </th>
+              <th v-if="can.edit || can.delete">Ações</th>
             </tr>
           </thead>
 
@@ -131,6 +134,9 @@ function destroy(id) {
               </td>
               <td data-label="Email">
                 {{ user.email }}
+              </td>
+              <td data-label="Matrícula">
+                {{ user.matricula }}
               </td>
               <td
                 v-if="can.edit || can.delete"

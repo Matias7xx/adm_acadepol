@@ -25,6 +25,7 @@ const props = defineProps({
 const form = useForm({
   name: '',
   email: '',
+  matricula: '',
   password: '',
   password_confirmation: '',
   roles: []
@@ -81,6 +82,22 @@ const form = useForm({
           >
             <div class="text-red-400 text-sm" v-if="form.errors.email">
               {{ form.errors.email }}
+            </div>
+          </FormControl>
+        </FormField>
+
+        <FormField
+          label="Matrícula"
+          :class="{ 'text-red-400': form.errors.matricula }"
+        >
+          <FormControl
+            v-model="form.matricula"
+            type="text"
+            placeholder="Informe a Matrícula"
+            :error="form.errors.matricula"
+          >
+            <div class="text-red-400 text-sm" v-if="form.errors.matricula">
+              {{ form.errors.matricula }}
             </div>
           </FormControl>
         </FormField>
