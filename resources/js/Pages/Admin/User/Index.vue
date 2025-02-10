@@ -39,7 +39,7 @@ const form = useForm({
 const formDelete = useForm({})
 
 function destroy(id) {
-  if (confirm("Tem certeza que deseja remover o usuário?")) {
+  if (confirm("Tem certeza de que deseja remover o usuário?")) {
     formDelete.delete(route("admin.user.destroy", id))
   }
 }
@@ -87,6 +87,7 @@ function destroy(id) {
                   focus:ring
                   focus:ring-indigo-200
                   focus:ring-opacity-50
+                  text-gray-900
                 "
                 placeholder="Search"
               />

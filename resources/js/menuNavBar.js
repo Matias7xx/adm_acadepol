@@ -14,22 +14,22 @@ import {
   export default [
     {
       icon: mdiMenu,
-      label: 'Sample menu',
+      label: 'Menu',
       menu: [
         {
           icon: mdiClockOutline,
-          label: 'Item One'
+          label: 'Item Um'
         },
         {
           icon: mdiCloud,
-          label: 'Item Two'
+          label: 'Item Dois'
         },
         {
           isDivider: true
         },
         {
           icon: mdiCrop,
-          label: 'Item Last'
+          label: 'Item Três'
         }
       ]
     },
@@ -38,16 +38,16 @@ import {
       menu: [
         {
           icon: mdiAccount,
-          label: 'My Profile',
+          label: 'Meu Perfil',
           to: '/admin/edit-account-info'
         },
         {
           icon: mdiCogOutline,
-          label: 'Settings'
+          label: 'Configurações'
         },
         {
           icon: mdiEmail,
-          label: 'Messages'
+          label: 'Mensagens'
         },
         {
           isDivider: true

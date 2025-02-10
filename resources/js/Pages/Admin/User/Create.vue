@@ -34,17 +34,17 @@ const form = useForm({
 
 <template>
   <LayoutAuthenticated>
-    <Head title="Add user" />
+    <Head title="Novo usuário" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiAccountKey"
-        title="Add user"
+        title="Cadastrar Usuário"
         main
       >
         <BaseButton
           :route-name="route('admin.user.index')"
           :icon="mdiArrowLeftBoldOutline"
-          label="Back"
+          label="Voltar"
           color="white"
           rounded-full
           small
@@ -55,13 +55,13 @@ const form = useForm({
         @submit.prevent="form.post(route('admin.user.store'))"
       >
         <FormField
-          label="Name"
+          label="Nome"
           :class="{ 'text-red-400': form.errors.name }"
         >
           <FormControl
             v-model="form.name"
             type="text"
-            placeholder="Enter Name"
+            placeholder="Informe o Nome"
             :error="form.errors.name"
           >
             <div class="text-red-400 text-sm" v-if="form.errors.name">
@@ -71,13 +71,13 @@ const form = useForm({
         </FormField>
 
         <FormField
-          label="Email"
+          label="E-mail"
           :class="{ 'text-red-400': form.errors.email }"
         >
           <FormControl
             v-model="form.email"
             type="text"
-            placeholder="Enter Email"
+            placeholder="Informe o E-mail"
             :error="form.errors.email"
           >
             <div class="text-red-400 text-sm" v-if="form.errors.email">
@@ -103,13 +103,13 @@ const form = useForm({
         </FormField>
 
         <FormField
-          label="Password"
+          label="Senha"
           :class="{ 'text-red-400': form.errors.password }"
         >
           <FormControl
             v-model="form.password"
             type="password"
-            placeholder="Enter Password"
+            placeholder="Informe uma Senha"
             :error="form.errors.password"
           >
             <div class="text-red-400 text-sm" v-if="form.errors.password">
@@ -119,13 +119,13 @@ const form = useForm({
         </FormField>
 
         <FormField
-          label="Password Confirmation"
+          label="Confirmação de Senha"
           :class="{ 'text-red-400': form.errors.password }"
         >
           <FormControl
             v-model="form.password_confirmation"
             type="password"
-            placeholder="Enter Password Confirmation"
+            placeholder="Confirme a Senha"
             :error="form.errors.password"
           >
             <div class="text-red-400 text-sm" v-if="form.errors.password">
@@ -137,7 +137,7 @@ const form = useForm({
         <BaseDivider />
 
         <FormField
-          label="Roles"
+          label="Função"
           wrap-body
         >
           <FormCheckRadioGroup
@@ -153,7 +153,7 @@ const form = useForm({
             <BaseButton
               type="submit"
               color="info"
-              label="Submit"
+              label="Cadastrar"
               :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing"
             />

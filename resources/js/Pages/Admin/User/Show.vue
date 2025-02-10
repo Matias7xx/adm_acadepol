@@ -28,17 +28,17 @@ const props = defineProps({
 
 <template>
   <LayoutAuthenticated>
-    <Head title="View user" />
+    <Head title="Detalhes Usuário" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiAccountKey"
-        title="View user"
+        title="Detalhes do Usuário"
         main
       >
         <BaseButton
           :route-name="route('admin.user.index')"
           :icon="mdiArrowLeftBoldOutline"
-          label="Back"
+          label="Voltar"
           color="white"
           rounded-full
           small
@@ -58,7 +58,7 @@ const props = defineProps({
                   lg:block
                 "
               >
-                Name
+                Nome
               </td>
               <td data-label="Name">
                 {{ user.name }}
@@ -75,9 +75,9 @@ const props = defineProps({
                   lg:block
                 "
               >
-                Email
+                E-mail
               </td>
-              <td data-label="Email">
+              <td data-label="E-mail">
                 {{ user.email }}
               </td>
             </tr>
@@ -92,7 +92,24 @@ const props = defineProps({
                   lg:block
                 "
               >
-                Created
+                Matrícula
+              </td>
+              <td data-label="Matrícula">
+                {{ user.matricula }}
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="
+                  p-4
+                  pl-8
+                  text-slate-500
+                  dark:text-slate-400
+                  hidden
+                  lg:block
+                "
+              >
+                Criado em
               </td>
               <td data-label="Created">
                 {{ new Date(user.created_at).toLocaleString() }}
