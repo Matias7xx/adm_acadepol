@@ -105,8 +105,8 @@ const submit = () => {
         <BaseLevel>
           <BaseButtons>
             <BaseButton
+              class="bg-[#bea54a] text-[black] hover:bg-[#a38e5d]"
               type="submit"
-              color="info"
               label="Login"
               :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing"
@@ -114,15 +114,22 @@ const submit = () => {
             <BaseButton
               v-if="canResetPassword"
               :route-name="route('password.request')"
-              color="info"
+              class="bg-[#bea54a] text-[black] hover:bg-[#a38e5d]"
               outline
               label="Esqueci a senha"
             />
           </BaseButtons>
-          <Link
+         <!--  <Link
             :href="route('register')"
           >
             Cadastrar
+          </Link> -->
+
+          <Link
+            :href="route('home')"
+            class="hover:text-[#a38e5d]"
+          >
+            Voltar
           </Link>
         </BaseLevel>
       </CardBox>
