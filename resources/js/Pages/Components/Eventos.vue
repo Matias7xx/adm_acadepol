@@ -9,7 +9,7 @@
         <!-- Coluna de eventos -->
         <div class="lg:col-span-2 space-y-4">
 
-          <h2 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-center">
+          <h2 class="text-2xl sm:text-3xl font-sans mb-6 sm:mb-8 text-center sm:text-center">
         Eventos
           </h2>
 

@@ -15,8 +15,8 @@ import Header from './Components/Header.vue';
     <header class="w-full">
       <SiteNavbar />
       <Header class="shadow-xl" />
-      <div class="h-0.5 bg-[#bea55a]"></div>
-    </header>
+      <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
+      </header>
 
     <!-- Hero Section -->
     <section class="w-full">
@@ -39,7 +39,7 @@ import Header from './Components/Header.vue';
     </main>
 
     <!-- Footer -->
-    <div class="h-0.5 bg-[#bea55a]"></div>
+    <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
     <Footer />
   </div>
 </template>

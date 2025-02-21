@@ -64,8 +64,10 @@ const cancelClose = () => {
 const menuItems = [
   { text: 'História', href: 'historia' },
   { text: 'Missão', href: 'missao' },
-  { text: 'Diretores e Ex-Diretores', href: '#' },
+  { text: 'Diretores e Ex-Diretores', href: 'diretores' },
   { text: 'Estrutura Física', href: '#' },
-  { text: 'Galeria', href: '#' }
+  { text: 'Galeria', href: '#' },
+  { text: 'Regimento Interno', href: '#' },
+  { text: 'Organograma', href: '#' }
 ];
 </script>

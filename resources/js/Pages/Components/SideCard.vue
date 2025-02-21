@@ -44,10 +44,10 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png'
           href="#" 
           class="text-lg sm:text-xl font-sans text-black-700 hover:text-gray-900 transition-colors"
         >
-          ACADEPOL ONLINE
+          REQUERIMENTOS
         </a>
         <p class="text-sm sm:text-base text-gray-700 mt-2">
-          Acesse agora o sistema ACADEPOL ONLINE e veja todo o conteúdo disponível.
+          Faça um Requerimento.
         </p>
       </div>
     </div>
