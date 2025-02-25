@@ -65,8 +65,7 @@ const menuItems = [
   { text: 'História', href: 'historia' },
   { text: 'Missão', href: 'missao' },
   { text: 'Diretores e Ex-Diretores', href: 'diretores' },
-  { text: 'Estrutura Física', href: '#' },
-  { text: 'Galeria', href: '#' },
+  { text: 'Estrutura Física', href: 'estrutura' },
   { text: 'Regimento Interno', href: '#' },
   { text: 'Organograma', href: '#' }
 ];

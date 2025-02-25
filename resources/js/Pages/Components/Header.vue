@@ -8,7 +8,7 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-  <div class="bg-[black] py-4 md:py-6 lg:py-8 shadow-md">
+  <div class="bg-[black] py-5 md:py-7 lg:py-10 shadow-md">
     <div class="max-w-screen-xl mx-auto px-4 md:px-8 lg:px-14 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
       
       <!-- Logos -->

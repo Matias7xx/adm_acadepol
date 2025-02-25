@@ -27,6 +27,10 @@ Route::get('/diretores', function () {
     return Inertia::render('Diretores');
 })->name('diretores');
 
+Route::get('/estrutura', function () {
+    return Inertia::render('Estrutura');
+})->name('estrutura');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

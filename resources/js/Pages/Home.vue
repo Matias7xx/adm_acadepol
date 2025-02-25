@@ -6,6 +6,8 @@ import Cards from './Components/Cards.vue';
 import Footer from './Components/Footer.vue';
 import Eventos from './Components/Eventos.vue';
 import Header from './Components/Header.vue';
+import Search from './Components/Search.vue';
+
 </script>
 
 <template>
@@ -13,9 +15,14 @@ import Header from './Components/Header.vue';
   <div class="min-h-screen flex flex-col bg-gray-100">
     <!-- Header Section -->
     <header class="w-full">
+     <!--  <Header class="shadow-xl" /> -->
+       <Header />
+       <!-- Barra de Pesquisa -->
+      <div class="search-bar bg-white shadow-md px-4 py-2">
+        <Search />
+      </div>
       <SiteNavbar />
-      <Header class="shadow-xl" />
-      <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
+      <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->   
       </header>
 
     <!-- Hero Section -->

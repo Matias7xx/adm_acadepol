@@ -4,21 +4,15 @@
   import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
   import Acadepol from '@/src/assets/PLACA-ACADEPOL.jpg'
-  import CardDiretores from './Components/CardDiretores.vue';
+  import GaleriaEstrutura from './Components/GaleriaEstrutura.vue';
 
-  const diretores = 
-  { 
-    name: "", 
-    description: "", 
-    image: '' 
-  }
   </script>
 
-<template>
-  <Head title="Diretores" />
+  <template>
+    <Head title="Estrutura" />
   <div class="min-h-screen flex flex-col bg-gray-100">
     <SiteNavbar />
-      <CardDiretores />
-    <Footer />
+    <GaleriaEstrutura />
+   <Footer />
   </div>
-</template>
+  </template>

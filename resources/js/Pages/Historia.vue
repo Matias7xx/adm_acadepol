@@ -1,6 +1,5 @@
 <script setup>
   import SiteNavbar from './Components/SiteNavbar.vue';
-  import Header from './Components/Header.vue';
   import Footer from './Components/Footer.vue';
   import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
@@ -18,7 +17,6 @@
   <Head title="História" />
   <div class="min-h-screen flex flex-col bg-gray-100">
     <SiteNavbar />
-    <Header />
 
     <section class="w-full bg-gray-100 py-10">
       <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
