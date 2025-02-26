@@ -37,5 +37,5 @@ Route::group([
     Route::post('edit-account-info', 'UserController@accountInfoStore')->name('account.info.store');
     Route::post('change-password', 'UserController@changePasswordStore')->name('account.password.store');
 
-    Route::resource('curso', 'CursoController');
+     Route::resource('cursos', 'CursoController');
 });

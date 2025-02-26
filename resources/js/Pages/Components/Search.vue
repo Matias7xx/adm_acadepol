@@ -1,37 +1,40 @@
 <template>
-    <div class="flex flex-col items-center space-y-2 w-full max-w-lg mx-auto">
-      <div class="relative w-full">
-        <input
-          type="text"
-          v-model="searchQuery"
-          @input="searchOnPage"
-          placeholder="Pesquisar na página..."
-          class="pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 w-full transition-all bg-white text-gray-800 border-gray-300 shadow-sm"
-        />
-        <div class="absolute left-3 top-2.5 text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <button v-if="searchQuery" @click="clearSearch" class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700">
-          ✕
-        </button>
+  <div class="flex flex-col items-center space-y-2 w-full max-w-lg mx-auto">
+    <div class="relative w-full">
+      <input
+        type="text"
+        v-model="searchQuery"
+        @keyup.enter="searchOnPage"
+        placeholder="Pesquisar na página..."
+        class="pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 w-full transition-all bg-white text-gray-800 border-gray-300 shadow-sm"
+      />
+      <div 
+        class="absolute left-3 top-2.5 text-gray-500 cursor-pointer hover:text-yellow-500"
+        @click="searchOnPage"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
       </div>
-      <div v-if="matchCount > 0" class="text-sm text-gray-600">
-        {{ matchCount }} resultado{{ matchCount > 1 ? 's' : '' }} encontrado{{ matchCount > 1 ? 's' : '' }}
-      </div>
-      <div v-else-if="searchQuery && matchCount === 0" class="text-sm text-red-500">
-        Nenhum resultado encontrado.
-      </div>
+      <button v-if="searchQuery" @click="clearSearch" class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700">
+        ✕
+      </button>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onBeforeUnmount, watch } from 'vue';
-  
-  const searchQuery = ref('');
-  const matchCount = ref(0);
-  const originalTextNodes = new Map();
+    <!-- <div v-if="matchCount > 0" class="text-sm text-gray-600">
+      {{ matchCount }} resultado{{ matchCount > 1 ? 's' : '' }} encontrado{{ matchCount > 1 ? 's' : '' }}
+    </div>
+    <div v-else-if="searchQuery && hasSearched && matchCount === 0" class="text-sm text-red-500">
+      Nenhum resultado encontrado.
+    </div> -->
+  </div>
+</template>
+
+<script setup>
+import { ref, onBeforeUnmount } from 'vue';
+
+const searchQuery = ref('');
+const matchCount = ref(0);
+const hasSearched = ref(false);
 
 function searchOnPage() {
   // Remover destaques anteriores
@@ -39,6 +42,7 @@ function searchOnPage() {
   
   if (!searchQuery.value.trim()) {
     matchCount.value = 0;
+    hasSearched.value = true;
     return;
   }
   
@@ -76,12 +80,20 @@ function searchOnPage() {
   });
   
   matchCount.value = count;
+  hasSearched.value = true;
   
   // Se houver resultados, role até o primeiro resultado
   const firstMatch = document.querySelector('.highlight-search');
   if (firstMatch) {
     firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+}
+
+function clearSearch() {
+  searchQuery.value = '';
+  clearHighlights();
+  matchCount.value = 0;
+  hasSearched.value = false;
 }
 
 function clearHighlights() {
@@ -102,14 +114,13 @@ function escapeRegExp(string) {
 onBeforeUnmount(() => {
   clearHighlights();
 });
-  </script>
-  
-  <style>
-  .highlight-search {
-    background-color: rgba(255, 222, 0, 0.4);
-    font-weight: bold;
-    border-radius: 2px;
-    padding: 0 2px;
-  }
-  </style>
-  
+</script>
+
+<style>
+.highlight-search {
+  background-color: rgba(255, 222, 0, 0.4);
+  font-weight: bold;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+</style>

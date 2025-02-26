@@ -79,9 +79,9 @@ onBeforeUnmount(() => {
                   </Link>
                 </template>
                 <template v-else>
-                  <Link :href="route('login')" class="text-black px-4 py-2 rounded-md text-sm font-bold hover:bg-[#a38e4d]">
+                  <a :href="route('login')" class="text-black px-4 py-2 rounded-md text-sm font-bold hover:bg-[#a38e4d]">
                     LOGIN
-                  </Link>
+                  </a>
                 </template>
               </div>
             </div>
