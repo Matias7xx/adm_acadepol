@@ -4,6 +4,7 @@
   import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
   import Acadepol from '@/src/assets/PLACA-ACADEPOL.jpg'
+  import Header from './Components/Header.vue';
 
   const historia = 
   { 
@@ -16,6 +17,7 @@
 <template>
   <Head title="História" />
   <div class="min-h-screen flex flex-col bg-gray-100">
+    <Header />
     <SiteNavbar />
 
     <section class="w-full bg-gray-100 py-10">

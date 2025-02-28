@@ -5,6 +5,7 @@
   import { Head } from '@inertiajs/vue3';
   import Missao from '@/src/assets/missao.jpeg'
   import Missao2 from '@/src/assets/missao2.jpeg'
+  import Header from './Components/Header.vue';
 
   const historia = 
   { 
@@ -20,6 +21,7 @@
 <template>
   <Head title="História" />
   <div class="min-h-screen flex flex-col bg-gray-100">
+  <Header />
   <SiteNavbar />
     <section class="w-full bg-gray-100 py-10">
       <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">

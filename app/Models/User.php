@@ -42,4 +42,11 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    //puxar os cursos nos quais um usuário está matriculado
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'matriculas', 'user_id', 'curso_id')
+            ->withTimestamps();
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\CursoController;
+use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +36,13 @@ Route::get('/estrutura', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/cursos', [CursoController::class, 'cursosPublicos'])->name('cursos');
+
+//Route::post('/cursos/{curso}/matricular', [CursoController::class, 'matricularAluno'])->middleware('auth'); //Matricular aluno
+
+
+Route::post('/cursos/{curso}/matricular', [MatriculaController::class, 'store'])->middleware('auth'); //Matricular aluno
 
 
 //Profile

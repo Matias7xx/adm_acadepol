@@ -4,6 +4,8 @@ use App\Http\Middleware\HasAccessAdmin;
 use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MatriculaController;
+
 
 Route::group([
     'namespace' => 'App\Http\Controllers\Admin',
@@ -37,5 +39,8 @@ Route::group([
     Route::post('edit-account-info', 'UserController@accountInfoStore')->name('account.info.store');
     Route::post('change-password', 'UserController@changePasswordStore')->name('account.password.store');
 
-     Route::resource('cursos', 'CursoController');
+    Route::resource('cursos', 'CursoController');
+
+    Route::patch('/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
+    Route::patch('/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
 });

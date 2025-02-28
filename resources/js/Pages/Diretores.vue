@@ -5,6 +5,7 @@
   import { Head } from '@inertiajs/vue3';
   import Acadepol from '@/src/assets/PLACA-ACADEPOL.jpg'
   import CardDiretores from './Components/CardDiretores.vue';
+  import Header from './Components/Header.vue';
 
   const diretores = 
   { 
@@ -17,6 +18,7 @@
 <template>
   <Head title="Diretores" />
   <div class="min-h-screen flex flex-col bg-gray-100">
+    <Header />
     <SiteNavbar />
       <CardDiretores />
     <Footer />
