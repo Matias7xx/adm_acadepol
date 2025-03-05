@@ -48,7 +48,7 @@ class CursoController extends Controller
         ]);
     }
 
-    public function cursosPublicos()
+    public function cursosPublicos() //Exibe os cursos na aba "Cursos" do layout principal
 {
     $cursos = Curso::where('status', 'aberto')->paginate(3);
 
@@ -83,7 +83,7 @@ class CursoController extends Controller
         'material_complementar' => 'nullable|array',
         'certificacao' => 'boolean',
         'certificacao_modelo' => 'nullable|string',
-        'status' => 'required|in:aberto,em andamento,concluído,cancelado',
+        'status' => 'required|in:Aberto,Em andamento,Concluído,Cancelado',
     ]);
 
     // Processa o upload da imagem se enviada
@@ -104,7 +104,18 @@ class CursoController extends Controller
 
     public function show(Curso $curso)
     {
-        return Inertia::render('Cursos/Show', ['curso' => $curso]);
+        $this->authorize('adminView', $curso);
+
+        return Inertia::render('Admin/Cursos/Show', [
+            'curso' => $curso,
+        ]);
+    }
+
+    public function showCurso(Curso $curso)//Exibe os detalhes do curso para a o usuário fazer matrícula
+    {
+        return Inertia::render('CursoDetalhe', [
+            'curso' => $curso,
+        ]);
     }
 
     public function exibirAlunos($id)//ID DO CURSO. Exibir quantidade e dados dos alunos inscritos

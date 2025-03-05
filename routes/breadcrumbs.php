@@ -72,6 +72,8 @@ Breadcrumbs::resource('admin.menu.item', 'Menu Items', 'admin.menu');
 Breadcrumbs::resource('admin.category.type', 'Category Types');
 Breadcrumbs::resource('admin.category.type.item', 'Items', 'admin.category.type');
 Breadcrumbs::resource('admin.cursos', 'Cursos'); //Sempre que colocar alguma rota em ADMIN
+Breadcrumbs::resource('admin.matriculas', 'Matriculas'); //Sempre que colocar alguma rota em ADMIN
+
 
 // admin account Info
 Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {

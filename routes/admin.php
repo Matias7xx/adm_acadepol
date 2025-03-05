@@ -41,6 +41,14 @@ Route::group([
 
     Route::resource('cursos', 'CursoController');
 
-    Route::patch('/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
-    Route::patch('/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
+    //Aqui é onde o ADMIN analisa as matrículas
+    Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
+        Route::get('/matriculas', [MatriculaController::class, 'index'])->name('matriculas.index');
+        Route::get('/admin/matriculas/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
+        Route::patch('/admin/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
+        Route::patch('/admin/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
+    });
+
+    /* Route::patch('/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
+    Route::patch('/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar'); */
 });

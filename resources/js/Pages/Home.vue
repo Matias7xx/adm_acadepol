@@ -7,6 +7,8 @@ import Footer from './Components/Footer.vue';
 import Eventos from './Components/Eventos.vue';
 import Header from './Components/Header.vue';
 import Search from './Components/Search.vue';
+import Toast from './Components/Toast.vue';
+import FlashMessage from './Components/FlashMessage.vue';
 
 </script>
 
@@ -24,6 +26,7 @@ import Search from './Components/Search.vue';
       <SiteNavbar />
       <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->   
       </header>
+      <FlashMessage />
 
     <!-- Hero Section -->
     <section class="w-full">
@@ -49,4 +52,5 @@ import Search from './Components/Search.vue';
     <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
     <Footer />
   </div>
+  <Toast />
 </template>

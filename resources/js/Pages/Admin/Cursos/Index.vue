@@ -112,6 +112,9 @@ function destroy(id) {
               <th>
                 <Sort label="Descrição" attribute="descricao" />
               </th>
+              <th>
+                <Sort label="Status" attribute="status" />
+              </th>
               <th v-if="can.edit || can.delete">Ações</th>
             </tr>
           </thead>
@@ -133,6 +136,9 @@ function destroy(id) {
               </td>
               <td data-label="descricao">
                 {{ curso.descricao }}
+              </td>
+              <td data-label="status">
+                {{ curso.status }}
               </td>
               <td
                 v-if="can.edit || can.delete"

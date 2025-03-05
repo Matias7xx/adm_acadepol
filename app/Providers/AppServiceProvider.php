@@ -11,6 +11,11 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
+
+     protected $policies = [
+        'App\Models\Matricula' => 'App\Policies\MatriculaPolicy',
+    ];
+
     public function register()
     {
         //

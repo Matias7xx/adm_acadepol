@@ -15,12 +15,12 @@ import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
 
-const props = defineProps({
+/* const props = defineProps({
   roles: {
     type: Object,
     default: () => ({}),
   }
-})
+}) */
 
 const form = useForm({
   nome: '',
@@ -37,7 +37,7 @@ const form = useForm({
   material_complementar: '',
   certificacao: false,
   certificacao_modelo: '',
-  status: 'aberto',
+  status: 'Aberto',
   imagem_file: null,
 })
 

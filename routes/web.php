@@ -39,10 +39,21 @@ Route::get('/dashboard', function () {
 
 Route::get('/cursos', [CursoController::class, 'cursosPublicos'])->name('cursos');
 
+Route::get('/cursos/{curso}', [CursoController::class, 'showCurso'])->name('detalhes'); //Detalhes do curso
+
 //Route::post('/cursos/{curso}/matricular', [CursoController::class, 'matricularAluno'])->middleware('auth'); //Matricular aluno
 
 
-Route::post('/cursos/{curso}/matricular', [MatriculaController::class, 'store'])->middleware('auth'); //Matricular aluno
+//ABRIR FORMULÁRIO DE MATRÍCULA
+Route::get('/cursos/{curso}/matricula', [MatriculaController::class, 'inscricao'])
+->middleware('auth')
+->where('curso', '[0-9]+')
+->name('matricula'); //Matricular aluno
+
+// Rota para processar a MATRÍCULA (SALVAR)
+Route::post('/matricula', [MatriculaController::class, 'store'])
+    ->middleware('auth')
+    ->name('matricula.store');
 
 
 //Profile
