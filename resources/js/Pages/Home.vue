@@ -26,8 +26,7 @@ import FlashMessage from './Components/FlashMessage.vue';
       <SiteNavbar />
       <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->   
       </header>
-      <FlashMessage />
-
+      
     <!-- Hero Section -->
     <section class="w-full">
       <HomeCarousel />
@@ -52,5 +51,4 @@ import FlashMessage from './Components/FlashMessage.vue';
     <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
     <Footer />
   </div>
-  <Toast />
 </template>

@@ -47,6 +47,8 @@ Route::group([
         Route::get('/admin/matriculas/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
         Route::patch('/admin/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
         Route::patch('/admin/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
+        Route::patch('/admin/matriculas/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])
+        ->name('matriculas.alterar-status');
     });
 
     /* Route::patch('/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');

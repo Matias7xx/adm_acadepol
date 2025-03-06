@@ -10,8 +10,8 @@
   import CourseHeader from './CursoDetalhesComponents/CourseHeader.vue';
   import EnrollmentCard from './CursoDetalhesComponents/EnrollmentCard.vue';
   import SocialShareCard from './CursoDetalhesComponents/SocialShareCard.vue';
-  import { useToast } from '@/Composables/useToast';
-  
+  import { useToast } from '@/Composables/useToast'; 
+
   // Props recebendo o curso da rota
   const props = defineProps({
     curso: {

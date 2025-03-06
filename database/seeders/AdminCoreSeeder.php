@@ -80,8 +80,8 @@ class AdminCoreSeeder extends Seeder
         }
 
         // create roles and assign existing permissions
-        $role3 = Role::create(['name' => 'aluno']);
-        $role3->givePermissionTo('admin user');
+        $role3 = Role::create(['name' => 'servidor']);
+        /* $role3->givePermissionTo('admin user'); */ //Permissão de super usuário para o Servidor
         foreach ($permissions as $permission) {
             if (Str::contains($permission, 'list')) {
                 $role3->givePermissionTo($permission);

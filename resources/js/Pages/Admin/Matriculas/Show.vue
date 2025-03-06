@@ -21,6 +21,10 @@ const props = defineProps({
 // Toast
 const { toast } = useToast();
 
+// Estado local para controlar o seletor de status
+const selectedStatus = ref(props.matricula.status);
+const isChangingStatus = ref(false);
+
 // Status de matrículas
 const statusLabels = {
   pendente: 'Pendente',
@@ -39,6 +43,17 @@ const showConfirmModal = ref(false);
 const confirmModalTitle = ref('');
 const confirmModalMessage = ref('');
 const confirmModalAction = ref(() => {});
+
+// Função de confirmação para o modal
+const handleConfirm = () => {
+  // Verificar se confirmModalAction.value é uma função antes de chamá-la
+  if (typeof confirmModalAction.value === 'function') {
+    confirmModalAction.value();
+  } else {
+    console.error('confirmModalAction não é uma função');
+    closeConfirmModal();
+  }
+};
 
 // Dados adicionais da matrícula (parsear o JSON)
 const dadosAdicionais = computed(() => {
@@ -69,7 +84,49 @@ const formatDate = (dateString) => {
   }).format(date);
 };
 
-// Funções de Ação
+// Alternar Status
+const alterarStatus = (novoStatus) => {
+  const statusTexto = {
+    pendente: 'pendente',
+    aprovada: 'aprovada',
+    rejeitada: 'rejeitada'
+  };
+
+  // Verificar se o status é diferente do atual
+  if (novoStatus === props.matricula.status) {
+    toast(`A matrícula já está ${statusTexto[novoStatus]}`, 'info');
+    return;
+  }
+
+  confirmModalTitle.value = `Alterar Status para ${statusLabels[novoStatus]}`;
+  confirmModalMessage.value = `Tem certeza que deseja alterar o status da matrícula para ${statusTexto[novoStatus]}?`;
+  
+  confirmModalAction.value = () => {
+    isChangingStatus.value = true;
+    
+    useForm({
+      status: novoStatus
+    }).patch(route('admin.matriculas.alterar-status', { id: props.matricula.id }), {
+      onSuccess: () => {
+        toast(`Status alterado para ${statusTexto[novoStatus]} com sucesso!`, 'success');
+        closeConfirmModal();
+        isChangingStatus.value = false;
+        // Recarregar para atualizar o status
+       /*  window.location.reload(); */
+      },
+      onError: (errors) => {
+        toast('Erro ao alterar status da matrícula', 'error');
+        console.error(errors);
+        closeConfirmModal();
+        isChangingStatus.value = false;
+      }
+    });
+  };
+  
+  showConfirmModal.value = true;
+};
+
+// Funções específicas para os botões atuais
 const aprovarMatricula = () => {
   confirmModalTitle.value = 'Aprovar Matrícula';
   confirmModalMessage.value = 'Tem certeza que deseja aprovar esta matrícula? O aluno será notificado e terá acesso ao curso.';
@@ -136,92 +193,60 @@ const closeConfirmModal = () => {
         />
       </SectionTitleLineWithButton>
 
-      <!-- Status da Matrícula -->
-      <div class="flex justify-between items-center mb-6">
-        <div>
-          <span 
-            :class="statusClasses[matricula.status]" 
-            class="px-3 py-1 text-sm font-medium rounded-full"
-          >
-            {{ statusLabels[matricula.status] }}
-          </span>
+      <!-- Seção de Alteração de Status -->
+      <CardBox class="mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h3 class="text-lg font-medium mb-2">Status da Matrícula</h3>
+            <span 
+              :class="statusClasses[matricula.status]" 
+              class="px-3 py-1 text-sm font-medium rounded-full"
+            >
+              {{ statusLabels[matricula.status] }}
+            </span>
+          </div>
+          
+          <div class="w-full md:w-auto">
+            <h3 class="text-lg font-medium mb-2">Alterar Status</h3>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <select 
+                v-model="selectedStatus" 
+                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                :disabled="isChangingStatus"
+              >
+                <option value="pendente">Pendente</option>
+                <option value="aprovada">Aprovada</option>
+                <option value="rejeitada">Rejeitada</option>
+              </select>
+              
+              <BaseButton
+                @click="alterarStatus(selectedStatus)"
+                label="Atualizar Status"
+                color="info"
+                :loading="isChangingStatus"
+                :disabled="selectedStatus === matricula.status || isChangingStatus"
+              />
+            </div>
+          </div>
         </div>
-        
-        <div v-if="matricula.status === 'pendente'" class="flex space-x-3">
-          <BaseButton
-            @click="aprovarMatricula"
-            label="APROVAR"
-            color="success"
-            small
-          />
-          <BaseButton
-            @click="rejeitarMatricula"
-            label="REJEITAR"
-            color="danger"
-            small
-          />
-        </div>
+      </CardBox>
+
+      <!-- Ações rápidas para aprovação/rejeição (botões legados) -->
+      <div v-if="matricula.status === 'pendente'" class="flex justify-end space-x-3 mb-6">
+        <BaseButton
+          @click="aprovarMatricula"
+          label="APROVAR"
+          color="success"
+          small
+        />
+        <BaseButton
+          @click="rejeitarMatricula"
+          label="REJEITAR"
+          color="danger"
+          small
+        />
       </div>
 
-      <!-- Informações do Curso -->
-      <!-- <CardBox class="mb-6">
-        <div class="mb-4">
-          <h3 class="text-lg font-medium mb-4">Informações do Curso</h3>
-        </div>
-        <table>
-          <tbody>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Nome do Curso
-              </td>
-              <td data-label="Nome do Curso">
-                {{ matricula.curso.nome }}
-              </td>
-            </tr>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Período
-              </td>
-              <td data-label="Período">
-                {{ formatDate(matricula.curso.data_inicio) }} a {{ formatDate(matricula.curso.data_fim) }}
-              </td>
-            </tr>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Carga Horária
-              </td>
-              <td data-label="Carga Horária">
-                {{ matricula.curso.carga_horaria }} HORAS
-              </td>
-            </tr>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Localização
-              </td>
-              <td data-label="Localização">
-                {{ matricula.curso.localizacao }}
-              </td>
-            </tr>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Capacidade Máxima
-              </td>
-              <td data-label="Capacidade Máxima">
-                {{ matricula.curso.capacidade_maxima }}
-              </td>
-            </tr>
-            <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
-                Modalidade
-              </td>
-              <td data-label="Modalidade">
-                {{ matricula.curso.modalidade }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </CardBox> -->
-      
       <!-- Informações do Aluno -->
       <CardBox class="mb-6">
         <div class="mb-4">
@@ -301,31 +326,31 @@ const closeConfirmModal = () => {
       </CardBox>
       
       <!-- Modal de Confirmação -->
-      <div 
-        v-if="showConfirmModal" 
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-      >
-        <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-          <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">{{ confirmModalTitle }}</h3>
-            <div class="mt-2 px-7 py-3">
-              <p class="text-sm text-gray-500 dark:text-gray-300">{{ confirmModalMessage }}</p>
-            </div>
-            <div class="flex justify-center gap-4 mt-4">
-              <BaseButton 
-                @click="confirmModalAction" 
-                label="Confirmar"
-                color="info"
-              />
-              <BaseButton 
-                @click="closeConfirmModal" 
-                label="Cancelar"
-                color="white"
-              />
-            </div>
-          </div>
-        </div>
+<div 
+  v-if="showConfirmModal" 
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+>
+  <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+    <div class="mt-3 text-center">
+      <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">{{ confirmModalTitle }}</h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500 dark:text-gray-300">{{ confirmModalMessage }}</p>
       </div>
+      <div class="flex justify-center gap-4 mt-4">
+        <BaseButton 
+        @click="handleConfirm" 
+          label="Confirmar"
+          color="info"
+        />
+        <BaseButton 
+          @click="closeConfirmModal" 
+          label="Cancelar"
+          color="white"
+        />
+      </div>
+    </div>
+  </div>
+</div>
     </SectionMain>
   </LayoutAuthenticated>
 </template>

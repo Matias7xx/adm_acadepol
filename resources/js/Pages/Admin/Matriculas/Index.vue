@@ -12,7 +12,8 @@ import {
   mdiMagnify,
   mdiEye,
   mdiCheckCircle,
-  mdiCloseCircle
+  mdiCloseCircle,
+  mdiSwapHorizontal
 } from "@mdi/js"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
@@ -89,23 +90,32 @@ const filteredMatriculas = computed(() => {
 });
 
 // Funções de Ação
-const aprovarMatricula = (id) => {
-  confirmModalTitle.value = 'Aprovar Matrícula';
-  confirmModalMessage.value = 'Tem certeza que deseja aprovar esta matrícula? O aluno será notificado e terá acesso ao curso.';
+const alterarStatus = (id, novoStatus, mensagemConfirmacao) => {
+  const mensagens = {
+    aprovada: 'aprova',
+    rejeitada: 'rejeita',
+    pendente: 'retornar para pendente'
+  };
+  
+  confirmModalTitle.value = `${mensagens[novoStatus].charAt(0).toUpperCase() + mensagens[novoStatus].slice(1)} Matrícula`;
+  confirmModalMessage.value = mensagemConfirmacao || `Tem certeza que deseja ${mensagens[novoStatus]} esta matrícula?`;
   
   // Define a função de confirmação diretamente
   confirmModalAction.value = () => {
     // Criar novo form para cada solicitação
-    const form = useForm({});
-    form.patch(route('admin.matriculas.aprovar', id), {
+    const form = useForm({
+      status: novoStatus
+    });
+    
+    form.patch(route('admin.matriculas.alterar-status', id), {
       onSuccess: () => {
-        toast('Matrícula aprovada com sucesso!', 'success');
+        toast(`Matrícula ${mensagens[novoStatus]}da com sucesso!`, 'success');
         closeConfirmModal();
-        // Opcional: recarregar a página para atualizar os dados
-        window.location.reload();
+        // Recarregar a página para atualizar os dados
+        /* window.location.reload(); */
       },
       onError: (errors) => {
-        toast('Erro ao aprovar matrícula', 'error');
+        toast(`Erro ao ${mensagens[novoStatus]} matrícula`, 'error');
         console.error(errors);
         closeConfirmModal();
       }
@@ -115,30 +125,12 @@ const aprovarMatricula = (id) => {
   showConfirmModal.value = true;
 };
 
+const aprovarMatricula = (id) => {
+  alterarStatus(id, 'aprovada', 'Tem certeza que deseja aprovar esta matrícula? O aluno será notificado e terá acesso ao curso.');
+};
+
 const rejeitarMatricula = (id) => {
-  confirmModalTitle.value = 'Rejeitar Matrícula';
-  confirmModalMessage.value = 'Tem certeza que deseja rejeitar esta matrícula? O aluno será notificado e não terá acesso ao curso.';
-  
-  // Define a função de confirmação diretamente
-  confirmModalAction.value = () => {
-    // Criar novo form para cada solicitação
-    const form = useForm({});
-    form.patch(route('admin.matriculas.rejeitar', id), {
-      onSuccess: () => {
-        toast('Matrícula rejeitada com sucesso!', 'success');
-        closeConfirmModal();
-        // Opcional: recarregar a página para atualizar os dados
-        window.location.reload();
-      },
-      onError: (errors) => {
-        toast('Erro ao rejeitar matrícula', 'error');
-        console.error(errors);
-        closeConfirmModal();
-      }
-    });
-  };
-  
-  showConfirmModal.value = true;
+  alterarStatus(id, 'rejeitada', 'Tem certeza que deseja rejeitar esta matrícula? O aluno será notificado e não terá acesso ao curso.');
 };
 
 const closeConfirmModal = () => {
@@ -259,6 +251,8 @@ const handleConfirm = () => {
                     color="info"
                     outline
                   />
+                  
+                  <!-- Ações para status pendente -->
                   <template v-if="matricula.status === 'pendente'">
                     <BaseButton
                       @click="aprovarMatricula(matricula.id)"
@@ -273,6 +267,30 @@ const handleConfirm = () => {
                       small
                       color="danger"
                       outline
+                    />
+                  </template>
+                  
+                  <!-- Ações para status aprovado -->
+                  <template v-if="matricula.status === 'aprovada'">
+                    <BaseButton
+                      @click="rejeitarMatricula(matricula.id)"
+                      :icon="mdiSwapHorizontal"
+                      small
+                      color="danger"
+                      outline
+                      title="Mudar para Rejeitado"
+                    />
+                  </template>
+                  
+                  <!-- Ações para status rejeitado -->
+                  <template v-if="matricula.status === 'rejeitada'">
+                    <BaseButton
+                      @click="aprovarMatricula(matricula.id)"
+                      :icon="mdiSwapHorizontal"
+                      small
+                      color="success"
+                      outline
+                      title="Mudar para Aprovado"
                     />
                   </template>
                 </BaseButtons>

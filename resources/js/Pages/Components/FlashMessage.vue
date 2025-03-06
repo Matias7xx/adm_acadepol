@@ -15,7 +15,7 @@ console.log('Flash message:', usePage().props.flash.message)
           </svg>
         </div>
         <div>
-          <p class="font-bold">{{ $page.props.flash.message }} baaaas</p>
+          <p class="font-bold">{{ $page.props.flash.message }}</p>
         </div>
         <div class="ml-auto">
           <button @click="$page.props.flash.message = null" class="text-green-700">

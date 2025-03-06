@@ -7,6 +7,8 @@ import { createPinia } from 'pinia'
 import { useDarkModeStore } from '@/Stores/darkMode.js'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import Toast from './Pages/Components/Toast.vue';
+import FlashMessage from './Pages/Components/FlashMessage.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'ACADEPOL';
 
@@ -19,6 +21,7 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)    
             .use(ZiggyVue, Ziggy)
+            .use(Toast, FlashMessage)
             .mount(el);
     },
     progress: {

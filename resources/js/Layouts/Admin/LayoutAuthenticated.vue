@@ -11,6 +11,7 @@ import NavBar from '@/Components/NavBar.vue'
 import NavBarItemPlain from '@/Components/NavBarItemPlain.vue'
 import AsideMenu from '@/Components/AsideMenu.vue'
 import FooterBar from '@/Components/FooterBar.vue'
+import Toast from '@/Pages/Components/Toast.vue'
 
 const layoutAsidePadding = 'xl:pl-60'
 
@@ -39,6 +40,7 @@ const menuClick = (event, item) => {
       'overflow-hidden lg:overflow-visible': isAsideMobileExpanded
     }"
   >
+  <Toast />
     <div
       :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
       class="pt-14 min-h-screen w-screen transition-position lg:w-auto bg-gray-50 dark:bg-slate-800 dark:text-slate-100"

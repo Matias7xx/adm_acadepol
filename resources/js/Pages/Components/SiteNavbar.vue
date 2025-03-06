@@ -7,6 +7,9 @@ import SocialMedia from './SocialMedia.vue';
 import Search from './Search.vue';
 import Header from './Header.vue';
 import { router } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
+const { toast } = useToast();
+import Toast from './Toast.vue';
 
 function navigateToCursos() {
   router.visit(route('admin.cursos.index'));
@@ -59,7 +62,8 @@ onBeforeUnmount(() => {
   <div>
     <!-- Container fixo do cabeçalho -->
     <div class="header-container fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
-      
+      <Toast />
+
       <!-- Navbar -->
       <nav class="bg-[#bea55a] shadow-md transition-all duration-300">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

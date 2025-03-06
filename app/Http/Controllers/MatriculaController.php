@@ -52,6 +52,16 @@ class MatriculaController extends Controller
 
     public function inscricao($cursoId)
     {
+        // Se não estiver autenticado, redireciona para login
+        if (!Auth::check()) {
+        // Salva o curso ID na sessão para recuperar após o login
+        session(['intended_curso_id' => $cursoId]);
+        
+        return back()->withErrors([
+                'unauthenticated' => 'Você precisa estar logado para se inscrever.'
+            ]);
+        }
+        
         $cursoId = (int) $cursoId;
         $curso = Curso::findOrFail($cursoId);
         $user = Auth::user();
@@ -61,10 +71,11 @@ class MatriculaController extends Controller
             ->where('user_id', $user->id)
             ->exists();
 
-        if ($matriculaExistente) {
-            return redirect()->route('cursos')
-                ->with('message', 'Você já está matriculado neste curso.');
-        }
+            if ($matriculaExistente) {
+                return back()->withErrors([
+                    'enrollment' => 'Você já está matriculado neste curso.'
+                ]);
+            }
 
         // Verifica se o curso ainda está com inscrições abertas
         if ($curso->status !== 'aberto') {
@@ -199,6 +210,29 @@ class MatriculaController extends Controller
             'message' => 'Matrícula rejeitada.'
         ]);
     }
+
+    public function alterarStatus(Request $request, $id)
+{
+    $matricula = Matricula::findOrFail($id);
+    $this->authorize('update', $matricula);
+    
+    $request->validate([
+        'status' => 'required|in:aprovada,rejeitada,pendente',
+    ]);
+
+    $novoStatus = $request->status;
+    
+    // Verificar se o status é diferente do atual
+    if ($matricula->status !== $novoStatus) {
+        $matricula->status = $novoStatus;
+        $matricula->save();
+        
+        // Em vez de retornar JSON, redirecione com uma mensagem de sessão
+        return redirect()->back()->with('message', 'Status da matrícula alterado com sucesso para ' . $novoStatus);
+    }
+    
+    return redirect()->back()->with('message', 'A matrícula já está com este status');
+}
     
     /**
      * Exibe os detalhes de uma matrícula (para administradores).
