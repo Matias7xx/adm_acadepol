@@ -25,6 +25,7 @@ import CardBoxClient from '@/Components/CardBoxClient.vue'
 import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue'
 import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue'
 import SectionBannerStarOnGitHub from '@/Components/SectionBannerStarOnGitHub.vue'
+import Home from '../Home.vue'
 const chartData = ref(null)
 const fillChartData = () => {
   chartData.value = chartConfig.sampleChartData()
@@ -51,18 +52,9 @@ const transactionBarItems = computed(() => mainStore.history)
         title="Overview"
         main
       >
-        <!--<BaseButton
-          href="https://github.com/balajidharma/laravel-vue-admin-panel"
-          target="_blank"
-          :icon="mdiGithub"
-          label="Star on GitHub"
-          color="contrast"
-          rounded-full
-          small
-        />-->
       </SectionTitleLineWithButton>
       
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
+      <!-- <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
         <CardBoxWidget
           trend="12%"
           trend-type="up"
@@ -116,8 +108,6 @@ const transactionBarItems = computed(() => mainStore.history)
         </div>
       </div>
 
-      <!--<SectionBannerStarOnGitHub />-->
-
       <SectionTitleLineWithButton
         :icon="mdiChartPie"
         title="Trends overview"
@@ -156,7 +146,7 @@ const transactionBarItems = computed(() => mainStore.history)
         has-table
       >
         <TableSampleClients />
-      </CardBox>
+      </CardBox> -->
     </SectionMain>
   </LayoutAuthenticated>
 </template>

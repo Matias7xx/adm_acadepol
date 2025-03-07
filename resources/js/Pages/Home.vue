@@ -7,6 +7,7 @@ import Footer from './Components/Footer.vue';
 import Eventos from './Components/Eventos.vue';
 import Header from './Components/Header.vue';
 import Search from './Components/Search.vue';
+import Breadcrumb from '@/Components/Admin/Breadcrumb.vue';
 import Toast from './Components/Toast.vue';
 import FlashMessage from './Components/FlashMessage.vue';
 
