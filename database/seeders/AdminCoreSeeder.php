@@ -117,6 +117,13 @@ class AdminCoreSeeder extends Seeder
             'description' => 'Admin Menu',
         ]);
 
+        // create servidores menu
+        $servidorMenu = Menu::create([
+            'name' => 'Servidor',
+            'machine_name' => 'servidor',
+            'description' => 'Servidor Menu',
+        ]);
+
         $menu_items = [
             [
                 'name' => 'Dashboard',
@@ -177,6 +184,18 @@ class AdminCoreSeeder extends Seeder
         ];
 
         $menu->menuItems()->createMany($menu_items);
+
+        $servidorMenu_items = [
+            [
+                'name' => 'Meus Cursos',
+                'uri' => '/<servidor>',
+                'enabled' => 1,
+                'weight' => 0,
+                'icon' => 'M13,3V9H21V3M13,21H21V11H13M3,21H11V15H3M3,13H11V3H3V13Z',
+            ],
+        ];
+
+        $servidorMenu->menuItems()->createMany($servidorMenu_items);
 
         // create category type
         CategoryType::create([

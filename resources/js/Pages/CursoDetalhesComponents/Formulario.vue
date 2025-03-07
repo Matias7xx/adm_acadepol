@@ -49,8 +49,21 @@ const formatarData = (dataString) => {
   return new Intl.DateTimeFormat('pt-BR').format(data);
 };
 
+let form;
+
 // Função para submeter o formulário
 const submeterInscricao = () => {
+  // Validar aceite de termos
+  if (!formData.value.aceitaTermos) {
+    toast.error('Você precisa aceitar os termos para continuar');
+    return;
+  }
+
+  // Validar campos obrigatórios
+  if (!formData.value.expectativas) {
+    toast.error('Por favor, preencha suas expectativas para o curso');
+    return;
+  }
   isSubmitting.value = true;
   
   // Preparar os dados para envio

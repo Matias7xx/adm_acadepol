@@ -2,7 +2,11 @@
 import { Head, Link, useForm } from "@inertiajs/vue3"
 import {
   mdiAccountKey,
-  mdiArrowLeftBoldOutline
+  mdiArrowLeftBoldOutline,
+  mdiFileDocument,
+  mdiSchool,
+  mdiMapMarker,
+  mdiCalendarRange
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -15,12 +19,18 @@ import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
 
-/* const props = defineProps({
-  roles: {
-    type: Object,
-    default: () => ({}),
-  }
-}) */
+const modalidadeOptions = {
+  'presencial': 'presencial',
+  'online': 'online', 
+  'híbrido': 'híbrido'
+};
+
+const statusOptions = {
+  'aberto': 'aberto',
+  'em andamento': 'em andamento',
+  'concluído': 'concluído',
+  'cancelado': 'cancelado'
+};
 
 const form = useForm({
   nome: '',
@@ -29,15 +39,15 @@ const form = useForm({
   data_inicio: '',
   data_fim: '',
   carga_horaria: '',
-  pre_requisitos: '',
-  enxoval: '',
+  pre_requisitos: [],
+  enxoval: [],
   localizacao: '',
   capacidade_maxima: '',
   modalidade: 'presencial',
-  material_complementar: '',
+  /* material_complementar: [], */
   certificacao: false,
   certificacao_modelo: '',
-  status: 'Aberto',
+  status: 'aberto',
   imagem_file: null,
 })
 
@@ -47,6 +57,14 @@ const handleImageUpload = (event) => {
     form.imagem_file = file;
   }
 };
+
+// Função para adicionar itens a arrays (enxoval, pre_requisitos, etc)
+const handleArrayInput = (field, value) => {
+  if (!value) return;
+  
+  const items = value.split(',').map(item => item.trim()).filter(item => item);
+  form[field] = items;
+};
 </script>
 
 <template>
@@ -54,7 +72,7 @@ const handleImageUpload = (event) => {
     <Head title="Novo Curso" />
     <SectionMain>
       <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
+        :icon="mdiSchool"
         title="Cadastrar Curso"
         main
       >
@@ -71,234 +89,280 @@ const handleImageUpload = (event) => {
         form
         @submit.prevent="form.post(route('admin.cursos.store'))"
       >
-        <FormField
-          label="Nome"
-          :class="{ 'text-red-400': form.errors.nome }"
-        >
-          <FormControl
-            v-model="form.nome"
-            type="text"
-            placeholder="Informe o Nome do Curso"
-            :error="form.errors.nome"
+        <!-- Informações Básicas -->
+        <div class="p-4 rounded-lg mb-6">
+          <h3 class="font-semibold text-lg mb-4">Informações Básicas</h3>
+          
+          <FormField
+            label="Nome do Curso"
+            :class="{ 'text-red-400': form.errors.nome }"
           >
-            <div class="text-red-400 text-sm" v-if="form.errors.nome">
-              {{ form.errors.nome }}
-            </div>
-          </FormControl>
-        </FormField>
+            <FormControl
+              v-model="form.nome"
+              type="text"
+              placeholder="Informe o Nome do Curso"
+              :error="form.errors.nome"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.nome">
+                {{ form.errors.nome }}
+              </div>
+            </FormControl>
+          </FormField>
 
-        <FormField
-          label="Descrição"
-          :class="{ 'text-red-400': form.errors.descricao }"
-        >
-          <FormControl
-            v-model="form.descricao"
-            type="textarea"
-            placeholder="Descrição do curso"
-            :error="form.errors.descricao"
+          <FormField
+            label="Descrição"
+            :class="{ 'text-red-400': form.errors.descricao }"
           >
-            <div class="text-red-400 text-sm" v-if="form.errors.descricao">
-              {{ form.errors.descricao }}
-            </div>
-          </FormControl>
-        </FormField>
+            <FormControl
+              v-model="form.descricao"
+              type="textarea"
+              placeholder="Descrição detalhada do curso"
+              :error="form.errors.descricao"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.descricao">
+                {{ form.errors.descricao }}
+              </div>
+            </FormControl>
+          </FormField>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Data de Início"
+              :class="{ 'text-red-400': form.errors.data_inicio }"
+              :icon="mdiCalendarRange"
+            >
+              <FormControl
+                v-model="form.data_inicio"
+                type="date"
+                :error="form.errors.data_inicio"
+              >
+                <div class="text-red-400 text-sm" v-if="form.errors.data_inicio">
+                  {{ form.errors.data_inicio }}
+                </div>
+              </FormControl>
+            </FormField>
 
-        <FormField
-          label="Imagem (URL ou Upload)"
-          :class="{ 'text-red-400': form.errors.imagem }"
-        >
-          <FormControl
-            v-model="form.imagem"
-            type="text"
-            placeholder="URL da imagem"
-            :error="form.errors.imagem"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.imagem">
-              {{ form.errors.imagem }}
-            </div>
-          </FormControl>
-          <FormControl
-            v-model="form.imagem"
-            type="file"
-            placeholder="Insira uma imagem"
-            @change="handleImageUpload"
-            :error="form.errors.imagem"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.imagem">
-              {{ form.errors.imagem }}
-            </div>
-          </FormControl>
-        </FormField>
+            <FormField
+              label="Data de Término"
+              :class="{ 'text-red-400': form.errors.data_fim }"
+              :icon="mdiCalendarRange"
+            >
+              <FormControl
+                v-model="form.data_fim"
+                type="date"
+                :error="form.errors.data_fim"
+              >
+                <div class="text-red-400 text-sm" v-if="form.errors.data_fim">
+                  {{ form.errors.data_fim }}
+                </div>
+              </FormControl>
+            </FormField>
+          </div>
+        </div>
+        
+        <!-- Detalhes do Curso -->
+        <div class="p-4 rounded-lg mb-6">
+          <h3 class="font-semibold text-lg mb-4">Detalhes do Curso</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Carga Horária (horas)"
+              :class="{ 'text-red-400': form.errors.carga_horaria }"
+            >
+              <FormControl
+                v-model="form.carga_horaria"
+                type="number"
+                min="1"
+                placeholder="Ex: 40"
+                :error="form.errors.carga_horaria"
+              >
+                <div class="text-red-400 text-sm" v-if="form.errors.carga_horaria">
+                  {{ form.errors.carga_horaria }}
+                </div>
+              </FormControl>
+            </FormField>
 
-        <FormField
-          label="Data de Início"
-          :class="{ 'text-red-400': form.errors.data_inicio }"
-        >
-          <FormControl
-            v-model="form.data_inicio"
-            type="date"
-            placeholder="Informe a data de início do Curso"
-            :error="form.errors.data_inicio"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.data_inicio">
-              {{ form.errors.data_inicio }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Data de Término"
-          :class="{ 'text-red-400': form.errors.data_fim }"
-        >
-          <FormControl
-            v-model="form.data_fim"
-            type="date"
-            placeholder="Informe a data de término do Curso"
-            :error="form.errors.data_fim"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.data_fim">
-              {{ form.errors.data_fim }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Carga Horária"
-          :class="{ 'text-red-400': form.errors.carga_horaria }"
-        >
-          <FormControl
-            v-model="form.carga_horaria"
-            type="number"
-            placeholder="Informe a carga horária do Curso"
-            :error="form.errors.carga_horaria"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.carga_horaria">
-              {{ form.errors.carga_horaria }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Cursos Pré-Requisitos"
-          :class="{ 'text-red-400': form.errors.pre_requisitos }"
-        >
-          <FormControl
-            v-model="form.pre_requisitos"
-            type="text"
-            placeholder="Existe algum curso pré-requisito requerido?"
-            :error="form.errors.pre_requisitos"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.pre_requisitos">
-              {{ form.errors.pre_requisitos }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Enxoval"
-          :class="{ 'text-red-400': form.errors.enxoval }"
-        >
-          <FormControl
-            v-model="form.enxoval"
-            type="text"
-            placeholder="Itens necessários separados por vírgula"
-            :error="form.errors.enxoval"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.enxoval">
-              {{ form.errors.enxoval }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Localização do curso"
-          :class="{ 'text-red-400': form.errors.localizacao }"
-        >
-          <FormControl
-            v-model="form.localizacao"
-            type="text"
-            placeholder="Informe a localização onde o curso será relaizado."
-            :error="form.errors.localizacao"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.localizacao">
-              {{ form.errors.localizacao }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Capacidade Máxima de alunos"
-          :class="{ 'text-red-400': form.errors.capacidade_maxima }"
-        >
-          <FormControl
-            v-model="form.capacidade_maxima"
-            type="text"
-            placeholder="Informe a capacidade máxima de alunos que podem ser matriculados."
-            :error="form.errors.capacidade_maxima"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.capacidade_maxima">
-              {{ form.errors.capacidade_maxima }}
-            </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Modalidade do Curso"
-          :class="{ 'text-red-400': form.errors.modalidade }"
-        >
-          <FormControl
+            <FormField
+              label="Capacidade Máxima de Alunos"
+              :class="{ 'text-red-400': form.errors.capacidade_maxima }"
+            >
+              <FormControl
+                v-model="form.capacidade_maxima"
+                type="number"
+                min="1"
+                placeholder="Ex: 30"
+                :error="form.errors.capacidade_maxima"
+              >
+                <div class="text-red-400 text-sm" v-if="form.errors.capacidade_maxima">
+                  {{ form.errors.capacidade_maxima }}
+                </div>
+              </FormControl>
+            </FormField>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Modalidade do Curso"
+              :class="{ 'text-red-400': form.errors.modalidade }"
+            >
+            <FormControl
             v-model="form.modalidade"
             type="select"
-            :options="['presencial', 'online', 'híbrido']"
-            placeholder="Informe a modalidade do Curso"
+            :options="modalidadeOptions"
             :error="form.errors.modalidade"
-          >
-            <div class="text-red-400 text-sm" v-if="form.errors.modalidade">
-              {{ form.errors.modalidade }}
-            </div>
-          </FormControl>
-        </FormField>
+            >
+                <div class="text-red-400 text-sm" v-if="form.errors.modalidade">
+                  {{ form.errors.modalidade }}
+                </div>
+              </FormControl>
+            </FormField>
 
-        <FormField
-          label="Documentação Necessária"
-          :class="{ 'text-red-400': form.errors.nome }"
-        >
-          <FormControl
-            v-model="form.material_complementar"
-            type="text"
-            placeholder="Documentação necessária para matrícula."
-            :error="form.errors.material_complementar"
+            <FormField
+              label="Status do Curso"
+              :class="{ 'text-red-400': form.errors.status }"
+            >
+              <FormControl
+                v-model="form.status"
+                type="select"
+                :options="statusOptions"
+                :error="form.errors.status"
+              >
+                <div class="text-red-400 text-sm" v-if="form.errors.status">
+                  {{ form.errors.status }}
+                </div>
+              </FormControl>
+            </FormField>
+          </div>
+          
+          <FormField
+            label="Localização"
+            :class="{ 'text-red-400': form.errors.localizacao }"
+            :icon="mdiMapMarker"
           >
-            <div class="text-red-400 text-sm" v-if="form.errors.material_complementar">
-              {{ form.errors.material_complementar }}
+            <FormControl
+              v-model="form.localizacao"
+              type="text"
+              placeholder="Local onde o curso será realizado"
+              :error="form.errors.localizacao"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.localizacao">
+                {{ form.errors.localizacao }}
+              </div>
+            </FormControl>
+          </FormField>
+          
+          <FormField
+            label="Certificação"
+            :class="{ 'text-red-400': form.errors.certificacao }"
+          >
+            <div class="flex items-center space-x-2">
+              <FormControl
+                v-model="form.certificacao"
+                type="checkbox"
+                :error="form.errors.certificacao"
+              />
+              <span>O curso emite certificado?</span>
             </div>
-          </FormControl>
-        </FormField>
-
-        <FormField
-          label="Certificação"
-          :class="{ 'text-red-400': form.errors.certificacao }"
-        >
-          <FormControl
-            v-model="form.certificacao"
-            type="checkbox"
-            placeholder="O curso gera certificado?"
-            :error="form.errors.certificacao"
-          >
             <div class="text-red-400 text-sm" v-if="form.errors.certificacao">
               {{ form.errors.certificacao }}
             </div>
-          </FormControl>
-        </FormField>
+          </FormField>
+        </div>
+        
+        <!-- Recursos e Requisitos -->
+        <div class="p-4 rounded-lg mb-6">
+          <h3 class="font-semibold text-lg mb-4">Recursos e Requisitos</h3>
+          
+          <FormField
+            label="Pré-Requisitos"
+            :class="{ 'text-red-400': form.errors.pre_requisitos }"
+          >
+            <FormControl
+              :model-value="form.pre_requisitos.join(', ')"
+              @update:model-value="handleArrayInput('pre_requisitos', $event)"
+              type="text"
+              placeholder="Cursos ou conhecimentos necessários (separados por vírgula)"
+              :error="form.errors.pre_requisitos"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.pre_requisitos">
+                {{ form.errors.pre_requisitos }}
+              </div>
+            </FormControl>
+          </FormField>
+
+          <FormField
+            label="Enxoval"
+            :class="{ 'text-red-400': form.errors.enxoval }"
+          >
+            <FormControl
+              :model-value="form.enxoval.join(', ')"
+              @update:model-value="handleArrayInput('enxoval', $event)"
+              type="text"
+              placeholder="Itens necessários (separados por vírgula)"
+              :error="form.errors.enxoval"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.enxoval">
+                {{ form.errors.enxoval }}
+              </div>
+            </FormControl>
+          </FormField>
+
+         <!--  <FormField
+            label="Material Complementar"
+            :class="{ 'text-red-400': form.errors.material_complementar }"
+            :icon="mdiFileDocument"
+          >
+            <FormControl
+              :model-value="form.material_complementar.join(', ')"
+              @update:model-value="handleArrayInput('material_complementar', $event)"
+              type="text"
+              placeholder="Documentos ou materiais extras (separados por vírgula)"
+              :error="form.errors.material_complementar"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.material_complementar">
+                {{ form.errors.material_complementar }}
+              </div>
+            </FormControl>
+          </FormField> -->
+        </div>
+        
+        <!-- Imagem do Curso -->
+        <div class="p-4 rounded-lg mb-6">
+          <h3 class="font-semibold text-lg mb-4">Imagem do Curso</h3>
+          
+          <FormField
+            label="Upload de Imagem"
+          >
+            <FormControl
+              type="file"
+              accept="image/*"
+              @change="handleImageUpload"
+              :error="form.errors.imagem_file"
+            >
+              <div class="text-red-400 text-sm" v-if="form.errors.imagem_file">
+                {{ form.errors.imagem_file }}
+              </div>
+            </FormControl>
+            <p class="text-sm text-gray-500 mt-1">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</p>
+          </FormField>
+        </div>
 
         <BaseDivider />
 
         <template #footer>
           <BaseButtons>
             <BaseButton
+              type="button"
+              color="light"
+              label="Cancelar"
+              :route-name="route('admin.cursos.index')"
+              :class="{ 'opacity-75': form.processing }"
+              :disabled="form.processing"
+            />
+            <BaseButton
               type="submit"
               color="info"
-              label="Cadastrar"
+              label="Cadastrar Curso"
               :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing"
             />

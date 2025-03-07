@@ -79,18 +79,25 @@ class CursoController extends Controller
         'enxoval' => 'nullable|array',
         'localizacao' => 'required|string|max:255',
         'capacidade_maxima' => 'required|integer|min:1',
-        'modalidade' => 'required|in:presencial,online,híbrido',
+        'modalidade' => 'required|string|max:20',
         'material_complementar' => 'nullable|array',
         'certificacao' => 'boolean',
         'certificacao_modelo' => 'nullable|string',
-        'status' => 'required|in:Aberto,Em andamento,Concluído,Cancelado',
+        'status' => 'required|string|max:20',
     ]);
 
-    // Processa o upload da imagem se enviada
+   /*  // Processa o upload da imagem se enviada
     if ($request->hasFile('imagem_file')) {
         $path = $request->file('imagem_file')->store('cursos', 'public'); // Salva em storage/app/public/cursos
         $validated['imagem'] = Storage::url($path); // Armazena o URL do arquivo
     }
+ */
+    if ($request->hasFile('imagem_file')) {  //Salva em C:\Code\adm-acadepol\public\images
+        $file = $request->file('imagem_file');
+        $filename = time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('images/cursos'), $filename);
+        $validated['imagem'] = '/images/cursos/' . $filename;
+    } 
 
     // Converte arrays para JSON (caso precise armazenar em colunas do tipo JSON)
     $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);

@@ -19,11 +19,11 @@ return new class extends Migration {
             $table->json('enxoval')->nullable(); // Itens necessários para o curso
             $table->string('localizacao');
             $table->integer('capacidade_maxima')->default(0);
-            $table->enum('modalidade', ['presencial', 'online', 'híbrido']);
-            $table->json('material_complementar')->nullable();
+            $table->string('modalidade', 20)->default('presencial');
+            /* $table->json('material_complementar')->nullable(); */
             $table->boolean('certificacao')->default(false);
             $table->text('certificacao_modelo')->nullable();
-            $table->enum('status', ['aberto', 'em andamento', 'concluído', 'cancelado'])->default('aberto');
+            $table->string('status', 20)->default('aberto');
             $table->timestamps();
         });
     }

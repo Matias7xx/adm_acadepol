@@ -153,7 +153,7 @@ const shareOnSocial = async (network) => {
         } else {
           await navigator.clipboard.writeText(url);
           // Aqui seria melhor usar seu sistema de toast
-          alert('Link copiado para a área de transferência!');
+          toast.success('Link copiado para a área de transferência!');
         }
         break;
     }

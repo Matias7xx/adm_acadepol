@@ -38,21 +38,26 @@
   };
   
   const formatarTextoHtml = (texto) => {
-    if (!texto) return '';
-    
-    // Converter texto com quebras de linha em HTML
-    return texto
-      .replace(/\n/g, '<br>')
-      // Converter listas com hífens em listas HTML
-      .replace(/- (.*?)(?=<br|$)/g, '<li>$1</li>')
-      // Envolver conjuntos de itens de lista em tags <ul>
-      .replace(/<li>(.*?)(?=<li>|$)/gs, match => {
-        if (match.includes('<li>')) {
-          return '<ul>' + match + '</ul>';
-        }
-        return match;
-      });
-  };
+  if (!texto) return '';
+  
+  // Tentar parsear o JSON se for um array
+  let listaItens = Array.isArray(texto) ? texto : 
+    (typeof texto === 'string' ? JSON.parse(texto) : []);
+
+  // Se for array simples, criar lista HTML
+  if (listaItens.length > 0) {
+    return `
+      <ul class="list-disc list-inside space-y-2 text-gray-700">
+        ${listaItens.map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    `;
+  }
+
+  // Fallback para texto plano
+  return texto
+    .replace(/\n/g, '<br>')
+    .replace(/- (.*?)(?=<br|$)/g, '<li>$1</li>');
+};
   
   /* // Métodos
   const handleEnrollment = () => {
@@ -82,7 +87,7 @@
       :status="curso.status"
     />
   
-    <div class="container mx-auto px-4 sm:px-6 -mt-6">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
       <div class="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8">
         <!-- Conteúdo principal -->
         <div class="w-full lg:w-2/3 space-y-4 md:space-y-6">
@@ -142,7 +147,7 @@
         </div>
         
         <!-- Sidebar com informações adicionais -->
-        <div class="w-full lg:w-1/3 mt-4 lg:mt-0">
+        <div class="w-full lg:w-1/3 space-y-4 md:space-y-6">
           <div class="sticky top-4 space-y-4 md:space-y-6">
             <!-- Card de inscrição -->
             <EnrollmentCard 
@@ -156,8 +161,8 @@
             
             <!-- Compartilhar e ações -->
             <SocialShareCard 
-              courseUrl="https://acadepol.pb.gov.br/cursos/cursotal" 
-              courseTitle="Confira este curso incrível fornecido pela Acadepol!" 
+            :courseUrl="courseUrl"
+            :courseTitle="`Confira o curso ${curso.nome} na Acadepol!`" 
             />
           </div>
         </div>

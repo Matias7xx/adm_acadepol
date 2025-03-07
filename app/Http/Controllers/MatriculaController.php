@@ -134,7 +134,7 @@ class MatriculaController extends Controller
                 ->with('message', 'O curso atingiu a capacidade máxima.');
         }
     
-        // Verifica pré-requisitos
+        /* // Verifica pré-requisitos
         $preRequisitos = is_string($curso->pre_requisitos) 
             ? json_decode($curso->pre_requisitos, true) ?? [] 
             : ($curso->pre_requisitos ?? []);
@@ -149,7 +149,7 @@ class MatriculaController extends Controller
                 return redirect()->route('cursos')
                     ->with('message', 'Você não atende aos pré-requisitos para este curso.');
             }
-        }
+        } */
     
         // Criar a matrícula
         $matricula = Matricula::create([
