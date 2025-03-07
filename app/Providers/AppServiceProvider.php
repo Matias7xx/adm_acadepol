@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
 
      protected $policies = [
         'App\Models\Matricula' => 'App\Policies\MatriculaPolicy',
+        'App\Models\Curso' => 'App\Policies\CursoPolicy',
     ];
 
     public function register()

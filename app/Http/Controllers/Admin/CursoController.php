@@ -49,14 +49,14 @@ class CursoController extends Controller
     }
 
     public function cursosPublicos() //Exibe os cursos na aba "Cursos" do layout principal
-{
+    {
     $cursos = Curso::where('status', 'aberto')->paginate(3);
 
 
     return Inertia::render('Cursos', [
         'cursos' => $cursos,
     ]);
-}
+    }
 
     public function create()
     {
@@ -66,7 +66,7 @@ class CursoController extends Controller
     }
 
     public function store(Request $request)
-{
+    {
     $validated = $request->validate([
         'nome' => 'required|string|max:255',
         'descricao' => 'nullable|string',
@@ -80,7 +80,7 @@ class CursoController extends Controller
         'localizacao' => 'required|string|max:255',
         'capacidade_maxima' => 'required|integer|min:1',
         'modalidade' => 'required|string|max:20',
-        'material_complementar' => 'nullable|array',
+        /* 'material_complementar' => 'nullable|array', */
         'certificacao' => 'boolean',
         'certificacao_modelo' => 'nullable|string',
         'status' => 'required|string|max:20',
@@ -102,12 +102,12 @@ class CursoController extends Controller
     // Converte arrays para JSON (caso precise armazenar em colunas do tipo JSON)
     $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
     $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
-    $validated['material_complementar'] = json_encode($validated['material_complementar'] ?? []);
+    /* $validated['material_complementar'] = json_encode($validated['material_complementar'] ?? []); */
 
     Curso::create($validated);
 
-    return redirect()->route('admin.cursos.index')->with('success', 'Curso cadastrado com sucesso!');
-}
+    return redirect()->route('admin.cursos.index')->with('message', 'Curso cadastrado com sucesso!');
+    }
 
     public function show(Curso $curso)
     {
@@ -126,7 +126,7 @@ class CursoController extends Controller
     }
 
     public function exibirAlunos($id)//ID DO CURSO. Exibir quantidade e dados dos alunos inscritos
-{
+    {
     $curso = Curso::with('alunos')->findOrFail($id);
 
     return response()->json([
@@ -134,44 +134,95 @@ class CursoController extends Controller
         'quantidade_inscritos' => $curso->alunos->count(),
         'inscritos' => $curso->alunos
     ]);
-}
+    }
 
     public function edit(Curso $curso)
     {
-        return Inertia::render('Cursos/Edit', ['curso' => $curso]);
+    $this->authorize('adminUpdate', $curso);
+
+    return Inertia::render('Admin/Cursos/Edit', [
+        'curso' => $curso,
+    ]);
     }
 
+    /**
+ * Update the specified resource in storage.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  \App\Models\Curso  $curso
+ * @return \Illuminate\Http\RedirectResponse
+ */
     public function update(Request $request, Curso $curso)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'imagem' => 'nullable|string',
-            'data_inicio' => 'required|date',
-            'data_fim' => 'required|date|after_or_equal:data_inicio',
-            'carga_horaria' => 'required|integer|min:1',
-            'pre_requisitos' => 'nullable|array',
-            'enxoval' => 'nullable|array',
-            'localizacao' => 'required|string|max:255',
-            'capacidade_maxima' => 'required|integer|min:1',
-            'modalidade' => 'required|in:presencial,online,híbrido',
-            'material_complementar' => 'nullable|array',
-            'certificacao' => 'boolean',
-            'certificacao_modelo' => 'nullable|string',
-            'status' => 'required|in:aberto,em andamento,concluído,cancelado',
-        ]);
 
-        $curso->update($validated);
+        \Log::info('Request recebida:', $request->all());
+    $this->authorize('adminUpdate', $curso);
 
-        return redirect()->route('cursos.index');
+    // Valide os dados do formulário
+    $validated = $request->validate([
+        'nome' => 'required|string|max:255',
+        'descricao' => 'nullable|string',
+        'imagem' => 'nullable|string',
+        'imagem_file' => 'nullable|image|max:2048',
+        'data_inicio' => 'required|date',
+        'data_fim' => 'required|date|after_or_equal:data_inicio',
+        'carga_horaria' => 'required|integer|min:1',
+        'pre_requisitos' => 'nullable|array',
+        'enxoval' => 'nullable|array',
+        'localizacao' => 'required|string|max:255',
+        'capacidade_maxima' => 'required|integer|min:1',
+        'modalidade' => 'required|string',
+        'certificacao' => 'boolean',
+        'certificacao_modelo' => 'nullable|string',
+        'status' => 'required|string',
+    ]);
+
+    // Processar upload de imagem, se fornecido
+    if ($request->hasFile('imagem_file')) {
+        // Remover imagem antiga se existir
+        if ($curso->imagem && file_exists(public_path($curso->imagem))) {
+            unlink(public_path($curso->imagem));
+        }
+        
+        $file = $request->file('imagem_file');
+        $filename = time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('images/cursos'), $filename);
+        $validated['imagem'] = '/images/cursos/' . $filename;
+    }
+
+    // Converter arrays para JSON antes de salvar
+    $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
+    $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
+
+    // Atualizar o curso
+    $curso->update($validated);
+
+    return redirect()->route('admin.cursos.index')
+        ->with('message', 'Curso atualizado com sucesso!');
     }
 
     public function destroy(Curso $curso)
     {
-        $curso->delete();
-        return redirect()->route('cursos.index');
-    }
+    $this->authorize('adminDelete', $curso);
 
+    // Verificar se há matrículas associadas antes de excluir. Se tiver algum usuário com matrícula APROVADA ou PENDENTE ele não remove.
+    $matriculasAtivas = $curso->alunos()->whereIn('status', ['aprovada', 'pendente'])->count();
+    
+    if ($matriculasAtivas > 0) {
+        return redirect()->route('admin.cursos.index')
+            ->with('message', 'Não é possível excluir um curso com matrículas ativas.');
+    }
+    
+    // Remover a imagem do curso, se existir
+    if ($curso->imagem && file_exists(public_path($curso->imagem))) {
+        unlink(public_path($curso->imagem));
+    }
+    
+    $curso->delete();
+    
+    return redirect()->route('admin.cursos.index')
+        ->with('message', 'Curso excluído com sucesso!');
+    }
     /* public function matricularAluno(Request $request, Curso $curso) {
         //$aluno = \Auth::user(); // Obtém o usuário logado
         $aluno = auth()->user();

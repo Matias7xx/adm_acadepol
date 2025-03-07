@@ -6,7 +6,7 @@ use App\Models\Matricula;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class MatriculaPolicy
+class MatriculaPolicy //controle de acesso baseado em papéis e permissões. Verifica permissões antes de permitir edição ou exclusão
 {
     use HandlesAuthorization;
 

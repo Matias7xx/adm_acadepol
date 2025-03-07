@@ -18,6 +18,7 @@ import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
+import { ref } from 'vue'
 
 const modalidadeOptions = {
   'presencial': 'presencial',
@@ -51,6 +52,33 @@ const form = useForm({
   imagem_file: null,
 })
 
+// Para gerenciar campos de array
+const novoPreRequisito = ref('');
+const novoItemEnxoval = ref('');
+
+// Funções para adicionar e remover itens dos arrays
+const adicionarPreRequisito = () => {
+  if (novoPreRequisito.value.trim()) {
+    form.pre_requisitos.push(novoPreRequisito.value.trim());
+    novoPreRequisito.value = '';
+  }
+};
+
+const removerPreRequisito = (index) => {
+  form.pre_requisitos.splice(index, 1);
+};
+
+const adicionarItemEnxoval = () => {
+  if (novoItemEnxoval.value.trim()) {
+    form.enxoval.push(novoItemEnxoval.value.trim());
+    novoItemEnxoval.value = '';
+  }
+};
+
+const removerItemEnxoval = (index) => {
+  form.enxoval.splice(index, 1);
+};
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -58,12 +86,11 @@ const handleImageUpload = (event) => {
   }
 };
 
-// Função para adicionar itens a arrays (enxoval, pre_requisitos, etc)
-const handleArrayInput = (field, value) => {
-  if (!value) return;
-  
-  const items = value.split(',').map(item => item.trim()).filter(item => item);
-  form[field] = items;
+const submit = () => {
+  form.post(route('admin.cursos.store'), {
+    preserveScroll: true,
+    forceFormData: true,
+  });
 };
 </script>
 
@@ -87,7 +114,6 @@ const handleArrayInput = (field, value) => {
       </SectionTitleLineWithButton>
       <CardBox
         form
-        @submit.prevent="form.post(route('admin.cursos.store'))"
       >
         <!-- Informações Básicas -->
         <div class="p-4 rounded-lg mb-6">
@@ -273,57 +299,81 @@ const handleArrayInput = (field, value) => {
         <div class="p-4 rounded-lg mb-6">
           <h3 class="font-semibold text-lg mb-4">Recursos e Requisitos</h3>
           
-          <FormField
-            label="Pré-Requisitos"
-            :class="{ 'text-red-400': form.errors.pre_requisitos }"
-          >
-            <FormControl
-              :model-value="form.pre_requisitos.join(', ')"
-              @update:model-value="handleArrayInput('pre_requisitos', $event)"
-              type="text"
-              placeholder="Cursos ou conhecimentos necessários (separados por vírgula)"
-              :error="form.errors.pre_requisitos"
+          <!-- Pré-requisitos (lista) -->
+          <div class="mb-6">
+            <FormField
+              label="Pré-requisitos"
             >
+              <div class="flex mb-2">
+                <FormControl
+                  v-model="novoPreRequisito"
+                  placeholder="Adicionar pré-requisito"
+                  class="flex-grow mr-2"
+                  :error="form.errors.pre_requisitos"
+                />
+                <BaseButton
+                  type="button"
+                  color="info"
+                  label="Adicionar"
+                  @click="adicionarPreRequisito"
+                />
+              </div>
+              <div v-if="form.pre_requisitos && form.pre_requisitos.length > 0" class="mt-2">
+                <ul class="list-disc pl-5">
+                  <li v-for="(item, index) in form.pre_requisitos" :key="index" class="mb-1 flex items-center">
+                    <span class="flex-grow">{{ item }}</span>
+                    <button type="button" @click="removerPreRequisito(index)" class="text-red-500 hover:text-red-700">
+                      <span>Remover</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div v-else class="text-gray-500 mt-2">
+                Nenhum pré-requisito adicionado.
+              </div>
               <div class="text-red-400 text-sm" v-if="form.errors.pre_requisitos">
                 {{ form.errors.pre_requisitos }}
               </div>
-            </FormControl>
-          </FormField>
+            </FormField>
+          </div>
 
-          <FormField
-            label="Enxoval"
-            :class="{ 'text-red-400': form.errors.enxoval }"
-          >
-            <FormControl
-              :model-value="form.enxoval.join(', ')"
-              @update:model-value="handleArrayInput('enxoval', $event)"
-              type="text"
-              placeholder="Itens necessários (separados por vírgula)"
-              :error="form.errors.enxoval"
+          <!-- Enxoval (lista) -->
+          <div class="mb-6">
+            <FormField
+              label="Enxoval (itens necessários)"
             >
+              <div class="flex mb-2">
+                <FormControl
+                  v-model="novoItemEnxoval"
+                  placeholder="Adicionar item ao enxoval"
+                  class="flex-grow mr-2"
+                  :error="form.errors.enxoval"
+                />
+                <BaseButton
+                  type="button"
+                  color="info"
+                  label="Adicionar"
+                  @click="adicionarItemEnxoval"
+                />
+              </div>
+              <div v-if="form.enxoval && form.enxoval.length > 0" class="mt-2">
+                <ul class="list-disc pl-5">
+                  <li v-for="(item, index) in form.enxoval" :key="index" class="mb-1 flex items-center">
+                    <span class="flex-grow">{{ item }}</span>
+                    <button type="button" @click="removerItemEnxoval(index)" class="text-red-500 hover:text-red-700">
+                      <span>Remover</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div v-else class="text-gray-500 mt-2">
+                Nenhum item de enxoval adicionado.
+              </div>
               <div class="text-red-400 text-sm" v-if="form.errors.enxoval">
                 {{ form.errors.enxoval }}
               </div>
-            </FormControl>
-          </FormField>
-
-         <!--  <FormField
-            label="Material Complementar"
-            :class="{ 'text-red-400': form.errors.material_complementar }"
-            :icon="mdiFileDocument"
-          >
-            <FormControl
-              :model-value="form.material_complementar.join(', ')"
-              @update:model-value="handleArrayInput('material_complementar', $event)"
-              type="text"
-              placeholder="Documentos ou materiais extras (separados por vírgula)"
-              :error="form.errors.material_complementar"
-            >
-              <div class="text-red-400 text-sm" v-if="form.errors.material_complementar">
-                {{ form.errors.material_complementar }}
-              </div>
-            </FormControl>
-          </FormField> -->
+            </FormField>
+          </div>
         </div>
         
         <!-- Imagem do Curso -->
@@ -360,11 +410,12 @@ const handleArrayInput = (field, value) => {
               :disabled="form.processing"
             />
             <BaseButton
-              type="submit"
+              type="button"
               color="info"
               label="Cadastrar Curso"
               :class="{ 'opacity-25': form.processing }"
               :disabled="form.processing"
+              @click="submit"
             />
           </BaseButtons>
         </template>
