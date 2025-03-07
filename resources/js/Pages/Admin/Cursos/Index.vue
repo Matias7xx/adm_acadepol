@@ -1,11 +1,12 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3"
 import {
-  mdiAccountKey,
+  mdiBookshelf,
   mdiPlus,
   mdiSquareEditOutline,
   mdiTrashCan,
   mdiAlertBoxOutline,
+  mdiAccountGroup,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -50,7 +51,7 @@ function destroy(id) {
     <Head title="Cursos" />
     <SectionMain>
       <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
+        :icon="mdiBookshelf"
         title="Cursos"
         main
       >
@@ -145,6 +146,13 @@ function destroy(id) {
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
+                  <BaseButton
+                    :route-name="route('admin.matriculas.index')"
+                    :icon="mdiAccountGroup"
+                    :id="curso.id"
+                    color="white"
+                    small
+                  />
                   <BaseButton
                     v-if="can.edit"
                     :route-name="route('admin.cursos.edit', curso.id)"

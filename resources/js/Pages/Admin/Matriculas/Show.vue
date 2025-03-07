@@ -232,7 +232,7 @@ const closeConfirmModal = () => {
       </CardBox>
 
       <!-- Ações rápidas para aprovação/rejeição (botões legados) -->
-      <div v-if="matricula.status === 'pendente'" class="flex justify-end space-x-3 mb-6">
+      <!-- <div v-if="matricula.status === 'pendente'" class="flex justify-end space-x-3 mb-6">
         <BaseButton
           @click="aprovarMatricula"
           label="APROVAR"
@@ -245,7 +245,7 @@ const closeConfirmModal = () => {
           color="danger"
           small
         />
-      </div>
+      </div> -->
 
       <!-- Informações do Aluno -->
       <CardBox class="mb-6">

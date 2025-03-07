@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3"
 import {
-  mdiAccountKey,
+  mdiInformationOutline,
   mdiArrowLeftBoldOutline,
   mdiArrowRightBoldOutline
 } from "@mdi/js"
@@ -24,7 +24,7 @@ const props = defineProps({
     <Head title="Detalhes Curso" />
     <SectionMain>
       <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
+        :icon="mdiInformationOutline"
         title="Detalhes do Curso"
         main
       >

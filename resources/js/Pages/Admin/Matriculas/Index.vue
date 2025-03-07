@@ -7,13 +7,13 @@ import BaseButton from "@/Components/BaseButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import {
   mdiArrowLeftBoldOutline,
-  mdiArrowRightBoldOutline,
-  mdiAccountKey,
+  mdiBookPlusMultiple,
   mdiMagnify,
   mdiEye,
   mdiCheckCircle,
   mdiCloseCircle,
-  mdiSwapHorizontal
+  mdiSwapHorizontal,
+  mdiBook
 } from "@mdi/js"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
@@ -154,7 +154,7 @@ const handleConfirm = () => {
     <Head title="Matrículas" />
     <SectionMain>
       <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
+        :icon="mdiBookPlusMultiple"
         title="Matrículas"
         main
       >
