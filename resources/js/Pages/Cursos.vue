@@ -1,10 +1,10 @@
 <template>
   <Head title="Cursos" />
-  <div class="min-h-screen flex flex-col">
+  <div class="min-h-screen flex flex-col bg-gray-100">
     <Header />
     <SiteNavbar />
     
-    <main class="flex-grow bg-gray-100">
+    <main class="flex-grow">
       <div class="container mx-auto px-4 py-8">
         <div class="flex items-center mb-8 border-l-4 border-[#bea55a] pl-4">
           <h1 class="text-4xl font-sans text-[#bea55a] uppercase tracking-wider">CURSOS</h1>
@@ -15,11 +15,11 @@
             v-for="curso in cursos.data" 
             :key="curso.id"
             class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col relative"
-            :class="{'ring-2 ring-[#bea55a] ring-offset-2': curso.inscricoesAbertas}"
+            :class="{'ring-1 ring-[#bea55a] ring-offset-2': curso.status === 'aberto'}"
           >
             <!-- Faixa "Inscrições Abertas" -->
             <div 
-              v-if="curso.status == 'aberto'" 
+              v-if="curso.status === 'aberto'" 
               class="absolute top-5 -right-10 bg-[#bea55a] text-white py-1 px-10 transform rotate-45 z-10 shadow-md"
             >
               <span class="text-xs font-bold uppercase tracking-wider">Inscrições Abertas</span>
@@ -65,7 +65,46 @@
           </div>
         </div>
         
-        <div v-else class="bg-white p-8 rounded-lg shadow-md text-center">
+        <!-- Paginação -->
+        <div v-if="cursos.links && cursos.links.length > 3" class="mt-8">
+          <div class="flex justify-center space-x-1">
+            <template v-for="(link, index) in cursos.links" :key="index">
+              <!-- Link anterior -->
+              <Link 
+                v-if="link.url && index === 0" 
+                :href="link.url" 
+                class="px-4 py-2 bg-white rounded-md text-gray-700 hover:bg-[#bea55a] hover:text-white border border-gray-300 transition-colors"
+                :class="{'opacity-50 cursor-not-allowed': !link.url}"
+              >
+                &laquo;
+              </Link>
+              
+              <!-- Links numéricos (pular o primeiro e o último) -->
+              <Link 
+                v-else-if="index !== 0 && index !== cursos.links.length - 1" 
+                :href="link.url" 
+                class="px-4 py-2 rounded-md transition-colors border"
+                :class="link.active ? 
+                  'bg-[#bea55a] text-white border-[#bea55a]' : 
+                  'bg-white text-gray-700 hover:bg-[#bea55a] hover:text-white border-gray-300'"
+              >
+                {{ link.label }}
+              </Link>
+              
+              <!-- Link seguinte -->
+              <Link 
+                v-if="link.url && index === cursos.links.length - 1" 
+                :href="link.url" 
+                class="px-4 py-2 bg-white rounded-md text-gray-700 hover:bg-[#bea55a] hover:text-white border border-gray-300 transition-colors"
+                :class="{'opacity-50 cursor-not-allowed': !link.url}"
+              >
+                &raquo;
+              </Link>
+            </template>
+          </div>
+        </div>
+        
+        <div v-else-if="!hasCursos" class="bg-white p-8 rounded-lg shadow-md text-center">
           <div class="bg-gray-100 p-6 rounded-full inline-block mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#bea55a]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -94,22 +133,24 @@ const props = defineProps({
   cursos: {
     type: Object,
     required: true,
-    default: () => ({ data: [] })
+    default: () => ({ 
+      data: [],
+      links: [],
+      meta: {}
+    })
   }
 });
 
+// Verificar se há cursos disponíveis
 const hasCursos = computed(() => props.cursos.data && props.cursos.data.length > 0);
-
-// Calcula a porcentagem de vagas disponíveis
-const getVagasPercentage = (curso) => {
-  if (!curso.capacidade_maxima || curso.capacidade_maxima === 0) return 0;
-  return Math.round((curso.vagasDisponiveis / curso.capacidade_maxima) * 100);
-};
 
 // Tratamento de erro de imagem
 const handleImageError = (event) => {
   event.target.src = '/images/default-curso.jpg';
 };
+
+// Para debugging da paginação
+console.log('Links de paginação:', props.cursos.links);
 </script>
 
 <style scoped>
