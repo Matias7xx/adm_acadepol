@@ -2,6 +2,7 @@
 import iconAgenda from '@/src/assets/icon-agenda.png'
 import iconOnline from '@/src/assets/icon-online.png'
 import iconAlojamento from '@/src/assets/icon-alojamento.png'
+import { Link } from '@inertiajs/vue3'
 </script>
 
 <template>
@@ -64,7 +65,7 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png'
       </div>
       <div class="flex flex-col text-center sm:text-left">
         <a 
-          href="#" 
+          href="/alojamento/pre-reserva" 
           class="text-lg sm:text-xl font-sans text-black-700 hover:text-gray-900 transition-colors"
         >
           RESERVA DE ALOJAMENTO

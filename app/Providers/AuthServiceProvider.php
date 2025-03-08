@@ -23,6 +23,9 @@ class AuthServiceProvider extends ServiceProvider
         'Plank\Mediable\Media' => 'BalajiDharma\LaravelAdminCore\Policies\MediaPolicy',
         'App\Models\Matricula' => 'App\Policies\MatriculaPolicy',
         'App\Models\Curso' => 'App\Policies\CursoPolicy',
+        'App\Models\Director' => 'App\Policies\DirectorPolicy',
+        'App\Models\Alojamento' => 'App\Policies\AlojamentoPolicy',
+
     ];
 
     /**

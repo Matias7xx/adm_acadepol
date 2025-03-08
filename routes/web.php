@@ -29,6 +29,10 @@ Route::get('/diretores', function () {
     return Inertia::render('Diretores');
 })->name('diretores');
 
+// API para retornar dados dos diretores para o componente CardDiretores
+Route::get('/api/directors', [App\Http\Controllers\Admin\DirectorController::class, 'listarDiretores'])->name('api.directors');
+
+
 Route::get('/estrutura', function () {
     return Inertia::render('Estrutura');
 })->name('estrutura');
@@ -54,6 +58,25 @@ Route::get('/cursos/{curso}/matricula', [MatriculaController::class, 'inscricao'
 Route::post('/matricula', [MatriculaController::class, 'store'])
     ->middleware('auth')
     ->name('matricula.store');
+
+    // Rotas públicas para pré-reserva de alojamento (requer login)
+Route::middleware(['auth'])->group(function () {
+    // Formulário de pré-reserva
+    Route::get('/alojamento/pre-reserva', [App\Http\Controllers\AlojamentoController::class, 'reservaForm'])
+        ->name('alojamento.reserva.form');
+    
+    // Processar solicitação de pré-reserva
+    Route::post('/alojamento/pre-reserva', [App\Http\Controllers\AlojamentoController::class, 'store'])
+        ->name('alojamento.reserva.store');
+    
+    // Listar minhas reservas
+    Route::get('/alojamento/minhas-reservas', [App\Http\Controllers\AlojamentoController::class, 'minhasReservas'])
+        ->name('alojamento.minhas-reservas');
+
+    // Rota para a página de confirmação de reserva
+    Route::get('/alojamento/confirmacao', [App\Http\Controllers\AlojamentoController::class, 'confirmacao'])
+        ->name('alojamento.confirmacao');
+});
 
 
 //Profile
