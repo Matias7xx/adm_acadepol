@@ -29,6 +29,10 @@ Route::get('/diretores', function () {
     return Inertia::render('Diretores');
 })->name('diretores');
 
+// API para retornar dados dos diretores para o componente CardDiretores
+Route::get('/api/directors', [App\Http\Controllers\Admin\DirectorController::class, 'listarDiretores'])->name('api.directors');
+
+
 Route::get('/estrutura', function () {
     return Inertia::render('Estrutura');
 })->name('estrutura');
