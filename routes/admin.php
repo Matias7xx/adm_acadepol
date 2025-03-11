@@ -68,6 +68,5 @@ Route::group([
             ->name('admin.alojamento.aprovar');
         Route::patch('/alojamento/{alojamento}/rejeitar', [App\Http\Controllers\AlojamentoController::class, 'rejeitar'])
             ->name('admin.alojamento.rejeitar');
-    });
-    
+    });    
 });
