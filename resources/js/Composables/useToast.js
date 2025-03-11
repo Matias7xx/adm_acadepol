@@ -31,7 +31,13 @@ export function useToast() {
   
   return {
     toasts,
-    toast,
+    toast: {
+      // Adicione métodos como success, error, etc.
+      success: (message, duration) => toast(message, 'success', duration),
+      error: (message, duration) => toast(message, 'error', duration),
+      warning: (message, duration) => toast(message, 'warning', duration),
+      info: (message, duration) => toast(message, 'info', duration)
+    },
     removeToast
   };
 }

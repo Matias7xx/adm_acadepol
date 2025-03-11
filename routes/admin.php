@@ -41,6 +41,8 @@ Route::group([
 
     Route::resource('cursos', 'CursoController');
 
+    Route::resource('directors', 'DirectorController');
+
     //Aqui é onde o ADMIN analisa as matrículas
     Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
         Route::get('/matriculas', [MatriculaController::class, 'index'])->name('matriculas.index');
@@ -50,7 +52,25 @@ Route::group([
         Route::patch('/admin/matriculas/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])
         ->name('matriculas.alterar-status');
     });
+<<<<<<< HEAD
 
-    /* Route::patch('/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
-    Route::patch('/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar'); */
+    // Rotas para gerenciamento administrativo de alojamentos
+    Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
+        // Recursos padrão
+        Route::resource('alojamento', App\Http\Controllers\AlojamentoController::class)
+        ->names([
+            'index' => 'alojamento.index',
+            'show' => 'alojamento.show',
+        ])
+        ->only(['index', 'show']);
+        
+        // Ações personalizadas
+        Route::patch('/alojamento/{alojamento}/aprovar', [App\Http\Controllers\AlojamentoController::class, 'aprovar'])
+            ->name('admin.alojamento.aprovar');
+        Route::patch('/alojamento/{alojamento}/rejeitar', [App\Http\Controllers\AlojamentoController::class, 'rejeitar'])
+            ->name('admin.alojamento.rejeitar');
+    });
+=======
+>>>>>>> d1d4dd09ea0e35624c7bc0abb966898115cbbe31
+    
 });
