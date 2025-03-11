@@ -52,6 +52,7 @@ Route::group([
         Route::patch('/admin/matriculas/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])
         ->name('matriculas.alterar-status');
     });
+<<<<<<< HEAD
 
     // Rotas para gerenciamento administrativo de alojamentos
     Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
@@ -69,5 +70,7 @@ Route::group([
         Route::patch('/alojamento/{alojamento}/rejeitar', [App\Http\Controllers\AlojamentoController::class, 'rejeitar'])
             ->name('admin.alojamento.rejeitar');
     });
+=======
+>>>>>>> d1d4dd09ea0e35624c7bc0abb966898115cbbe31
     
 });
