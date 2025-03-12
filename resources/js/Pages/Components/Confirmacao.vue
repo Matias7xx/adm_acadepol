@@ -8,12 +8,29 @@ import Footer from '@/Pages/Components/Footer.vue';
 const props = defineProps({
   user: Object,
   mensagem: String,
-  detalhes: Object
+  detalhes: Object,
+  tipo: {
+    type: String,
+    default: 'alojamento'
+  }
 });
+
+// Computar título e subtítulo com base no tipo
+const titulo = props.tipo === 'matricula' 
+  ? 'Confirmação de Inscrição em Curso' 
+  : 'Confirmação de Pré-Reserva de Alojamento';
+
+const voltarRota = props.tipo === 'matricula' 
+  ? route('cursos') 
+  : route('home');
+
+const voltarTexto = props.tipo === 'matricula'
+  ? 'Voltar aos Cursos'
+  : 'Voltar ao Início';
 </script>
 
 <template>
-  <Head title="Confirmação de Pré-Reserva"/>
+  <Head :title="titulo"/>
   <div class="min-h-screen bg-gray-100">
     <Header />
     <SiteNavbar />
@@ -21,9 +38,9 @@ const props = defineProps({
     <!-- Cabeçalho -->
     <div class="bg-gray-100 text-[#bea55a] py-4">
       <div class="container mx-auto flex justify-between items-center px-4">
-        <h1 class="text-xl font-bold">Confirmação de Pré-Reserva de Alojamento</h1>
-        <Link :href="route('home')" class="text[#bea55a] hover:text-amber-300 transition">
-          Voltar ao Início
+        <h1 class="text-xl font-bold">{{ titulo }}</h1>
+        <Link :href="voltarRota" class="text-[#bea55a] hover:text-amber-300 transition">
+          {{ voltarTexto }}
         </Link>
       </div>
     </div>
@@ -48,28 +65,37 @@ const props = defineProps({
           
           <div class="space-y-2">
             <p><span class="font-medium">Nome:</span> {{ detalhes.nome }}</p>
-            <p><span class="font-medium">Período:</span> {{ detalhes.data_inicial }} a {{ detalhes.data_final }}</p>
+            
+            <template v-if="tipo === 'matricula'">
+              <p><span class="font-medium">Curso:</span> {{ detalhes.curso }}</p>
+            </template>
+            
+            <p>
+              <span class="font-medium">{{ tipo === 'matricula' ? 'Período do Curso:' : 'Período:' }}</span> 
+              {{ detalhes.data_inicial || detalhes.data_inicio }} a {{ detalhes.data_final || detalhes.data_fim }}
+            </p>
+            
             <p><span class="font-medium">Data da Solicitação:</span> {{ detalhes.created_at }}</p>
-            <p><span class="font-medium">Situação:</span> <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">Aguardando Análise</span></p>
+            <p>
+              <span class="font-medium">Situação:</span> 
+              <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">Aguardando Análise</span>
+            </p>
           </div>
         </div>
         
         <div class="text-center mt-4 space-y-4">
-          <p class="text-gray-600">Você receberá um e-mail com a confirmação ou rejeição da sua solicitação.</p>
+          <p class="text-gray-600">
+            {{ tipo === 'matricula' 
+              ? 'Você receberá uma notificação por e-mail quando sua inscrição for analisada.' 
+              : 'Você receberá um e-mail com a confirmação ou rejeição da sua solicitação.' }}
+          </p>
           
           <div class="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-            <!-- <Link
-              :href="route('alojamento.minhas-reservas')"
-              class="bg-amber-500 hover:bg-amber-600 text-white py-2 px-6 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-amber-300"
-            >
-              Ver Minhas Reservas
-            </Link> -->
-            
             <Link
-              :href="route('home')"
+              :href="voltarRota"
               class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-6 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
-              Voltar ao Início
+              {{ voltarTexto }}
             </Link>
           </div>
         </div>
