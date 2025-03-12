@@ -1,72 +1,108 @@
 <?php
 
-use App\Http\Middleware\HasAccessAdmin;
-use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CategoryTypeController;
+use App\Http\Controllers\Admin\CursoController;
+use App\Http\Controllers\Admin\DirectorController;
+use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AlojamentoController;
 use App\Http\Controllers\MatriculaController;
+use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
+use App\Http\Middleware\HasAccessAdmin;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
+/*
+|--------------------------------------------------------------------------
+| Rotas Administrativas
+|--------------------------------------------------------------------------
+*/
 
 Route::group([
-    'namespace' => 'App\Http\Controllers\Admin',
     'prefix' => config('admin.prefix'),
     'middleware' => ['auth', HasAccessAdmin::class, HandleInertiaAdminRequests::class],
     'as' => 'admin.',
 ], function () {
+    // Dashboard
     Route::get('/', function () {
         return Inertia::render('Admin/Dashboard');
-    })->name('dashboard');    
-    Route::resource('user', 'UserController');
-    Route::resource('role', 'RoleController');
-    Route::resource('permission', 'PermissionController');
-    Route::resource('menu', 'MenuController')->except([
-        'show',
-    ]);
-    Route::resource('menu.item', 'MenuItemController')->except([
-        'show',
-    ]);
-    Route::group([
-        'prefix' => 'category',
-        'as' => 'category.',
-    ], function () {
-        Route::resource('type', 'CategoryTypeController')->except([
-            'show',
-        ]);
+    })->name('dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Usuários, Funções e Permissões
+    |--------------------------------------------------------------------------
+    */
+    
+    // Usuários
+    Route::resource('user', UserController::class);
+    Route::controller(UserController::class)->group(function () {
+        Route::get('edit-account-info', 'accountInfo')->name('account.info');
+        Route::post('edit-account-info', 'accountInfoStore')->name('account.info.store');
+        Route::post('change-password', 'changePasswordStore')->name('account.password.store');
+    });
+    
+    // Funções e Permissões
+    Route::resource('role', RoleController::class);
+    Route::resource('permission', PermissionController::class);
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Configurações do Sistema
+    |--------------------------------------------------------------------------
+    */
+    
+    // Menus
+    Route::resource('menu', MenuController::class)->except(['show']);
+    Route::resource('menu.item', MenuItemController::class)->except(['show']);
+    
+    // Categorias
+    Route::prefix('category')->name('category.')->group(function () {
+        Route::resource('type', CategoryTypeController::class)->except(['show']);
         Route::resource('type.item', 'CategoryController');
     });
-    Route::resource('media', 'MediaController');
-    Route::get('edit-account-info', 'UserController@accountInfo')->name('account.info');
-    Route::post('edit-account-info', 'UserController@accountInfoStore')->name('account.info.store');
-    Route::post('change-password', 'UserController@changePasswordStore')->name('account.password.store');
+    
+    // Mídia
+    Route::resource('media', MediaController::class);
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento Acadêmico
+    |--------------------------------------------------------------------------
+    */
+    
+    // Cursos
+    Route::resource('cursos', CursoController::class);
+    
+    // Diretores
+    Route::resource('directors', DirectorController::class);
 
-    Route::resource('cursos', 'CursoController');
-
-    Route::resource('directors', 'DirectorController');
-
-    //Aqui é onde o ADMIN analisa as matrículas
-    Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
-        Route::get('/matriculas', [MatriculaController::class, 'index'])->name('matriculas.index');
-        Route::get('/admin/matriculas/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
-        Route::patch('/admin/matriculas/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
-        Route::patch('/admin/matriculas/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
-        Route::patch('/admin/matriculas/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])
-        ->name('matriculas.alterar-status');
+    // Matrículas
+    Route::prefix('matriculas')->group(function () {
+        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index');
+        Route::get('/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
+        Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
+        Route::patch('/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
+        Route::patch('/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])->name('matriculas.alterar-status');
     });
-
-    // Rotas para gerenciamento administrativo de alojamentos
-    Route::middleware(['auth', HasAccessAdmin::class])->group(function () {
-        // Recursos padrão
-        Route::resource('alojamento', App\Http\Controllers\AlojamentoController::class)
-        ->names([
-            'index' => 'alojamento.index',
-            'show' => 'alojamento.show',
-        ])
-        ->only(['index', 'show']);
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Alojamentos
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('alojamento')->group(function () {
+        // Listagem e visualização
+        Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
+        Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
         
-        // Ações personalizadas
-        Route::patch('/alojamento/{alojamento}/aprovar', [App\Http\Controllers\AlojamentoController::class, 'aprovar'])
-            ->name('admin.alojamento.aprovar');
-        Route::patch('/alojamento/{alojamento}/rejeitar', [App\Http\Controllers\AlojamentoController::class, 'rejeitar'])
-            ->name('admin.alojamento.rejeitar');
-    });    
+        // Ações de aprovação/rejeição
+        Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
+        Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
+    });
 });
