@@ -247,8 +247,9 @@ const validarCPF = (cpf) => {
                   id="nome" 
                   v-model="formData.nome" 
                   type="text" 
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
+                  disabled
                 >
               </div>
               
@@ -293,8 +294,9 @@ const validarCPF = (cpf) => {
                   id="matricula" 
                   v-model="formData.matricula" 
                   type="text" 
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
+                  disabled
                 >
               </div>
               
