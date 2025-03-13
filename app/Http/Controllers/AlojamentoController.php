@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Validation\Rule;
 use App\Models\Alojamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -215,6 +216,49 @@ class AlojamentoController extends Controller
         Mail::to($alojamento->email)->send(new ReservaAlojamentoRejeitada($alojamento));
 
         return redirect()->back()->with('message', 'Reserva rejeitada com sucesso.');
+    }
+
+    /**
+ * Alterar o status de uma reserva
+ */
+    public function alterarStatus(Request $request, Alojamento $alojamento)
+    {
+        $this->authorize('adminUpdate', $alojamento);
+        
+        $request->validate([
+            'status' => ['required', Rule::in(['pendente', 'aprovada', 'rejeitada'])],
+        ]);
+        
+        $novoStatus = $request->status;
+        
+        // Verificar se o status é diferente do atual
+        if ($alojamento->status === $novoStatus) {
+            return redirect()->back()->with('message', 'O status já está definido como ' . $novoStatus);
+        }
+        
+        // Para rejeição, precisamos de um motivo
+        if ($novoStatus === 'rejeitada' && !$request->has('motivo_rejeicao')) {
+            return redirect()->back()->with('error', 'É necessário informar um motivo para rejeitar a reserva');
+        }
+        
+        // Atualizar campos conforme o status
+        $dados = ['status' => $novoStatus];
+        
+        // Adicionar motivo de rejeição se for o caso
+        if ($novoStatus === 'rejeitada' && $request->has('motivo_rejeicao')) {
+            $dados['motivo_rejeicao'] = $request->motivo_rejeicao;
+        }
+        
+        $alojamento->update($dados);
+        
+        // Enviar notificação por email conforme o status
+        if ($novoStatus === 'aprovada') {
+            Mail::to($alojamento->email)->send(new ReservaAlojamentoAprovada($alojamento));
+        } elseif ($novoStatus === 'rejeitada') {
+            Mail::to($alojamento->email)->send(new ReservaAlojamentoRejeitada($alojamento));
+        }
+        
+        return redirect()->back()->with('message', 'Status da reserva alterado com sucesso para ' . $novoStatus);
     }
 
     /**

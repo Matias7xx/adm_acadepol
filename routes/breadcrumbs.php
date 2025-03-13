@@ -98,6 +98,7 @@ Breadcrumbs::resource('admin.category.type.item', 'Itens', 'admin.category.type'
 Breadcrumbs::resource('admin.cursos', 'Cursos');
 Breadcrumbs::resource('admin.matriculas', 'Matrículas');
 Breadcrumbs::resource('admin.directors', 'Diretores');
+Breadcrumbs::resource('admin.alojamento', 'Reserva de Alojamento');
 
 // admin account Info
 Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {
