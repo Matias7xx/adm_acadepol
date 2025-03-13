@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Link, useForm, Head } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
+import Toast from '@/Pages/Components/Toast.vue';
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
@@ -94,7 +95,7 @@ const alterarStatus = (novoStatus) => {
 
   // Verificar se o status é diferente do atual
   if (novoStatus === props.matricula.status) {
-    toast(`A matrícula já está ${statusTexto[novoStatus]}`, 'info');
+    toast.info(`A matrícula já está ${statusTexto[novoStatus]}`, 'info');
     return;
   }
 
@@ -104,20 +105,25 @@ const alterarStatus = (novoStatus) => {
   confirmModalAction.value = () => {
     isChangingStatus.value = true;
     
-    useForm({
+    const form = useForm({
       status: novoStatus
-    }).patch(route('admin.matriculas.alterar-status', { id: props.matricula.id }), {
+    });
+    
+    form.patch(route('admin.matriculas.alterar-status', { id: props.matricula.id }), {
       onSuccess: () => {
-        toast(`Status alterado para ${statusTexto[novoStatus]} com sucesso!`, 'success');
         closeConfirmModal();
+        toast.success(`Status alterado para ${statusTexto[novoStatus]} com sucesso!`);
+
+        // Atualizar o status da matrícula localmente
+        props.matricula.status = novoStatus;
         isChangingStatus.value = false;
         // Recarregar para atualizar o status
        /*  window.location.reload(); */
       },
       onError: (errors) => {
-        toast('Erro ao alterar status da matrícula', 'error');
-        console.error(errors);
         closeConfirmModal();
+        toast.error('Erro ao alterar status da matrícula');
+        console.error(errors);
         isChangingStatus.value = false;
       }
     });

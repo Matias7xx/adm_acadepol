@@ -109,15 +109,21 @@ const alterarStatus = (id, novoStatus, mensagemConfirmacao) => {
     
     form.patch(route('admin.matriculas.alterar-status', id), {
       onSuccess: () => {
-        toast(`Matrícula ${mensagens[novoStatus]}da com sucesso!`, 'success');
         closeConfirmModal();
+        toast.success(`Matrícula ${mensagens[novoStatus]}da com sucesso!`);
+        
+        // Atualiza o item na lista local em vez de recarregar a página
+        const index = props.matriculas.data.findIndex(m => m.id === id);
+        if (index !== -1) {
+          props.matriculas.data[index].status = novoStatus;
+        }
         // Recarregar a página para atualizar os dados
         /* window.location.reload(); */
       },
       onError: (errors) => {
-        toast(`Erro ao ${mensagens[novoStatus]} matrícula`, 'error');
-        console.error(errors);
         closeConfirmModal();
+        toast.error(`Erro ao ${mensagens[novoStatus]} matrícula`);
+        console.error(errors);
       }
     });
   };
