@@ -60,12 +60,19 @@ class MatriculaController extends Controller
             abort(404, 'Curso não encontrado');
         }
         
-        // Se não estiver autenticado, redireciona para login
+        // Se não estiver autenticado, redireciona para login com parâmetros
         if (!Auth::check()) {
             // Salva o curso ID na sessão para recuperar após o login
             session(['intended_curso_id' => $cursoId]);
+            session(['intended_route' => 'matricula']);
+            session(['intended_acao' => 'matricula_curso']);
             
-            return back()->withErrors([
+            // Redirecionar para login com os parâmetros na URL
+            return redirect()->route('login', [
+                'intended_route' => 'matricula',
+                'curso_id' => $cursoId,
+                'acao' => 'matricula_curso'
+            ])->withErrors([
                 'unauthenticated' => 'Você precisa estar logado para se inscrever.'
             ]);
         }

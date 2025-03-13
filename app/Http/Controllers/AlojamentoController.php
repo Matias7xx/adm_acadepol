@@ -18,7 +18,7 @@ class AlojamentoController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        //$this->middleware('auth');
     }
 
     /**
@@ -26,6 +26,21 @@ class AlojamentoController extends Controller
      */
     public function reservaForm()
     {
+         // Verificar se o usuário está autenticado
+    if (!Auth::check()) {
+        // Armazenar a intenção
+        session(['intended_route' => 'alojamento.reserva.form']);
+        session(['intended_acao' => 'reserva_alojamento']);
+        
+        // Redirecionar para login com parâmetros
+        return redirect()->route('login', [
+            'intended_route' => 'alojamento.reserva.form',
+            'acao' => 'reserva_alojamento'
+        ])->withErrors([
+            'unauthenticated' => 'Você precisa estar logado para solicitar alojamento.'
+        ]);
+    }
+
         return Inertia::render('Components/FormularioAlojamento', [
             'user' => Auth::user()
         ]);
@@ -36,6 +51,12 @@ class AlojamentoController extends Controller
      */
     public function store(Request $request)
     {
+
+        // Verificar autenticação
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         // Validar os dados do formulário
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -102,6 +123,11 @@ class AlojamentoController extends Controller
  */
     public function confirmacao(Request $request)
     {
+        // Verificar autenticação
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    
     return Inertia::render('Components/Confirmacao', [
         'user' => Auth::user(),
         'mensagem' => 'Sua solicitação de pré-reserva foi enviada com sucesso e será analisada em breve.',
