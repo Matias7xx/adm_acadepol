@@ -72,11 +72,11 @@ class AlojamentoController extends Controller
         $alojamento->save();
 
         // Enviar email para o administrador
-        $administradorEmail = config('alojamento.admin_email', 'admin@academiapolicia.gov.br');
+        $administradorEmail = config('alojamento.admin_email', 'matiasnobrega7@gmail.com');
         Mail::to($administradorEmail)->send(new NovaReservaAlojamento($alojamento));
 
         // Enviar cópia para o email institucional
-        $emailInstitucional = config('alojamento.institutional_email', 'alojamento@academiapolicia.gov.br');
+        $emailInstitucional = config('alojamento.institutional_email', 'nobregamatias7@gmail.com');
         if ($emailInstitucional !== $administradorEmail) {
             Mail::to($emailInstitucional)->send(new NovaReservaAlojamento($alojamento));
         }

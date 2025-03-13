@@ -11,10 +11,10 @@ return [
     */
 
     // Email do administrador para receber notificações de novas reservas
-    /* 'admin_email' => env('ALOJAMENTO_ADMIN_EMAIL', 'admin@academiapolicia.gov.br'), */
+    'admin_email' => env('ALOJAMENTO_ADMIN_EMAIL', 'matiasnobrega7@gmail.com'),
 
     // Email institucional para receber cópia das notificações EMAIL DA ACADEPOL
-    /* 'institutional_email' => env('ALOJAMENTO_INSTITUTIONAL_EMAIL', 'alojamento@academiapolicia.gov.br'), */
+    'institutional_email' => env('ALOJAMENTO_INSTITUTIONAL_EMAIL', 'nobregamatias7@gmail.com'),
 
     // Capacidade máxima de ocupação do alojamento
     'capacidade_maxima' => env('ALOJAMENTO_CAPACIDADE', 30),

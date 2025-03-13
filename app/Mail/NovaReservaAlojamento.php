@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class NovaReservaAlojamento extends Mailable
+class NovaReservaAlojamento extends Mailable implements ShouldQueue
 {
 
     //A classe Mailable referencia o template Blade, e o Controller acessa as configurações do arquivo de configuração.
