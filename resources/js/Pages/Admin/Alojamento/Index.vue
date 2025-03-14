@@ -133,7 +133,6 @@ function submeterRejeicao() {
         <form @submit.prevent="form.get(route('admin.alojamento.index'))">
           <div class="py-2 flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Pesquisar</label>
               <input
                 type="search"
                 v-model="form.search"
@@ -142,7 +141,6 @@ function submeterRejeicao() {
               />
             </div>
             <div class="flex-1 min-w-[200px]">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
                 v-model="form.status"
                 class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 w-full"
