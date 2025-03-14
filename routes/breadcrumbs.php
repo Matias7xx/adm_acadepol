@@ -99,6 +99,7 @@ Breadcrumbs::resource('admin.cursos', 'Cursos');
 Breadcrumbs::resource('admin.matriculas', 'Matrículas');
 Breadcrumbs::resource('admin.directors', 'Diretores');
 Breadcrumbs::resource('admin.alojamento', 'Reserva de Alojamento');
+Breadcrumbs::resource('admin.noticias', 'Notícias');
 
 // admin account Info
 Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {

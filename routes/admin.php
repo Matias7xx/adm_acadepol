@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CursoController;
 use App\Http\Controllers\Admin\DirectorController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\NoticiaController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -108,4 +109,14 @@ Route::group([
         // Rota para alteração de status
         Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
     });
+
+     /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Notícias
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('noticias', NoticiaController::class);
+    Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
+    ->name('noticias.toggle-destaque');
+
 });

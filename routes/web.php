@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DirectorController;
 use App\Http\Controllers\AlojamentoController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NoticiaController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -52,6 +53,11 @@ Route::get('/cursos', [CursoController::class, 'cursosPublicos'])
 
 Route::get('/cursos/{curso}', [CursoController::class, 'showCurso'])
     ->name('detalhes');
+
+    //Rotas públicas para notícias
+Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias');
+Route::get('/noticias/{id}', [NoticiaController::class, 'exibir'])->name('noticias.exibir');
+Route::get('/api/ultimas-noticias', [NoticiaController::class, 'ultimasNoticias'])->name('api.ultimas-noticias');
 
 /*
 |--------------------------------------------------------------------------
