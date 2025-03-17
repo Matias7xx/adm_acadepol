@@ -24,7 +24,7 @@ class NoticiaController extends Controller
             ->paginate(6)
             ->withQueryString();
             
-        return Inertia::render('Noticias/Index', [
+        return Inertia::render('Components/Noticias', [
             'noticias' => $noticias,
             'filtros' => $request->only(['search']),
         ]);
@@ -53,13 +53,13 @@ class NoticiaController extends Controller
             ->orderBy('data_publicacao', 'desc')
             ->first();
             
-        return Inertia::render('Noticias/Exibir', [
+        return Inertia::render('Components/ExibirNoticia', [
             'noticia' => [
                 'id' => $noticia->id,
                 'titulo' => $noticia->titulo,
                 'descricao_curta' => $noticia->descricao_curta,
                 'conteudo' => $noticia->conteudo,
-                'imagem' => $noticia->imagem_url,
+                'imagem' => $noticia->imagem,
                 'destaque' => $noticia->destaque,
                 'data_publicacao' => $noticia->data_formatada,
                 'data_publicacao_iso' => $noticia->data_publicacao->toIso8601String(),
@@ -83,16 +83,17 @@ class NoticiaController extends Controller
     {
         $noticias = Noticia::publicado()
             ->orderBy('data_publicacao', 'desc')
-            ->take(3)
+            ->take(6)
             ->get()
             ->map(function($noticia) {
                 return [
                     'id' => $noticia->id,
                     'titulo' => $noticia->titulo,
                     'descricao_curta' => $noticia->descricao_curta,
-                    'imagem' => $noticia->imagem_url,
+                    'imagem' => $noticia->imagem,
                     'data_publicacao' => $noticia->data_formatada,
                     'destaque' => $noticia->destaque,
+                    'visualizacoes' => $noticia->visualizacoes
                 ];
             });
             
