@@ -77,13 +77,13 @@ class NoticiaController extends Controller
     }
 
     /**
-     * Retorna as últimas notícias em formato JSON para componentes
+     * Retorna as últimas notícias em formato JSON para componentes / Está retornando para as notícias da HOME
      */
     public function ultimasNoticias()
     {
         $noticias = Noticia::publicado()
             ->orderBy('data_publicacao', 'desc')
-            ->take(6)
+            ->take(3)
             ->get()
             ->map(function($noticia) {
                 return [
@@ -98,5 +98,47 @@ class NoticiaController extends Controller
             });
             
         return response()->json($noticias);
+    }
+
+    /**
+     * API para listar notícias paginadas com suporte a busca
+     * Rota: /api/noticias
+     */
+    public function apiNoticias(Request $request)
+    {
+        $perPage = $request->input('per_page', 5);
+        
+        // Validar e limitar os itens por página para evitar sobrecarga em VER TODAS AS NOTÍCIAS
+        $perPage = min(max($perPage, 3), 6);
+        
+        $noticias = Noticia::publicado()
+            ->when($request->search, function($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('titulo', 'like', "%{$search}%")
+                      ->orWhere('descricao_curta', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('data_publicacao', 'desc')
+            ->paginate($perPage);
+
+        // Transformar os dados para o formato esperado pelo frontend
+        $noticias->getCollection()->transform(function($noticia) {
+            return [
+                'id' => $noticia->id,
+                'titulo' => $noticia->titulo,
+                'descricao_curta' => $noticia->descricao_curta,
+                'imagem' => $noticia->imagem,
+                'data_publicacao' => $noticia->data_formatada,
+                'destaque' => $noticia->destaque,
+                'visualizacoes' => $noticia->visualizacoes
+            ];
+        });
+        
+        return response()->json($noticias);
+    }
+
+    public function ListarTodas(Request $request)
+    {         
+        return Inertia::render('Components/NoticiaListagem', []);
     }
 }

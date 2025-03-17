@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
       </nav>
     </div>
     <!-- Ajuste para compensar a navbar + barra de pesquisa -->
-    <div class="mt-[20px]"></div>
+    <!-- <div class="mt-[20px]"></div> -->
     <!-- Conteúdo Principal -->
     <div class="container mx-auto">
       <slot />

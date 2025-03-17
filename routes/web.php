@@ -55,9 +55,13 @@ Route::get('/cursos/{curso}', [CursoController::class, 'showCurso'])
     ->name('detalhes');
 
     //Rotas públicas para notícias
-Route::get('/noticias', [NoticiaController::class, 'index'])->name('noticias');
+Route::get('/noticias', [NoticiaController::class, 'ListarTodas'])->name('noticias');
 Route::get('/noticias/{id}', [NoticiaController::class, 'exibir'])->name('noticias.exibir');
 Route::get('/api/ultimas-noticias', [NoticiaController::class, 'ultimasNoticias'])->name('api.ultimas-noticias');
+
+// API para notícias paginadas com suporte a busca
+Route::get('/api/noticias', [NoticiaController::class, 'apiNoticias'])
+    ->name('api.noticias');
 
 /*
 |--------------------------------------------------------------------------

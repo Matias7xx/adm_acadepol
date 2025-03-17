@@ -1,4 +1,70 @@
+<script setup>
+import { ref } from 'vue';
+import { Link, Head } from '@inertiajs/vue3';
+import Header from './Header.vue';
+import SiteNavbar from './SiteNavbar.vue';
+import Footer from './Footer.vue';
+
+// Propriedades do componente
+const props = defineProps({
+  noticia: {
+    type: Object,
+    required: true
+  },
+  proximaNoticia: {
+    type: Object,
+    default: null
+  },
+  noticiaAnterior: {
+    type: Object,
+    default: null
+  }
+});
+
+// Estado
+const linkCopiado = ref(false);
+
+// Métodos
+const compartilhar = (plataforma) => {
+  const url = window.location.href;
+  const titulo = props.noticia.titulo;
+  
+  let shareUrl = '';
+  
+  switch (plataforma) {
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+      break;
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(titulo)}`;
+      break;
+    case 'whatsapp':
+      shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(titulo + ' ' + url)}`;
+      break;
+  }
+  
+  if (shareUrl) {
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  }
+};
+
+const copiarLink = () => {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    linkCopiado.value = true;
+    setTimeout(() => {
+      linkCopiado.value = false;
+    }, 3000);
+  });
+};
+
+const handleImageError = (event) => {
+  event.target.src = '/images/placeholder-news.jpg';
+};
+</script>
+
 <template>
+  <Head :title="noticia.titulo" />
    <Header />
    <SiteNavbar />
   <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6">
@@ -146,71 +212,6 @@
   </div>
   <Footer />
 </template>
-
-<script setup>
-import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
-import Header from './Header.vue';
-import SiteNavbar from './SiteNavbar.vue';
-import Footer from './Footer.vue';
-
-// Propriedades do componente
-const props = defineProps({
-  noticia: {
-    type: Object,
-    required: true
-  },
-  proximaNoticia: {
-    type: Object,
-    default: null
-  },
-  noticiaAnterior: {
-    type: Object,
-    default: null
-  }
-});
-
-// Estado
-const linkCopiado = ref(false);
-
-// Métodos
-const compartilhar = (plataforma) => {
-  const url = window.location.href;
-  const titulo = props.noticia.titulo;
-  
-  let shareUrl = '';
-  
-  switch (plataforma) {
-    case 'facebook':
-      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-      break;
-    case 'twitter':
-      shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(titulo)}`;
-      break;
-    case 'whatsapp':
-      shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(titulo + ' ' + url)}`;
-      break;
-  }
-  
-  if (shareUrl) {
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  }
-};
-
-const copiarLink = () => {
-  const url = window.location.href;
-  navigator.clipboard.writeText(url).then(() => {
-    linkCopiado.value = true;
-    setTimeout(() => {
-      linkCopiado.value = false;
-    }, 3000);
-  });
-};
-
-const handleImageError = (event) => {
-  event.target.src = '/images/placeholder-news.jpg';
-};
-</script>
 
 <style>
 /* Estilos para o conteúdo gerado pelo HTML */

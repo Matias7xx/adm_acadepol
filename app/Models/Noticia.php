@@ -74,4 +74,15 @@ class Noticia extends Model
     {
         return $this->data_publicacao ? $this->data_publicacao->format('d/m/Y') : '';
     }
+
+    public function getSanitizedConteudoAttribute()
+{
+    // Sanitizar HTML para evitar XSS e manter formatação básica
+    return \Mews\Purifier\Facades\Purifier::clean($this->conteudo, [
+        'HTML.Allowed' => 'p,b,i,u,strong,em,h2,h3,h4,ul,ol,li,a[href|target],br,blockquote',
+        'CSS.AllowedProperties' => [],
+        'AutoFormat.AutoParagraph' => true,
+        'AutoFormat.RemoveEmpty' => true,
+    ]);
+}
 }

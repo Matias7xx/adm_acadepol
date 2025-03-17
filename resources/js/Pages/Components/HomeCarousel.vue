@@ -37,22 +37,6 @@ const fetchDestacadas = async () => {
     console.error('Erro ao carregar notícias destacadas:', err);
     error.value = err.message;
     loading.value = false;
-    
-    // Fallback para os dados estáticos originais em caso de erro
-    newsItems.value = [
-      {
-        title: 'PROCESSO SELETIVO DE DOCENTES – 2024',
-        excerpt: 'Venha fazer parte do quadro de professores da Academia de Polícia Civil da Paraíba.',
-        image: '/images/acadepol.jpeg',
-        link: '#',
-      },
-      {
-        title: 'IV COTE - Curso de Operações Táticas Especiais',
-        excerpt: 'Inscrições: de 04/02 até às 18h do dia 21/02. Início em: 31/03/2025.',
-        image: '/images/goe.jpeg',
-        link: '#',
-      },
-    ];
   }
 };
 
@@ -79,10 +63,10 @@ const stopAutoPlay = () => {
 };
 
 // Tratamento de erro de imagem
-/* const handleImageError = (event) => {
-  event.target.src = '/images/placeholder-news.jpg';
+ const handleImageError = (event) => {
+  event.target.src = '/images/placeholder-news.png';
 };
- */
+
 onMounted(() => {
   fetchDestacadas();
   startAutoPlay();
