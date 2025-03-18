@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Mews\Purifier\Facades\Purifier;
 
 class NoticiaController extends Controller
 {
@@ -85,6 +86,20 @@ class NoticiaController extends Controller
             'data_publicacao' => 'required|date',
             'status' => 'required|in:rascunho,publicado,arquivado',
         ]);
+
+        // Sanitizar o HTML
+        $validated['conteudo'] = Purifier::clean($validated['conteudo'], [
+            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,h1,h2,h3,h4,h5,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div,span[class],video[src|controls|width|height],source[src|type]',
+            'HTML.SafeIframe' => true,
+            'URI.SafeIframeRegexp' => '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%',
+            'AutoFormat.RemoveEmpty' => true,
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right',
+            'AutoFormat.AutoParagraph' => true,
+            'AutoFormat.Linkify' => true,
+        ]);
+
+        // Processar imagens dentro do conteúdo
+        $validated['conteudo'] = $this->processContentImages($validated['conteudo']);
         
         // Processar upload de imagem diretamente para diretório público
         if ($request->hasFile('imagem')) {
@@ -182,6 +197,20 @@ class NoticiaController extends Controller
             'data_publicacao' => 'required|date',
             'status' => 'required|in:rascunho,publicado,arquivado',
         ]);
+
+        // Sanitizar o HTML
+        $validated['conteudo'] = Purifier::clean($validated['conteudo'], [
+            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,h1,h2,h3,h4,h5,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div,span[class],video[src|controls|width|height],source[src|type]',
+            'HTML.SafeIframe' => true,
+            'URI.SafeIframeRegexp' => '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%',
+            'AutoFormat.RemoveEmpty' => true,
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right',
+            'AutoFormat.AutoParagraph' => true,
+            'AutoFormat.Linkify' => true,
+        ]);
+
+        // Processar imagens dentro do conteúdo
+        $validated['conteudo'] = $this->processContentImages($validated['conteudo']);
         
         // Remover imagem atual se solicitado
         if ($request->input('remover_imagem') && $noticia->imagem) {
@@ -265,5 +294,35 @@ class NoticiaController extends Controller
         
         return redirect()->back()
             ->with('message', $noticia->destaque ? 'Notícia destacada.' : 'Destaque removido.');
+    }
+
+    //Processamento de imagens
+    private function processContentImages($html)
+    {
+        // Busca imagens em base64
+        preg_match_all('/<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/i', $html, $matches, PREG_SET_ORDER);
+        
+        foreach ($matches as $match) {
+            $extension = $match[1]; // jpeg, png, etc.
+            $base64Image = $match[2];
+            
+            // Gerar nome único
+            $filename = 'content_'.time().'_'.uniqid().'.'.$extension;
+            $path = '/images/noticias/content/'.$filename;
+            
+            // Salvar imagem
+            $directory = public_path('images/noticias/content');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            file_put_contents(public_path($path), base64_decode($base64Image));
+            
+            // Substituir a imagem base64 pela URL da imagem
+            $imageUrl = $path; // Use path relativo, não asset()
+            $html = str_replace('src="data:image/'.$extension.';base64,'.$base64Image.'"', 'src="'.$imageUrl.'"', $html);
+        }
+        
+        return $html;
     }
 }

@@ -64,7 +64,7 @@ const stopAutoPlay = () => {
 
 // Tratamento de erro de imagem
  const handleImageError = (event) => {
-  event.target.src = '/images/placeholder-news.png';
+  event.target.src = '/images/placeholder-news2.png';
 };
 
 onMounted(() => {
