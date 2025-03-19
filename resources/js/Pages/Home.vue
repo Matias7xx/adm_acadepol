@@ -10,7 +10,6 @@ import Search from './Components/Search.vue';
 import Breadcrumb from '@/Components/Admin/Breadcrumb.vue';
 import Toast from './Components/Toast.vue';
 import FlashMessage from './Components/FlashMessage.vue';
-import SideCard from './Components/SideCard.vue';
 
 </script>
 
@@ -45,7 +44,6 @@ import SideCard from './Components/SideCard.vue';
         <!-- Eventos Grid -->
         <section class="mb-12">
           <Noticias />
-          <SideCard />
         </section>
       </div>
     </main>

@@ -105,125 +105,128 @@ onMounted(() => {
 <template>
   <section class="w-full bg-gray-100 py-8 sm:py-12" aria-labelledby="noticias-titulo">
     <div class="max-w-screen-xl mx-auto px-4 sm:px-6">
-      <!-- Título com destaque visual -->
-      <div class="mb-8 text-center">
-        <h2 id="noticias-titulo" class="text-2xl sm:text-3xl font-bold text-gray-800 relative inline-block">
-          Notícias
-          <span class="absolute bottom-0 left-0 w-full h-1 bg-[#bea55a]" aria-hidden="true"></span>
-        </h2>
-      </div>
-
-      <!-- Estado de carregamento -->
-      <div v-if="loading" class="flex justify-center items-center py-12" aria-live="polite" aria-busy="true">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800" role="status"></div>
-        <span class="sr-only">Carregando notícias...</span>
-      </div>
-
-      <!-- Estado de erro -->
-      <div v-else-if="error" class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6" aria-live="assertive">
-        <p class="font-medium">Erro ao carregar notícias</p>
-        <p>{{ error }}</p>
-        <button 
-          @click="fetchNoticias" 
-          class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none transition-colors"
-        >
-          Tentar novamente
-        </button>
-      </div>
-
-      <!-- Sem resultados -->
-      <div v-else-if="noticias.length === 0" class="text-center py-8" aria-live="polite">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-        <h3 class="text-lg font-medium text-gray-900">Nenhuma notícia encontrada</h3>
-        <p class="mt-1 text-gray-500">
-          Não há notícias publicadas no momento.
-        </p>
-      </div>
-
-      <!-- Layout de visualização de notícias -->
-      <div v-else class="flex flex-col lg:flex-row gap-8">
-        <!-- Coluna principal de notícias - 2/3 em desktop -->
+      <!-- Conteúdo principal -->
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Coluna principal de notícias -->
         <div class="w-full lg:w-2/3 space-y-6">
-          <article 
-            v-for="(noticia, index) in noticias" 
-            :key="noticia.id" 
-            class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-            :class="[
-              noticia.destaque ? 'border-l-4 border-[#bea55a]' : '',
-              index === 0 && hasDestaque() ? 'ring-2 ring-[#bea55a] ring-opacity-50' : ''
-            ]"
-          >
-            <div class="flex flex-col md:flex-row h-full">
-              <!-- Container da imagem -->
-              <div v-if="noticia.imagem" class="md:w-1/3 h-48 md:h-auto relative">
-                <img 
-                  :src="noticia.imagem" 
-                  :alt="`Imagem ilustrativa: ${noticia.titulo}`" 
-                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  @error="handleImageError"
-                />
-                <span 
-                  v-if="noticia.destaque" 
-                  class="absolute top-2 left-2 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                  aria-label="Notícia em destaque"
-                >
-                  Destaque
-                </span>
-              </div>
-              
-              <!-- Conteúdo -->
-              <div class="p-5 md:w-2/3 flex flex-col h-full">
-                <div class="flex-grow">
-                  <!-- Data com ícone -->
-                  <div class="text-sm text-gray-500 mb-2 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <time :datetime="noticia.data_publicacao">{{ noticia.data_publicacao }}</time>
-                  </div>
-                  
-                  <!-- Título da notícia -->
-                  <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 line-clamp-2">
-                    {{ noticia.titulo }}
-                  </h3>
-                  
-                  <!-- Descrição mais legível -->
-                  <p class="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed line-clamp-3">
-                    {{ truncateText(noticia.descricao_curta, 150) }}
-                  </p>
+          <!-- Título alinhado com as notícias -->
+          <div class="mb-6">
+            <h2 id="noticias-titulo" class="text-2xl sm:text-3xl font-bold text-gray-800 relative inline-block">
+              Notícias
+              <span class="absolute bottom-0 left-0 w-full h-1 bg-[#bea55a]" aria-hidden="true"></span>
+            </h2>
+          </div>
+
+          <!-- Estado de carregamento -->
+          <div v-if="loading" class="flex justify-center items-center py-12" aria-live="polite" aria-busy="true">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800" role="status"></div>
+            <span class="sr-only">Carregando notícias...</span>
+          </div>
+
+          <!-- Estado de erro -->
+          <div v-else-if="error" class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6" aria-live="assertive">
+            <p class="font-medium">Erro ao carregar notícias</p>
+            <p>{{ error }}</p>
+            <button 
+              @click="fetchNoticias" 
+              class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none transition-colors"
+            >
+              Tentar novamente
+            </button>
+          </div>
+
+          <!-- Sem resultados -->
+          <div v-else-if="noticias.length === 0" class="text-center py-8" aria-live="polite">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900">Nenhuma notícia encontrada</h3>
+            <p class="mt-1 text-gray-500">
+              Não há notícias publicadas no momento.
+            </p>
+          </div>
+
+          <!-- Lista de notícias -->
+          <div v-else class="space-y-6">
+            <article 
+              v-for="(noticia, index) in noticias" 
+              :key="noticia.id" 
+              class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              :class="[
+                noticia.destaque ? 'border-l-4 border-[#bea55a]' : '',
+                index === 0 && hasDestaque() ? 'ring-2 ring-[#bea55a] ring-opacity-50' : ''
+              ]"
+            >
+              <div class="flex flex-col md:flex-row h-full">
+                <!-- Container da imagem -->
+                <div v-if="noticia.imagem" class="md:w-1/3 h-48 md:h-auto relative">
+                  <img 
+                    :src="noticia.imagem" 
+                    :alt="`Imagem ilustrativa: ${noticia.titulo}`" 
+                    class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    @error="handleImageError"
+                  />
+                  <span 
+                    v-if="noticia.destaque" 
+                    class="absolute top-2 left-2 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                    aria-label="Notícia em destaque"
+                  >
+                    Destaque
+                  </span>
                 </div>
                 
-                <div class="mt-auto">
-                  <!-- Visualizações -->
-                  <div class="flex items-center text-gray-500 text-sm mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>{{ noticia.visualizacoes }} visualizações</span>
+                <!-- Conteúdo -->
+                <div class="p-5 md:w-2/3 flex flex-col h-full">
+                  <div class="flex-grow">
+                    <!-- Data com ícone -->
+                    <div class="text-sm text-gray-500 mb-2 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <time :datetime="noticia.data_publicacao">{{ noticia.data_publicacao }}</time>
+                    </div>
+                    
+                    <!-- Título da notícia -->
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 line-clamp-2">
+                      {{ noticia.titulo }}
+                    </h3>
+                    
+                    <!-- Descrição mais legível -->
+                    <p class="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                      {{ truncateText(noticia.descricao_curta, 150) }}
+                    </p>
                   </div>
                   
-                  <!-- Botão de "Saiba mais" -->
-                  <div>
-                    <Link 
-                      :href="`/noticias/${noticia.id}`"
-                      class="inline-flex items-center text-sm font-medium text-yellow-600 hover:text-yellow-800 transition-colors focus:outline-none focus:underline"
-                      :aria-label="`Leia mais sobre: ${noticia.titulo}`"
-                    >
-                      Saiba mais
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <div class="mt-auto">
+                    <!-- Visualizações -->
+                    <div class="flex items-center text-gray-500 text-sm mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
                       </svg>
-                    </Link>
+                      <span>{{ noticia.visualizacoes }} visualizações</span>
+                    </div>
+                    
+                    <!-- Botão de "Saiba mais" -->
+                    <div>
+                      <Link 
+                        :href="`/noticias/${noticia.id}`"
+                        class="inline-flex items-center text-sm font-medium text-yellow-600 hover:text-yellow-800 transition-colors focus:outline-none focus:underline"
+                        :aria-label="`Leia mais sobre: ${noticia.titulo}`"
+                      >
+                        Saiba mais
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </article>
-          
+            </article>
+          </div>
+
           <!-- Botão "Ver todas as notícias" -->
           <div class="text-center pt-4" v-if="noticias.length > 0">
             <Link 
