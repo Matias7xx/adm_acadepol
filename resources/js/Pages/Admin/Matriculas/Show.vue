@@ -8,6 +8,7 @@ import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButton from "@/Components/BaseButton.vue"
+import RejeicaoMatriculaModal from '@/Pages/Components/RejeicaoMatriculaModal.vue';
 import {
   mdiAccountKey,
   mdiArrowLeftBoldOutline
@@ -39,22 +40,14 @@ const statusClasses = {
   rejeitada: 'bg-red-100 text-red-800'
 };
 
-// Modal de confirmação
+// Modal de confirmação padrão
 const showConfirmModal = ref(false);
 const confirmModalTitle = ref('');
 const confirmModalMessage = ref('');
 const confirmModalAction = ref(() => {});
 
-// Função de confirmação para o modal
-const handleConfirm = () => {
-  // Verificar se confirmModalAction.value é uma função antes de chamá-la
-  if (typeof confirmModalAction.value === 'function') {
-    confirmModalAction.value();
-  } else {
-    console.error('confirmModalAction não é uma função');
-    closeConfirmModal();
-  }
-};
+// Modal de rejeição
+const showRejeicaoModal = ref(false);
 
 // Dados adicionais da matrícula (parsear o JSON)
 const dadosAdicionais = computed(() => {
@@ -98,6 +91,12 @@ const alterarStatus = (novoStatus) => {
     toast.info(`A matrícula já está ${statusTexto[novoStatus]}`, 'info');
     return;
   }
+  
+  // Se for rejeição, usa o modal específico
+  if (novoStatus === 'rejeitada') {
+    showRejeicaoModal.value = true;
+    return;
+  }
 
   confirmModalTitle.value = `Alterar Status para ${statusLabels[novoStatus]}`;
   confirmModalMessage.value = `Tem certeza que deseja alterar o status da matrícula para ${statusTexto[novoStatus]}?`;
@@ -117,8 +116,6 @@ const alterarStatus = (novoStatus) => {
         // Atualizar o status da matrícula localmente
         props.matricula.status = novoStatus;
         isChangingStatus.value = false;
-        // Recarregar para atualizar o status
-       /*  window.location.reload(); */
       },
       onError: (errors) => {
         closeConfirmModal();
@@ -132,51 +129,49 @@ const alterarStatus = (novoStatus) => {
   showConfirmModal.value = true;
 };
 
-// Funções específicas para os botões atuais
-const aprovarMatricula = () => {
-  confirmModalTitle.value = 'Aprovar Matrícula';
-  confirmModalMessage.value = 'Tem certeza que deseja aprovar esta matrícula? O aluno será notificado e terá acesso ao curso.';
-  confirmModalAction.value = () => {
-    useForm().patch(route('admin.matriculas.aprovar', props.id), {
-      onSuccess: () => {
-        toast('Matrícula aprovada com sucesso!', 'success');
-        closeConfirmModal();
-        // Recarregar para atualizar o status
-        window.location.reload();
-      },
-      onError: (errors) => {
-        toast('Erro ao aprovar matrícula', 'error');
-        console.error(errors);
-        closeConfirmModal();
-      }
-    });
-  };
-  showConfirmModal.value = true;
-};
+// Handler para confirmação da rejeição
+const handleRejeicaoConfirmada = ({ matriculaId, motivo }) => {
+  isChangingStatus.value = true;
+  
+  const form = useForm({
+    status: 'rejeitada',
+    motivo_rejeicao: motivo
+  });
+  
+  form.patch(route('admin.matriculas.alterar-status', { id: matriculaId }), {
+    onSuccess: () => {
+      showRejeicaoModal.value = false;
+      toast.success('Matrícula rejeitada com sucesso!');
 
-const rejeitarMatricula = () => {
-  confirmModalTitle.value = 'Rejeitar Matrícula';
-  confirmModalMessage.value = 'Tem certeza que deseja rejeitar esta matrícula? O aluno será notificado e não terá acesso ao curso.';
-  confirmModalAction.value = () => {
-    useForm().patch(route('admin.matriculas.rejeitar', props.id), {
-      onSuccess: () => {
-        toast('Matrícula rejeitada com sucesso!', 'success');
-        closeConfirmModal();
-        // Recarregar para atualizar o status
-        window.location.reload();
-      },
-      onError: (errors) => {
-        toast('Erro ao rejeitar matrícula', 'error');
-        console.error(errors);
-        closeConfirmModal();
-      }
-    });
-  };
-  showConfirmModal.value = true;
+      // Atualizar o status da matrícula localmente
+      props.matricula.status = 'rejeitada';
+      isChangingStatus.value = false;
+      
+      // Atualizar o seletor também
+      selectedStatus.value = 'rejeitada';
+    },
+    onError: (errors) => {
+      showRejeicaoModal.value = false;
+      toast.error('Erro ao rejeitar matrícula');
+      console.error(errors);
+      isChangingStatus.value = false;
+    }
+  });
 };
 
 const closeConfirmModal = () => {
   showConfirmModal.value = false;
+};
+
+// Função de confirmação para o modal
+const handleConfirm = () => {
+  // Verificar se confirmModalAction.value é uma função antes de chamá-la
+  if (typeof confirmModalAction.value === 'function') {
+    confirmModalAction.value();
+  } else {
+    console.error('confirmModalAction não é uma função');
+    closeConfirmModal();
+  }
 };
 </script>
 
@@ -236,22 +231,6 @@ const closeConfirmModal = () => {
           </div>
         </div>
       </CardBox>
-
-      <!-- Ações rápidas para aprovação/rejeição (botões legados) -->
-      <!-- <div v-if="matricula.status === 'pendente'" class="flex justify-end space-x-3 mb-6">
-        <BaseButton
-          @click="aprovarMatricula"
-          label="APROVAR"
-          color="success"
-          small
-        />
-        <BaseButton
-          @click="rejeitarMatricula"
-          label="REJEITAR"
-          color="danger"
-          small
-        />
-      </div> -->
 
       <!-- Informações do Aluno -->
       <CardBox class="mb-6">
@@ -331,32 +310,41 @@ const closeConfirmModal = () => {
         </table>
       </CardBox>
       
-      <!-- Modal de Confirmação -->
-<div 
-  v-if="showConfirmModal" 
-  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
->
-  <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-    <div class="mt-3 text-center">
-      <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">{{ confirmModalTitle }}</h3>
-      <div class="mt-2 px-7 py-3">
-        <p class="text-sm text-gray-500 dark:text-gray-300">{{ confirmModalMessage }}</p>
+      <!-- Modal de Confirmação Padrão -->
+      <div 
+        v-if="showConfirmModal" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      >
+        <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+          <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">{{ confirmModalTitle }}</h3>
+            <div class="mt-2 px-7 py-3">
+              <p class="text-sm text-gray-500 dark:text-gray-300">{{ confirmModalMessage }}</p>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+              <BaseButton 
+                @click="handleConfirm" 
+                label="Confirmar"
+                color="info"
+              />
+              <BaseButton 
+                @click="closeConfirmModal" 
+                label="Cancelar"
+                color="white"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="flex justify-center gap-4 mt-4">
-        <BaseButton 
-        @click="handleConfirm" 
-          label="Confirmar"
-          color="info"
-        />
-        <BaseButton 
-          @click="closeConfirmModal" 
-          label="Cancelar"
-          color="white"
-        />
-      </div>
-    </div>
-  </div>
-</div>
+      
+      <!-- Modal de Rejeição -->
+      <RejeicaoMatriculaModal
+        :is-open="showRejeicaoModal"
+        :matricula-id="matricula.id"
+        :matricula-info="matricula"
+        @close="showRejeicaoModal = false"
+        @confirm="handleRejeicaoConfirmada"
+      />
     </SectionMain>
   </LayoutAuthenticated>
 </template>

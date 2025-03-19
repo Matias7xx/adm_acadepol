@@ -17,6 +17,7 @@ return new class extends Migration
         $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
         $table->string('status')->default('pendente'); // Pendente, Aprovada, Rejeitada
         $table->json('dados_adicionais')->nullable(); //Armazena informações do formulário de inscrição
+        $table->text('motivo_rejeicao')->nullable()->after('status');
         $table->timestamps();
     });
 }

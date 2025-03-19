@@ -8,8 +8,12 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Mail\NovaMatricula;
+use App\Mail\MatriculaAprovada;
+use App\Mail\MatriculaRejeitada;
 
 class MatriculaController extends Controller
 {
@@ -55,7 +59,7 @@ class MatriculaController extends Controller
     public function inscricao($cursoId)
     {
         // Validação de ID
-        $cursoId = filter_var($cursoId, FILTER_VALIDATE_INT); //validação de entrada para evitar ataques de injeção e XSS:
+        $cursoId = filter_var($cursoId, FILTER_VALIDATE_INT);
         if (!$cursoId) {
             abort(404, 'Curso não encontrado');
         }
@@ -123,7 +127,7 @@ class MatriculaController extends Controller
             'user' => Auth::user(),
             'mensagem' => 'Sua inscrição foi enviada com sucesso e está aguardando análise.',
             'detalhes' => session('detalhes_matricula'),
-            'tipo' => 'matricula' // Para diferenciar do alojamento
+            'tipo' => 'matricula'
         ]);
     }
 
@@ -135,12 +139,10 @@ class MatriculaController extends Controller
      */
     public function store(Request $request)
     {
-        // Validação rigorosa dos dados
+        //Validação dos dados
         $validator = Validator::make($request->all(), [
             'curso_id' => ['required', 'exists:cursos,id'],
             'dados_adicionais' => ['required', 'array'],
-            /* 'dados_adicionais.*.key' => ['required', 'string'],
-            'dados_adicionais.*.value' => ['required', 'string'], */
         ]);
 
         if ($validator->fails()) {
@@ -196,12 +198,6 @@ class MatriculaController extends Controller
                 'id' => $matricula->id,
                 'created_at' => now()->format('d/m/Y H:i')
             ]]);
-        
-            Log::info('Matrícula realizada com sucesso', [
-                'matricula_id' => $matricula->id,
-                'user_id' => $user->id,
-                'curso_id' => $curso->id
-            ]);
             
             return redirect()->route('confirmacao');
         } catch (\Exception $e) {
@@ -233,7 +229,7 @@ class MatriculaController extends Controller
         }
         
         try {
-            $matricula = Matricula::findOrFail($id);
+            $matricula = Matricula::with(['curso', 'aluno'])->findOrFail($id);
             $this->authorize('update', $matricula);
     
             if ($matricula->status !== 'pendente') {
@@ -244,6 +240,11 @@ class MatriculaController extends Controller
     
             // Aprovar a matrícula
             $matricula->update(['status' => 'aprovada']);
+            
+            // Enviar email de aprovação para o aluno
+            if ($matricula->aluno && $matricula->aluno->email) {
+                Mail::to($matricula->aluno->email)->send(new MatriculaAprovada($matricula));
+            }
             
             Log::info('Matrícula aprovada', [
                 'matricula_id' => $id,
@@ -268,10 +269,11 @@ class MatriculaController extends Controller
     /**
      * Rejeitar uma matrícula.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function rejeitar($id)
+    public function rejeitar(Request $request, $id)
     {
         $id = filter_var($id, FILTER_VALIDATE_INT);
         if (!$id) {
@@ -280,8 +282,20 @@ class MatriculaController extends Controller
             ], 400);
         }
         
+        // Validar o motivo da rejeição
+        $validator = Validator::make($request->all(), [
+            'motivo_rejeicao' => 'required|string|min:5',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'É necessário informar um motivo válido para rejeitar a matrícula.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
         try {
-            $matricula = Matricula::findOrFail($id);
+            $matricula = Matricula::with(['curso', 'aluno'])->findOrFail($id);
             $this->authorize('update', $matricula);
     
             if ($matricula->status !== 'pendente') {
@@ -290,16 +304,26 @@ class MatriculaController extends Controller
                 ], 400);
             }
     
-            // Atualiza o status para rejeitado
-            $matricula->update(['status' => 'rejeitada']);
+            // Atualiza o status para rejeitado e salva o motivo
+            $motivo = $request->input('motivo_rejeicao');
+            $matricula->update([
+                'status' => 'rejeitada',
+                'motivo_rejeicao' => $motivo
+            ]);
+            
+            // Enviar email de rejeição para o aluno
+            if ($matricula->aluno && $matricula->aluno->email) {
+                Mail::to($matricula->aluno->email)->send(new MatriculaRejeitada($matricula, $motivo));
+            }
             
             Log::info('Matrícula rejeitada', [
                 'matricula_id' => $id,
-                'admin_id' => Auth::id()
+                'admin_id' => Auth::id(),
+                'motivo' => $motivo
             ]);
     
             return response()->json([
-                'message' => 'Matrícula rejeitada.'
+                'message' => 'Matrícula rejeitada com sucesso.'
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao rejeitar matrícula', [
@@ -313,6 +337,13 @@ class MatriculaController extends Controller
         }
     }
 
+    /**
+     * Alterar o status de uma matrícula
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function alterarStatus(Request $request, $id)
     {
         $id = filter_var($id, FILTER_VALIDATE_INT);
@@ -321,38 +352,60 @@ class MatriculaController extends Controller
         }
         
         try {
-            $matricula = Matricula::findOrFail($id);
+            $matricula = Matricula::with(['curso', 'aluno'])->findOrFail($id);
             $this->authorize('update', $matricula);
             
             $validated = $request->validate([
                 'status' => ['required', Rule::in(['aprovada', 'rejeitada', 'pendente'])],
+                'motivo_rejeicao' => 'required_if:status,rejeitada|nullable|string|min:5',
             ]);
         
             $novoStatus = $validated['status'];
             
             // Verificar se o status é diferente do atual
-            if ($matricula->status !== $novoStatus) {
-                $matricula->status = $novoStatus;
-                $matricula->save();
-                
-                Log::info('Status da matrícula alterado', [
-                    'matricula_id' => $id,
-                    'admin_id' => Auth::id(),
-                    'status_antigo' => $matricula->getOriginal('status'),
-                    'status_novo' => $novoStatus
-                ]);
-                
-                return redirect()->back()->with('message', 'Status da matrícula alterado com sucesso para ' . $novoStatus);
+            if ($matricula->status === $novoStatus) {
+                return redirect()->back()->with('message', 'A matrícula já está com este status');
             }
             
-            return redirect()->back()->with('message', 'A matrícula já está com este status');
+            // Preparar dados para atualização
+            $dados = ['status' => $novoStatus];
+            
+            // Se for rejeição, incluir o motivo
+            if ($novoStatus === 'rejeitada') {
+                if (!isset($validated['motivo_rejeicao']) || empty($validated['motivo_rejeicao'])) {
+                    return redirect()->back()->with('error', 'É necessário informar um motivo para rejeitar a matrícula');
+                }
+                $dados['motivo_rejeicao'] = $validated['motivo_rejeicao'];
+            }
+            
+            // Atualizar a matrícula
+            $matricula->update($dados);
+            
+            // Enviar notificação por email conforme o status
+            if ($matricula->aluno && $matricula->aluno->email) {
+                if ($novoStatus === 'aprovada') {
+                    Mail::to($matricula->aluno->email)->send(new MatriculaAprovada($matricula));
+                } elseif ($novoStatus === 'rejeitada') {
+                    Mail::to($matricula->aluno->email)->send(new MatriculaRejeitada($matricula, $dados['motivo_rejeicao']));
+                }
+            }
+            
+            Log::info('Status da matrícula alterado', [
+                'matricula_id' => $id,
+                'admin_id' => Auth::id(),
+                'status_antigo' => $matricula->getOriginal('status'),
+                'status_novo' => $novoStatus,
+                'motivo_rejeicao' => $novoStatus === 'rejeitada' ? $dados['motivo_rejeicao'] : null
+            ]);
+            
+            return redirect()->back()->with('message', 'Status da matrícula alterado com sucesso para ' . $novoStatus);
         } catch (\Exception $e) {
             Log::error('Erro ao alterar status da matrícula', [
                 'error' => $e->getMessage(),
                 'matricula_id' => $id
             ]);
             
-            return redirect()->back()->with('error', 'Ocorreu um erro ao alterar o status da matrícula');
+            return redirect()->back()->with('error', 'Ocorreu um erro ao alterar o status da matrícula: ' . $e->getMessage());
         }
     }
     

@@ -1,186 +1,222 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiBed,
-  mdiInformationOutline,
-  mdiArrowLeftBoldOutline,
-  mdiCheck,
-  mdiClose,
-  mdiAlertBoxOutline,
-} from "@mdi/js"
+import { ref, computed } from 'vue';
+import { Link, useForm, Head } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButton from "@/Components/BaseButton.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import CardBoxModal from "@/Components/CardBoxModal.vue"
-import { ref, computed } from 'vue'
-import { useToast } from '@/Composables/useToast'
-import Toast from '@/Pages/Components/Toast.vue'
+import {
+  mdiAccount,
+  mdiArrowLeftBoldOutline,
+  mdiCheckCircle,
+  mdiCloseCircle,
+  mdiRefresh
+} from "@mdi/js"
 
+// Props
 const props = defineProps({
-  reserva: {
-    type: Object,
-    default: () => ({}),
-  }
-})
+  reserva: Object
+});
 
 // Toast
 const { toast } = useToast();
 
-// Modal de rejeição
-const isRejeicaoModalActive = ref(false)
-const formRejeicao = useForm({
-  motivo_rejeicao: ''
-})
-
-// Submeter formulário de rejeição
-const submitRejeicao = () => {
-  formRejeicao.patch(route('admin.alojamento.rejeitar', props.reserva.id), {
-    onSuccess: () => {
-      isRejeicaoModalActive.value = false
-      toast.success('Reserva rejeitada com sucesso!');
-      // Recarregar para atualizar os dados
-      /* window.location.reload(); */
-    },
-    onError: (errors) => {
-      toast.error('Erro ao rejeitar reserva');
-      console.error(errors);
-    }
-  })
-}
-
-// Estado local para controlar o seletor de status
+// Estado local
 const selectedStatus = ref(props.reserva.status);
 const isChangingStatus = ref(false);
 
-// Status de alojamentos
+// Status de reservas
 const statusLabels = {
   pendente: 'Pendente',
   aprovada: 'Aprovada',
   rejeitada: 'Rejeitada'
 };
 
-// Cores para os status
-function getStatusColor(status) {
-  switch (status) {
-    case 'pendente':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'aprovada':
-      return 'bg-green-100 text-green-800'
-    case 'rejeitada':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
-}
+const statusClasses = {
+  pendente: 'bg-yellow-100 text-yellow-800',
+  aprovada: 'bg-green-100 text-green-800',
+  rejeitada: 'bg-red-100 text-red-800'
+};
 
-// Modal de confirmação
+// Modal de confirmação padrão
 const showConfirmModal = ref(false);
 const confirmModalTitle = ref('');
 const confirmModalMessage = ref('');
 const confirmModalAction = ref(() => {});
 
-// Função de confirmação para o modal
-const handleConfirm = () => {
-  if (typeof confirmModalAction.value === 'function') {
-    confirmModalAction.value();
-  } else {
-    console.error('confirmModalAction não é uma função');
-    closeConfirmModal();
+// Modal de rejeição
+const showRejeicaoModal = ref(false);
+const motivoRejeicao = ref('');
+const isSubmittingRejeicao = ref(false);
+const rejeicaoError = ref('');
+
+// Formatação de endereço
+const enderecoFormatado = computed(() => {
+  if (!props.reserva.endereco) return 'Não informado';
+  
+  try {
+    const endereco = typeof props.reserva.endereco === 'string' 
+      ? JSON.parse(props.reserva.endereco) 
+      : props.reserva.endereco;
+    
+    if (!endereco) return 'Não informado';
+    
+    const partes = [];
+    
+    if (endereco.rua) {
+      partes.push(`${endereco.rua}${endereco.numero ? ', ' + endereco.numero : ''}`);
+    }
+    
+    if (endereco.bairro) {
+      partes.push(endereco.bairro);
+    }
+    
+    if (endereco.cidade) {
+      partes.push(endereco.cidade);
+    }
+    
+    return partes.length > 0 ? partes.join(' - ') : 'Não informado';
+  } catch (e) {
+    console.error('Erro ao formatar endereço:', e);
+    return 'Erro ao formatar endereço';
   }
+});
+
+// Formatação de data
+const formatDate = (dateString) => {
+  if (!dateString) return 'Não informado';
+  
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
 };
 
-const closeConfirmModal = () => {
-  showConfirmModal.value = false;
+// Duração da estadia
+const duracaoEstadia = computed(() => {
+  if (!props.reserva.data_inicial || !props.reserva.data_final) return 'Não disponível';
+  
+  const dataInicial = new Date(props.reserva.data_inicial);
+  const dataFinal = new Date(props.reserva.data_final);
+  
+  const diffTime = Math.abs(dataFinal - dataInicial);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays + (diffDays === 1 ? ' dia' : ' dias');
+});
+
+// Mostrar modal de rejeição
+const showRejeicaoModalHandler = () => {
+  motivoRejeicao.value = '';
+  rejeicaoError.value = '';
+  showRejeicaoModal.value = true;
 };
 
-// Alternar Status
+// Confirmar rejeição
+const confirmarRejeicao = () => {
+  // Validar motivo
+  if (!motivoRejeicao.value || motivoRejeicao.value.trim().length < 5) {
+    rejeicaoError.value = 'Por favor, forneça um motivo válido com pelo menos 5 caracteres.';
+    return;
+  }
+  
+  isSubmittingRejeicao.value = true;
+  rejeicaoError.value = '';
+  
+  // Enviar requisição de rejeição
+  const form = useForm({
+    status: 'rejeitada',
+    motivo_rejeicao: motivoRejeicao.value.trim()
+  });
+  
+  form.patch(route('admin.alojamento.alterar-status', props.reserva.id), {
+    onSuccess: () => {
+      showRejeicaoModal.value = false;
+      isSubmittingRejeicao.value = false;
+      toast.success('Reserva rejeitada com sucesso!');
+      
+      // Atualizar o status localmente
+      props.reserva.status = 'rejeitada';
+      props.reserva.motivo_rejeicao = motivoRejeicao.value.trim();
+      selectedStatus.value = 'rejeitada';
+    },
+    onError: (errors) => {
+      isSubmittingRejeicao.value = false;
+      if (errors.motivo_rejeicao) {
+        rejeicaoError.value = errors.motivo_rejeicao;
+      } else {
+        rejeicaoError.value = 'Ocorreu um erro ao processar a rejeição. Por favor, tente novamente.';
+        toast.error('Erro ao rejeitar reserva');
+      }
+      console.error('Erro ao rejeitar reserva:', errors);
+    }
+  });
+};
+
+// Alterar Status
 const alterarStatus = (novoStatus) => {
-  const statusTexto = {
-    pendente: 'pendente',
-    aprovada: 'aprovada',
-    rejeitada: 'rejeitada'
-  };
-
-  // Verificar se o status é diferente do atual
-  if (novoStatus === props.reserva.status) {
-    toast.info(`A reserva já está ${statusTexto[novoStatus]}`);
-    return;
-  }
-
-  // Se o novo status for "rejeitada", abrir modal de rejeição
+  // Se for rejeição, abre o modal específico
   if (novoStatus === 'rejeitada') {
-    isRejeicaoModalActive.value = true;
+    showRejeicaoModalHandler();
     return;
   }
-
+  
   confirmModalTitle.value = `Alterar Status para ${statusLabels[novoStatus]}`;
-  confirmModalMessage.value = `Tem certeza que deseja alterar o status da reserva para ${statusTexto[novoStatus]}?`;
+  confirmModalMessage.value = `Tem certeza que deseja alterar o status da reserva para ${novoStatus}?`;
   
   confirmModalAction.value = () => {
     isChangingStatus.value = true;
-
+    
     const form = useForm({
       status: novoStatus
     });
     
-    // Para aprovação, usamos a rota específica
-    if (novoStatus === 'aprovada') {
-      form.patch(route('admin.alojamento.aprovar', props.reserva.id), {
-        onSuccess: () => {
-          closeConfirmModal();
-          toast.success(`Reserva aprovada com sucesso!`);
-          // Recarregar para atualizar o status
-          /* window.location.reload(); */
-        },
-        onError: (errors) => {
-          closeConfirmModal();
-          toast.error('Erro ao aprovar reserva');
-          console.error(errors);
-          isChangingStatus.value = false;
-        }
-      });
-    } else {
-      form.patch(route('admin.alojamento.alterar-status', props.reserva.id), {
-        onSuccess: () => {
-          closeConfirmModal();
-          toast.success(`Status alterado para ${statusTexto[novoStatus]} com sucesso!`);
-          // Recarregar para atualizar o status
-          /* window.location.reload(); */
-        },
-        onError: (errors) => {
-          closeConfirmModal();
-          toast.error('Erro ao alterar status da reserva');
-          console.error(errors);
-          isChangingStatus.value = false;
-        }
-      });
-    }
+    form.patch(route('admin.alojamento.alterar-status', props.reserva.id), {
+      onSuccess: () => {
+        showConfirmModal.value = false;
+        isChangingStatus.value = false;
+        toast.success(`Status alterado para ${novoStatus} com sucesso!`);
+        
+        // Atualizar o status localmente
+        props.reserva.status = novoStatus;
+      },
+      onError: (errors) => {
+        showConfirmModal.value = false;
+        isChangingStatus.value = false;
+        toast.error('Erro ao alterar status da reserva');
+        console.error('Erro:', errors);
+      }
+    });
   };
   
   showConfirmModal.value = true;
 };
 
-// Formatar data
-function formatDate(dateString) {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('pt-BR')
-}
+// Ações diretas (sem passar pelo dropdown)
+const aprovarReserva = () => {
+  alterarStatus('aprovada');
+};
 
-// Calcular duração da estadia
-function calcularDuracaoEstadia(dataInicial, dataFinal) {
-  if (!dataInicial || !dataFinal) return '0 dias'
-  
-  const inicio = new Date(dataInicial)
-  const fim = new Date(dataFinal)
-  const diffTime = Math.abs(fim - inicio)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-  
-  return `${diffDays} dia${diffDays !== 1 ? 's' : ''}`
-}
+const rejeitarReserva = () => {
+  alterarStatus('rejeitada');
+};
+
+const retornarParaPendente = () => {
+  alterarStatus('pendente');
+};
+
+const closeModal = () => {
+  showConfirmModal.value = false;
+};
+
+const closeRejeicaoModal = () => {
+  showRejeicaoModal.value = false;
+};
+
 </script>
 
 <template>
@@ -188,7 +224,7 @@ function calcularDuracaoEstadia(dataInicial, dataFinal) {
     <Head title="Detalhes da Reserva" />
     <SectionMain>
       <SectionTitleLineWithButton
-        :icon="mdiBed"
+        :icon="mdiAccount"
         title="Detalhes da Reserva de Alojamento"
         main
       >
@@ -201,117 +237,128 @@ function calcularDuracaoEstadia(dataInicial, dataFinal) {
           small
         />
       </SectionTitleLineWithButton>
-      
-      <!-- Notificações -->
-      <NotificationBar
-        :key="Date.now()"
-        v-if="$page.props.flash.message"
-        color="success"
-        :icon="mdiAlertBoxOutline"
-      >
-        {{ $page.props.flash.message }}
-      </NotificationBar>
-      <NotificationBar
-        :key="Date.now() + 1"
-        v-if="$page.props.flash.error"
-        color="danger"
-        :icon="mdiAlertBoxOutline"
-      >
-        {{ $page.props.flash.error }}
-      </NotificationBar>
-      
-      <!-- Card com status e ações -->
+
+      <!-- Seção de Status e Ações -->
       <CardBox class="mb-6">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h3 class="text-lg font-medium mb-2">Status da Reserva</h3>
             <span 
-              :class="['px-3 py-1 text-sm font-medium rounded-full', getStatusColor(reserva.status)]"
+              :class="statusClasses[reserva.status]" 
+              class="px-3 py-1 text-sm font-medium rounded-full"
             >
-              {{ statusLabels[reserva.status] || reserva.status.charAt(0).toUpperCase() + reserva.status.slice(1) }}
+              {{ statusLabels[reserva.status] }}
             </span>
           </div>
           
-          <div class="w-full md:w-auto">
-            <h3 class="text-lg font-medium mb-2">Alterar Status</h3>
-            <div class="flex flex-col sm:flex-row gap-3">
-              <select 
-                v-model="selectedStatus" 
-                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                :disabled="isChangingStatus"
-              >
-                <option value="pendente">Pendente</option>
-                <option value="aprovada">Aprovada</option>
-                <option value="rejeitada">Rejeitada</option>
-              </select>
-              
+          <div class="flex flex-col sm:flex-row gap-3">
+            <!-- Ações diretas baseadas no status atual -->
+            <div v-if="reserva.status === 'pendente'" class="flex gap-2">
               <BaseButton
-                @click="alterarStatus(selectedStatus)"
-                label="Atualizar Status"
+                @click="aprovarReserva"
+                :icon="mdiCheckCircle"
+                label="Aprovar"
+                color="success"
+                :disabled="isChangingStatus"
+              />
+              <BaseButton
+                @click="rejeitarReserva"
+                :icon="mdiCloseCircle"
+                label="Rejeitar"
+                color="danger"
+                :disabled="isChangingStatus"
+              />
+            </div>
+
+            <div v-if="reserva.status === 'aprovada'" class="flex gap-2">
+              <BaseButton
+                @click="rejeitarReserva"
+                :icon="mdiCloseCircle"
+                label="Rejeitar"
+                color="danger"
+                :disabled="isChangingStatus"
+              />
+              <BaseButton
+                @click="retornarParaPendente"
+                :icon="mdiRefresh"
+                label="Retornar para Pendente"
                 color="info"
-                :loading="isChangingStatus"
-                :disabled="selectedStatus === reserva.status || isChangingStatus"
+                :disabled="isChangingStatus"
+              />
+            </div>
+
+            <div v-if="reserva.status === 'rejeitada'" class="flex gap-2">
+              <BaseButton
+                @click="aprovarReserva"
+                :icon="mdiCheckCircle"
+                label="Aprovar"
+                color="success"
+                :disabled="isChangingStatus"
+              />
+              <BaseButton
+                @click="retornarParaPendente"
+                :icon="mdiRefresh"
+                label="Retornar para Pendente"
+                color="info"
+                :disabled="isChangingStatus"
               />
             </div>
           </div>
         </div>
-        
-        <div v-if="reserva.status === 'rejeitada' && reserva.motivo_rejeicao" class="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
-          <p class="font-medium text-red-800 mb-1">Motivo da rejeição:</p>
-          <p class="text-red-700">{{ reserva.motivo_rejeicao }}</p>
-        </div>
       </CardBox>
-      
-      <!-- Informações do solicitante -->
+
+      <!-- Informações da Reserva -->
       <CardBox class="mb-6">
-        <div class="font-medium text-lg border-b pb-2 mb-4">Informações do Solicitante</div>
+        <h3 class="text-lg font-medium mb-4">Informações da Reserva</h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid md:grid-cols-2 gap-6">
           <div>
+            <h4 class="font-medium text-gray-500 dark:text-gray-400 mb-2">Dados Pessoais</h4>
             <table class="w-full">
               <tbody>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium w-1/3">Nome</td>
-                  <td class="py-2">{{ reserva.nome }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Nome</td>
+                  <td>{{ reserva.nome }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">Matrícula</td>
-                  <td class="py-2">{{ reserva.matricula }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Matrícula</td>
+                  <td>{{ reserva.matricula }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">Cargo</td>
-                  <td class="py-2">{{ reserva.cargo }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Cargo</td>
+                  <td>{{ reserva.cargo }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">Órgão</td>
-                  <td class="py-2">{{ reserva.orgao }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Órgão</td>
+                  <td>{{ reserva.orgao }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">CPF</td>
-                  <td class="py-2">{{ reserva.cpf }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">CPF</td>
+                  <td>{{ reserva.cpf }}</td>
+                </tr>
+                <tr>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Condição</td>
+                  <td>{{ reserva.condicao }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
           
           <div>
+            <h4 class="font-medium text-gray-500 dark:text-gray-400 mb-2">Contato e Endereço</h4>
             <table class="w-full">
               <tbody>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium w-1/3">E-mail</td>
-                  <td class="py-2">{{ reserva.email }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Email</td>
+                  <td>{{ reserva.email }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">Telefone</td>
-                  <td class="py-2">{{ reserva.telefone }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Telefone</td>
+                  <td>{{ reserva.telefone }}</td>
                 </tr>
                 <tr>
-                  <td class="py-2 text-gray-600 font-medium">Condição</td>
-                  <td class="py-2">{{ reserva.condicao }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 font-medium">Data do Pedido</td>
-                  <td class="py-2">{{ new Date(reserva.created_at).toLocaleString() }}</td>
+                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Endereço</td>
+                  <td>{{ enderecoFormatado }}</td>
                 </tr>
               </tbody>
             </table>
@@ -321,66 +368,34 @@ function calcularDuracaoEstadia(dataInicial, dataFinal) {
       
       <!-- Detalhes da Estadia -->
       <CardBox class="mb-6">
-        <div class="font-medium text-lg border-b pb-2 mb-4">Detalhes da Estadia</div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <table class="w-full">
-              <tbody>
-                <tr>
-                  <td class="py-2 text-gray-600 font-medium w-1/3">Check-in</td>
-                  <td class="py-2">{{ formatDate(reserva.data_inicial) }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 font-medium">Check-out</td>
-                  <td class="py-2">{{ formatDate(reserva.data_final) }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 font-medium">Duração</td>
-                  <td class="py-2">{{ calcularDuracaoEstadia(reserva.data_inicial, reserva.data_final) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <h3 class="text-lg font-medium mb-4">Detalhes da Estadia</h3>
+        <table class="w-full">
+          <tbody>
+            <tr>
+              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Data Inicial</td>
+              <td>{{ formatDate(reserva.data_inicial) }}</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Data Final</td>
+              <td>{{ formatDate(reserva.data_final) }}</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Duração</td>
+              <td>{{ duracaoEstadia }}</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Motivo da Solicitação</td>
+              <td>{{ reserva.motivo }}</td>
+            </tr>
+            <tr v-if="reserva.status === 'rejeitada' && reserva.motivo_rejeicao">
+              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Motivo da Rejeição</td>
+              <td class="text-red-600">{{ reserva.motivo_rejeicao }}</td>
+            </tr>
+          </tbody>
+        </table>
       </CardBox>
       
-      <!-- Motivo da Solicitação -->
-      <CardBox class="mb-6">
-        <div class="font-medium text-lg border-b pb-2 mb-4">Motivo da Solicitação</div>
-        <div class="prose max-w-none">
-          <p>{{ reserva.motivo }}</p>
-        </div>
-      </CardBox>
-      
-      <!-- Modal de rejeição -->
-      <CardBoxModal
-        v-model="isRejeicaoModalActive"
-        title="Rejeitar Solicitação"
-        button="danger"
-        buttonLabel="Confirmar Rejeição"
-        :buttonDisabled="formRejeicao.processing || !formRejeicao.motivo_rejeicao"
-        @confirm="submitRejeicao"
-      >
-        <div class="space-y-4">
-          <p>Informe o motivo da rejeição desta solicitação de alojamento:</p>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Motivo da rejeição</label>
-            <textarea
-              v-model="formRejeicao.motivo_rejeicao"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              rows="5"
-              placeholder="Descreva o motivo da rejeição..."
-              required
-            ></textarea>
-            <div v-if="formRejeicao.errors.motivo_rejeicao" class="text-red-600 mt-1 text-sm">
-              {{ formRejeicao.errors.motivo_rejeicao }}
-            </div>
-          </div>
-        </div>
-      </CardBoxModal>
-      
-      <!-- Modal de Confirmação -->
+      <!-- Modal de Confirmação Padrão -->
       <div 
         v-if="showConfirmModal" 
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
@@ -393,14 +408,65 @@ function calcularDuracaoEstadia(dataInicial, dataFinal) {
             </div>
             <div class="flex justify-center gap-4 mt-4">
               <BaseButton 
-                @click="handleConfirm" 
+                @click="confirmModalAction" 
                 label="Confirmar"
                 color="info"
+                :loading="isChangingStatus"
               />
               <BaseButton 
-                @click="closeConfirmModal" 
+                @click="closeModal" 
                 label="Cancelar"
                 color="white"
+                :disabled="isChangingStatus"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal de Rejeição -->
+      <div 
+        v-if="showRejeicaoModal" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      >
+        <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+          <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white text-center">Rejeitar Reserva</h3>
+            <div class="mt-2 px-7 py-3">
+              <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">
+                Você está prestes a rejeitar a reserva de <span class="font-semibold">{{ reserva.nome }}</span>. 
+                Por favor, forneça um motivo para a rejeição:
+              </p>
+              
+              <div class="mb-4">
+                <label for="motivo_rejeicao" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Motivo da Rejeição *
+                </label>
+                <textarea
+                  id="motivo_rejeicao"
+                  v-model="motivoRejeicao"
+                  rows="4"
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Explique o motivo da rejeição. Esta informação será enviada ao solicitante."
+                  :disabled="isSubmittingRejeicao"
+                ></textarea>
+                <p v-if="rejeicaoError" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {{ rejeicaoError }}
+                </p>
+              </div>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+              <BaseButton 
+                @click="confirmarRejeicao" 
+                label="Rejeitar Reserva"
+                color="danger"
+                :loading="isSubmittingRejeicao"
+              />
+              <BaseButton 
+                @click="closeRejeicaoModal" 
+                label="Cancelar"
+                color="white"
+                :disabled="isSubmittingRejeicao"
               />
             </div>
           </div>

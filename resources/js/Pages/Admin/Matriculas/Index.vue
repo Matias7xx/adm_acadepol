@@ -19,6 +19,7 @@ import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import FormField from "@/Components/FormField.vue"
 import BaseButtons from "@/Components/BaseButtons.vue"
+import RejeicaoMatriculaModal from '@/Pages/Components/RejeicaoMatriculaModal.vue';
 
 // Props
 const props = defineProps({
@@ -34,12 +35,15 @@ const search = ref('');
 const statusFilter = ref('');
 const cursoFilter = ref('');
 
-// Modal de confirmação
+// Modal de confirmação padrão
 const showConfirmModal = ref(false);
 const confirmModalTitle = ref('');
 const confirmModalMessage = ref('');
-// Definir como função vazia inicialmente
 const confirmModalAction = ref(() => {});
+
+// Modal de rejeição
+const showRejeicaoModal = ref(false);
+const matriculaParaRejeitar = ref(null);
 
 // Status de matrículas
 const statusLabels = {
@@ -91,9 +95,18 @@ const filteredMatriculas = computed(() => {
 
 // Funções de Ação
 const alterarStatus = (id, novoStatus, mensagemConfirmacao) => {
+  // Se for rejeição, abre o modal específico
+  if (novoStatus === 'rejeitada') {
+    const matricula = props.matriculas.data.find(m => m.id === id);
+    if (matricula) {
+      matriculaParaRejeitar.value = matricula;
+      showRejeicaoModal.value = true;
+    }
+    return;
+  }
+  
   const mensagens = {
     aprovada: 'aprova',
-    rejeitada: 'rejeita',
     pendente: 'retornar para pendente'
   };
   
@@ -117,8 +130,6 @@ const alterarStatus = (id, novoStatus, mensagemConfirmacao) => {
         if (index !== -1) {
           props.matriculas.data[index].status = novoStatus;
         }
-        // Recarregar a página para atualizar os dados
-        /* window.location.reload(); */
       },
       onError: (errors) => {
         closeConfirmModal();
@@ -136,14 +147,40 @@ const aprovarMatricula = (id) => {
 };
 
 const rejeitarMatricula = (id) => {
-  alterarStatus(id, 'rejeitada', 'Tem certeza que deseja rejeitar esta matrícula? O aluno será notificado e não terá acesso ao curso.');
+  alterarStatus(id, 'rejeitada');
 };
 
 const closeConfirmModal = () => {
   showConfirmModal.value = false;
 };
 
-// Função de confirmação para o modal
+// Função para rejeitar a matrícula com motivo
+const handleRejeicaoConfirmada = ({ matriculaId, motivo }) => {
+  const form = useForm({
+    status: 'rejeitada',
+    motivo_rejeicao: motivo
+  });
+    
+  form.patch(route('admin.matriculas.alterar-status', matriculaId), {
+    onSuccess: () => {
+      showRejeicaoModal.value = false;
+      toast.success('Matrícula rejeitada com sucesso!');
+        
+      // Atualiza o item na lista local
+      const index = props.matriculas.data.findIndex(m => m.id === matriculaId);
+      if (index !== -1) {
+        props.matriculas.data[index].status = 'rejeitada';
+      }
+    },
+    onError: (errors) => {
+      showRejeicaoModal.value = false;
+      toast.error('Erro ao rejeitar matrícula');
+      console.error(errors);
+    }
+  });
+};
+
+// Função de confirmação para o modal padrão
 const handleConfirm = () => {
   // Verificar se confirmModalAction.value é uma função antes de chamá-la
   if (typeof confirmModalAction.value === 'function') {
@@ -251,7 +288,7 @@ const handleConfirm = () => {
               <td data-label="Ações" class="lg:w-1 whitespace-nowrap">
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
-                    :href="route('admin.matriculas.show', matricula.id)"
+                    :route-name="route('admin.matriculas.show', matricula.id)"
                     :icon="mdiEye"
                     small
                     color="info"
@@ -335,7 +372,7 @@ const handleConfirm = () => {
         </CardBox>
       </div>
       
-      <!-- Modal de Confirmação -->
+      <!-- Modal de Confirmação Padrão -->
       <div 
         v-if="showConfirmModal" 
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
@@ -361,6 +398,15 @@ const handleConfirm = () => {
           </div>
         </div>
       </div>
+      
+      <!-- Modal de Rejeição -->
+      <RejeicaoMatriculaModal
+        :is-open="showRejeicaoModal"
+        :matricula-id="matriculaParaRejeitar?.id"
+        :matricula-info="matriculaParaRejeitar"
+        @close="showRejeicaoModal = false"
+        @confirm="handleRejeicaoConfirmada"
+      />
     </SectionMain>
   </LayoutAuthenticated>
 </template>

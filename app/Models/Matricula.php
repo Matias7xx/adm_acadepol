@@ -9,7 +9,7 @@ class Matricula extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['curso_id', 'user_id', 'dados_adicionais', 'status'];
+    protected $fillable = ['curso_id', 'user_id', 'dados_adicionais', 'status', 'motivo_rejeicao'];
 
     protected $casts = [
         'dados_adicionais' => 'array', // Para salvar dados do formulário em JSON
