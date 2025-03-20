@@ -6,6 +6,7 @@ use App\Http\Controllers\AlojamentoController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NoticiaController;
+use App\Http\Controllers\ContatoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -62,6 +63,13 @@ Route::get('/api/ultimas-noticias', [NoticiaController::class, 'ultimasNoticias'
 // API para notícias paginadas com suporte a busca
 Route::get('/api/noticias', [NoticiaController::class, 'apiNoticias'])
     ->name('api.noticias');
+
+    // Fale Conosco (rota pública)
+Route::controller(ContatoController::class)->prefix('fale-conosco')->name('contato.')->group(function () {
+    Route::get('/', 'create')->name('create');
+    Route::post('/', 'store')->name('store');
+    Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
+});
 
 /*
 |--------------------------------------------------------------------------

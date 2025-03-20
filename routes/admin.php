@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AlojamentoController;
 use App\Http\Controllers\MatriculaController;
+use App\Http\Controllers\ContatoController;
 use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use App\Http\Middleware\HasAccessAdmin;
 use Illuminate\Support\Facades\Route;
@@ -118,5 +119,21 @@ Route::group([
     Route::resource('noticias', NoticiaController::class);
     Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
     ->name('noticias.toggle-destaque');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Mensagens de Contato
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('contato')->name('contato.')->group(function () {
+        Route::get('/', [ContatoController::class, 'index'])->name('index');
+        Route::get('/{contato}', [ContatoController::class, 'show'])->name('show');
+        Route::post('/{contato}/responder', [ContatoController::class, 'responder'])->name('responder');
+        Route::patch('/{contato}/arquivar', [ContatoController::class, 'arquivar'])->name('arquivar');
+        Route::patch('/{contato}/retornar-pendente', [ContatoController::class, 'retornarParaPendente'])->name('retornar-pendente');
+        Route::patch('/{contato}/alterar-status', [ContatoController::class, 'alterarStatus'])->name('alterar-status');
+        Route::delete('/{contato}', [ContatoController::class, 'destroy'])->name('destroy');
+    });
 
 });

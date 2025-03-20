@@ -100,6 +100,7 @@ Breadcrumbs::resource('admin.matriculas', 'Matrículas');
 Breadcrumbs::resource('admin.directors', 'Diretores');
 Breadcrumbs::resource('admin.alojamento', 'Reserva de Alojamento');
 Breadcrumbs::resource('admin.noticias', 'Notícias');
+Breadcrumbs::resource('admin.contato', 'Mensagens de Contato');
 
 // admin account Info
 Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {

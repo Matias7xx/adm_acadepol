@@ -210,6 +210,13 @@ class AdminCoreSeeder extends Seeder
                 'weight' => 10,
                 'icon' => 'M20 11V8H16V5H12V8H8V5H4V8H2V18H22V11H20M20 16H4V8H6V11H10V8H14V11H18V8H20V16Z', // Newspaper
             ],
+            [
+                'name' => 'Fale Conosco',
+                'uri' => '/<admin>/contato',
+                'enabled' => 1,
+                'weight' => 11,
+                'icon' => 'M22 11V3H11V5H5V3H2V11H5V9H8V19H22V11M8 9V5H11V9H8M20 19H10V11H20V19Z', // Layers/stack
+            ],
         ];
 
         $menu->menuItems()->createMany($menu_items);
