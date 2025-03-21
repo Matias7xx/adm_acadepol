@@ -48,6 +48,14 @@ Route::get('/estrutura', function () {
 Route::get('/api/directors', [DirectorController::class, 'listarDiretores'])
     ->name('api.directors');
 
+Route::get('/regimento-interno', function () {
+    return Inertia::render('RegimentoInterno');
+})->name('regimento.interno');
+
+Route::get('/organograma', function () {
+    return Inertia::render('Organograma');
+})->name('organograma');
+
 // Cursos - acesso público
 Route::get('/cursos', [CursoController::class, 'cursosPublicos'])
     ->name('cursos');

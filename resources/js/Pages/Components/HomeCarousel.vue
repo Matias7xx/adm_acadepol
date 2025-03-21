@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template> 
-  <div class="max-w-screen-xl mx-auto px-4"> <!-- Container alinhado com o restante do layout -->
+  <div class="max-w-screen-xl mx-auto px-4 mt-1"> <!-- Container alinhado com o restante do layout -->
     <!-- Estado de carregamento -->
     <div v-if="loading" class="relative shadow-xl overflow-hidden w-full h-48 sm:h-64 md:h-80 lg:h-96 bg-gray-200 animate-pulse flex items-center justify-center text-gray-400">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">

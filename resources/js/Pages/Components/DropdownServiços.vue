@@ -63,7 +63,7 @@ const cancelClose = () => {
 
 const menuItems = [
   { text: 'Requerimentos', href: '#' },
-  { text: 'Reservar Alojamento', href: '#' },
+  { text: 'Reservar Alojamento', href: '/alojamento/pre-reserva' },
   { text: 'Agendamentos', href: '#' }
 ];
 </script>

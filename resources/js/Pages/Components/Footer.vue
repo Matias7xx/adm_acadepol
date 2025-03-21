@@ -23,7 +23,7 @@ import { Link } from '@inertiajs/vue3';
           <h2 class="text-lg font-bold text-white tracking-wide">Links Úteis</h2>
           <ul class="space-y-2">
             <li>
-              <a href="#" class="text-sm hover:text-[#a38e4d] transition-colors duration-200">
+              <a href="/cursos" class="text-sm hover:text-[#a38e4d] transition-colors duration-200">
                 Cursos
               </a>
             </li>
@@ -38,7 +38,7 @@ import { Link } from '@inertiajs/vue3';
               </a>
             </li>
             <li>
-              <a href="#" class="text-sm hover:text-[#a38e4d] transition-colors duration-200">
+              <a href="/fale-conosco" class="text-sm hover:text-[#a38e4d] transition-colors duration-200">
                 Contato
               </a>
             </li>

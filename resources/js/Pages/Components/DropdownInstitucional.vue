@@ -66,7 +66,7 @@ const menuItems = [
   { text: 'Missão', href: '/missao' },
   { text: 'Diretores e Ex-Diretores', href: '/diretores' },
   { text: 'Estrutura Física', href: '/estrutura' },
-  { text: 'Regimento Interno', href: '#' },
-  { text: 'Organograma', href: '#' }
+  { text: 'Regimento Interno', href: '/regimento-interno' },
+  { text: 'Organograma', href: '/organograma' }
 ];
 </script>

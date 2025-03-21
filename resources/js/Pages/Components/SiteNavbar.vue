@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
               <Link href="/cursos" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Cursos</Link>
               <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Banco de Currículos</Link>
               <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Concursos e Seleções</Link>
-              <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Fale Conosco</Link>
+              <Link href="/fale-conosco" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Fale Conosco</Link>
             </div>
 
             <!-- Área de Login e Social -->
