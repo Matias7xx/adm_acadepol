@@ -85,7 +85,8 @@ Route::group([
 
     // Matrículas
     Route::prefix('matriculas')->group(function () {
-        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index');
+        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index'); //Todas as matrículas em todos os cursos (fazer o count futuramente)
+        Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso');
         Route::get('/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
         Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
         Route::patch('/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');

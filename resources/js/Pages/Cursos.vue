@@ -146,7 +146,7 @@ const hasCursos = computed(() => props.cursos.data && props.cursos.data.length >
 
 // Tratamento de erro de imagem
 const handleImageError = (event) => {
-  event.target.src = '/images/default-curso.jpg';
+  event.target.src = '/images/placeholder-news2.png';
 };
 
 // Para debugging da paginação

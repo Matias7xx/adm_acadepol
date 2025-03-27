@@ -147,7 +147,7 @@ function destroy(id) {
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
-                    :route-name="route('admin.matriculas.index')"
+                    :route-name="route('admin.matriculas.curso', curso.id)"
                     :icon="mdiAccountGroup"
                     :id="curso.id"
                     color="white"

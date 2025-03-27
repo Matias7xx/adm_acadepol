@@ -24,37 +24,46 @@ class MatriculaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Inertia\Response
      */
-    public function index(Request $request)
-    {
-        // Verificar permissão - somente administradores
-        $this->authorize('viewAny', Matricula::class);
-        
-        $matriculas = Matricula::with(['curso', 'aluno'])
-            ->when($request->search, function($query, $search) {
-                $search = trim(htmlspecialchars($search));
-                return $query->whereHas('aluno', function($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%")
-                        ->orWhere('matricula', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->status, function($query, $status) {
-                return $query->where('status', $status);
-            })
-            ->when($request->curso_id, function($query, $cursoId) {
-                return $query->where('curso_id', $cursoId);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->appends($request->only(['search', 'status', 'curso_id']));
-            
-        $cursos = Curso::select('id', 'nome')->get();
-        
-        return Inertia::render('Admin/Matriculas/Index', [
-            'matriculas' => $matriculas,
-            'cursos' => $cursos,
-            'filters' => $request->only(['search', 'status', 'curso_id']),
-        ]);
+    public function index(Request $request, Curso $curso)
+{
+    // Verificar permissão - somente administradores
+    $this->authorize('viewAny', Matricula::class);
+    
+    $query = Matricula::with(['curso', 'aluno']);
+    
+    // Se recebeu um objeto curso, filtra pelo ID do curso
+    if ($curso && $curso->exists) {
+        $query->where('curso_id', $curso->id);
     }
+    // Se não recebeu um objeto curso, mas recebeu um curso_id no request, também filtra
+    else if ($request->has('curso_id')) {
+        $query->where('curso_id', $request->curso_id);
+    }
+    
+    // Filtros adicionais
+    $matriculas = $query->when($request->search, function($query, $search) {
+            $search = trim(htmlspecialchars($search));
+            return $query->whereHas('aluno', function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('matricula', 'like', "%{$search}%");
+            });
+        })
+        ->when($request->status, function($query, $status) {
+            return $query->where('status', $status);
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->appends($request->only(['search', 'status', 'curso_id']));
+    
+    $cursos = Curso::select('id', 'nome')->get();
+    
+    return Inertia::render('Admin/Matriculas/Index', [
+        'matriculas' => $matriculas,
+        'cursos' => $cursos,
+        'cursoAtual' => $curso ?? null,
+        'filters' => $request->only(['search', 'status', 'curso_id']),
+    ]);
+}
 
     public function inscricao($cursoId)
     {
@@ -424,7 +433,7 @@ class MatriculaController extends Controller
         
         $matricula = Matricula::with(['curso', 'aluno'])->findOrFail($id);
         
-        // Verificar permissão - somente administradores ou o próprio usuário
+        // Verificar permissão - somente administradores
         $this->authorize('view', $matricula);
         
         return Inertia::render('Admin/Matriculas/Show', [

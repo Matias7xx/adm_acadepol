@@ -21,6 +21,11 @@ Breadcrumbs::for('cursos', function (BreadcrumbTrail $trail) {
     $trail->push('Cursos', route('cursos'));
 });
 
+Breadcrumbs::for('admin.matriculas.curso', function (BreadcrumbTrail $trail, $curso) {
+    $trail->parent('admin.matriculas.index');
+    $trail->push("Curso: " . $curso->nome, route('admin.matriculas.curso', $curso));
+});
+
 Breadcrumbs::for('regimento.interno', function (BreadcrumbTrail $trail) {
     $trail->parent('home');
     $trail->push('Regimento Interno', route('regimento.interno'));

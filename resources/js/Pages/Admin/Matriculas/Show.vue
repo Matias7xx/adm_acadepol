@@ -290,12 +290,36 @@ const handleConfirm = () => {
                 {{ dadosAdicionais.experiencia || 'Não informado' }}
               </td>
             </tr>
+            <tr>
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
+                Cursos relacionados que já participou
+              </td>
+              <td data-label="Cursos Anteriores">
+                {{ dadosAdicionais.cursosAnteriores || 'Não informado' }}
+              </td>
+            </tr>
             <tr v-if="dadosAdicionais.expectativas">
               <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
                 Expectativas para o Curso
               </td>
               <td data-label="Expectativas">
                 {{ dadosAdicionais.expectativas }}
+              </td>
+            </tr>
+            <tr v-if="dadosAdicionais.restricoesSaude">
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
+                Há restrição de saúde?
+              </td>
+              <td data-label="Restrições de Saúde">
+                {{ dadosAdicionais.restricoesSaude || 'Não informado' }}
+              </td>
+            </tr>
+            <tr>
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
+                Observações
+              </td>
+              <td data-label="Observações">
+                {{ dadosAdicionais.observacoes || 'Nenhuma' }}
               </td>
             </tr>
             <tr>
