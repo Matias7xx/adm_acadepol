@@ -18,6 +18,7 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
+        axios.defaults.withCredentials = true;
         return createApp({ render: () => h(App, props) })
             .use(plugin)    
             .use(ZiggyVue, Ziggy)
