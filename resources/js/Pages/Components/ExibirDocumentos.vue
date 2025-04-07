@@ -27,6 +27,8 @@ const props = defineProps({
 // Estado do componente
 const isMobile = ref(false);
 const isLoading = ref(true);
+const loadingProgress = ref(0);
+const zoomLevel = ref(100); // Nível de zoom padrão
 
 // Verificar se está em dispositivo móvel
 onMounted(() => {
@@ -34,16 +36,42 @@ onMounted(() => {
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
     window.innerWidth < 768;
     
-  // Simular um tempo de carregamento para UI
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 800);
+  // Simular carregamento
+  const interval = setInterval(() => {
+    loadingProgress.value += 10;
+    if (loadingProgress.value >= 100) {
+      clearInterval(interval);
+      isLoading.value = false;
+    }
+  }, 200);
 });
 
 // Arquivo para download
 const downloadFileName = computed(() => {
   return props.fileName.replace(/\s+/g, '_') + '.pdf';
 });
+
+// Controles de zoom
+const zoomIn = () => {
+  if (zoomLevel.value < 200) {
+    zoomLevel.value += 25;
+  }
+};
+
+const zoomOut = () => {
+  if (zoomLevel.value > 50) {
+    zoomLevel.value -= 25;
+  }
+};
+
+// Estilo do iframe baseado no zoom
+const iframeStyle = computed(() => ({
+  transform: `scale(${zoomLevel.value / 100})`,
+  transformOrigin: 'top left',
+  width: '100%',
+  height: '100%',
+  transition: 'transform 0.2s ease'
+}));
 </script>
 
 <template>
@@ -57,18 +85,52 @@ const downloadFileName = computed(() => {
     <!-- Visualizador de documento -->
     <div class="p-6">
       <!-- Estado de carregamento -->
-      <div v-if="isLoading" class="flex justify-center items-center h-64" aria-live="polite">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-blue-200"></div>
-        <span class="sr-only">Carregando documento...</span>
+      <div v-if="isLoading" class="flex flex-col justify-center items-center h-64">
+        <div class="w-64 h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+          <div 
+            class="h-full bg-blue-500 transition-all duration-200 ease-out" 
+            :style="{ width: `${loadingProgress}%` }"
+          ></div>
+        </div>
+        <p class="text-center text-gray-600">
+          Carregando documento... {{ loadingProgress }}%
+        </p>
       </div>
       
       <!-- Visualizador para desktop -->
-      <div v-else-if="!isMobile" class="w-full h-[500px] bg-gray-50 rounded-md overflow-hidden shadow-inner">
-        <iframe 
-          :src="documentUrl" 
-          class="w-full h-full border-0" 
-          :title="documentTitle"
-        ></iframe>
+      <div v-else-if="!isMobile" class="document-viewer">
+        <!-- Controles de zoom -->
+        <div class="zoom-controls mb-4 flex justify-center space-x-4">
+          <button 
+            @click="zoomOut" 
+            class="bg-gray-200 hover:bg-gray-300 p-2 rounded"
+            :disabled="zoomLevel <= 50"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+            </svg>
+          </button>
+          <span class="self-center">{{ zoomLevel }}%</span>
+          <button 
+            @click="zoomIn" 
+            class="bg-gray-200 hover:bg-gray-300 p-2 rounded"
+            :disabled="zoomLevel >= 200"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7m6 0v6m0-6h6" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Iframe com estilo de zoom -->
+        <div class="w-full h-[500px] bg-gray-50 rounded-md overflow-hidden shadow-inner">
+          <iframe 
+            :src="documentUrl" 
+            class="w-full h-full border-0" 
+            :style="iframeStyle"
+            :title="documentTitle"
+          ></iframe>
+        </div>
       </div>
       
       <!-- Em dispositivos móveis é mostrado apenas o aviso e as opções de download -->
@@ -125,3 +187,13 @@ const downloadFileName = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.document-viewer {
+  @apply relative;
+}
+
+.zoom-controls button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+</style>

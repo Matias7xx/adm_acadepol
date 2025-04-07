@@ -17,14 +17,6 @@ const additionalInfo = [
   'Todos os alunos e servidores devem seguir as normas estabelecidas neste regimento.',
   'Em caso de dúvidas, consulte a Diretoria da ACADEPOL.'
 ];
-
-// Estado para controle de seções expandidas
-const expandedSection = ref(null);
-
-// Método para alternar a seção expandida
-const toggleSection = (sectionId) => {
-  expandedSection.value = expandedSection.value === sectionId ? null : sectionId;
-};
 </script>
 
 <template>
@@ -68,35 +60,38 @@ const toggleSection = (sectionId) => {
         </ol>
       </nav>
          
-        <!-- Coluna principal de conteúdo -->
-        <div class="lg:col-span-2" id="documento">
-          <ExibirDocumentos 
-            :documentUrl="DOCUMENT_URL"
-            :documentTitle="DOCUMENT_TITLE"
-            documentType="pdf"
-            :fileName="DOCUMENT_FILENAME"
-            aspectRatio="3/4"
-            :description="DOCUMENT_DESCRIPTION"
-            :additionalInfo="additionalInfo"
-          />
+      <!-- Coluna principal de conteúdo -->
+      <div class="lg:col-span-2" id="documento">
+        <ExibirDocumentos 
+          :documentUrl="DOCUMENT_URL"
+          :documentTitle="DOCUMENT_TITLE"
+          :fileName="DOCUMENT_FILENAME"
+          aspectRatio="3/4"
+          :description="DOCUMENT_DESCRIPTION"
+          :additionalInfo="additionalInfo"
+        />
           
-          <!-- Informações complementares -->
-          <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Importância do Regimento Interno</h2>
-            <p class="text-gray-600 mb-4">
-              O Regimento Interno da ACADEPOL é o instrumento normativo que estabelece a estrutura organizacional, 
-              as atribuições dos órgãos que compõem a Academia, bem como as normas de funcionamento e procedimentos 
-              a serem adotados.
-            </p>
-            <p class="text-gray-600">
-              É fundamental que todos os envolvidos no processo de ensino-aprendizagem, sejam servidores, professores 
-              ou alunos, conheçam e sigam este regimento para garantir o bom funcionamento institucional e a qualidade 
-              da formação profissional.
-            </p>
-          </div>
+        <!-- Informações complementares -->
+        <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Importância do Regimento Interno</h2>
+          <p class="text-gray-600 mb-4">
+            O Regimento Interno da ACADEPOL é o instrumento normativo que estabelece a estrutura organizacional, 
+            as atribuições dos órgãos que compõem a Academia, bem como as normas de funcionamento e procedimentos 
+            a serem adotados.
+          </p>
+          <p class="text-gray-600">
+            É fundamental que todos os envolvidos no processo de ensino-aprendizagem, sejam servidores, professores 
+            ou alunos, conheçam e sigam este regimento para garantir o bom funcionamento institucional e a qualidade 
+            da formação profissional.
+          </p>
         </div>
+      </div>
     </main>
     
     <Footer />
   </div>
 </template>
+
+<style scoped>
+/* Estilos de escopo podem ser adicionados aqui se necessário */
+</style>
