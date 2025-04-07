@@ -108,63 +108,63 @@ export default {
     const indiceAtual = ref(0);
 
     const fotos = [
-      {
-        id: 1,
-        titulo: 'Fachada Principal',
-        descricao: 'Entrada principal da ACADEPOL',
-        categoria: 'Área Externa',
-        url: '/assets/images/estrutura/fachada.jpg'
-      },
-      {
-        id: 2,
-        titulo: 'Laboratório de Informática',
-        descricao: 'Laboratório equipado com computadores de última geração',
-        categoria: 'Laboratórios',
-        url: '/assets/images/estrutura/lab-informatica.jpg'
-      },
-      {
-        id: 3,
-        titulo: 'Sala de Aula Interativa',
-        descricao: 'Sala com recursos multimídia para aulas dinâmicas',
-        categoria: 'Salas de Aula',
-        url: '/assets/images/estrutura/sala-aula.jpg'
-      },
-      {
-        id: 4,
-        titulo: 'Biblioteca',
-        descricao: 'Acervo completo com obras especializadas em segurança pública',
-        categoria: 'Biblioteca',
-        url: '/assets/images/estrutura/biblioteca.jpg'
-      },
-      {
-        id: 5,
-        titulo: 'Auditório Principal',
-        descricao: 'Capacidade para 300 pessoas, equipado com sistema de som e projeção',
-        categoria: 'Auditório',
-        url: '/assets/images/estrutura/auditorio.jpg'
-      },
-      {
-        id: 6,
-        titulo: 'Laboratório de Balística',
-        descricao: 'Ambiente para análises e estudos balísticos',
-        categoria: 'Laboratórios',
-        url: '/assets/images/estrutura/lab-balistica.jpg'
-      },
-      {
-        id: 7,
-        titulo: 'Quadra Poliesportiva',
-        descricao: 'Espaço para atividades físicas e treinamento tático',
-        categoria: 'Instalações Esportivas',
-        url: '/assets/images/estrutura/quadra.jpg'
-      },
-      {
-        id: 8,
-        titulo: 'Estande de Tiro',
-        descricao: 'Ambiente seguro para treinamento de tiro',
-        categoria: 'Instalações Esportivas',
-        url: '/assets/images/estrutura/estande-tiro.jpg'
-      }
-    ];
+  {
+    id: 1,
+    titulo: 'Fachada Principal',
+    descricao: 'Entrada principal da ACADEPOL',
+    categoria: 'Área Externa',
+    url: 'https://static.paraiba.pb.gov.br/2015/01/acadepol-foto-francisco-fran%C3%A7a-19.jpg'
+  },
+  {
+    id: 2,
+    titulo: 'Laboratório de Informática',
+    descricao: 'Laboratório equipado com computadores de última geração',
+    categoria: 'Laboratórios',
+    url: 'https://pm.es.gov.br/Media/PMES/_Profiles/c4d8c6e6/9a583751/materia174mes10edit.jpg?v=637972173914939020'
+  },
+  {
+    id: 3,
+    titulo: 'Sala de Aula Interativa',
+    descricao: 'Sala com recursos multimídia para aulas dinâmicas',
+    categoria: 'Salas de Aula',
+    url: 'https://www.es.gov.br/Media/PortalES/_Profiles/c4d8c6e6/d8d1f292/WhatsApp%20Image%202023-11-13%20at%2013.18.54%20(1)-1.jpeg?v=638513060550508360'
+  },
+  {
+    id: 4,
+    titulo: 'Biblioteca',
+    descricao: 'Acervo completo com obras especializadas em segurança pública',
+    categoria: 'Biblioteca',
+    url: 'https://images.pexels.com/photos/1370296/pexels-photo-1370296.jpeg'
+  },
+  {
+    id: 5,
+    titulo: 'Auditório Principal',
+    descricao: 'Capacidade para 500 pessoas, equipado com sistema de som e projeção',
+    categoria: 'Auditório',
+    url: 'https://www.policiacivil.pb.gov.br/noticias/acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestra-sobre-administracao-publica/22092023-acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestr-1.jpg/@@images/6e0e85f7-3f3e-4bf8-a70c-3f35c0ab93db.jpeg'
+  },
+  {
+    id: 6,
+    titulo: 'Laboratório de Balística',
+    descricao: 'Ambiente para análises e estudos balísticos',
+    categoria: 'Laboratórios',
+    url: 'https://thumbs.dreamstime.com/z/pol%C3%ADcia-cient%C3%ADfica-extrai-vest%C3%ADgios-de-arma-no-laborat%C3%B3rio-bal%C3%ADstica-imagem-conceitual-181491170.jpg?ct=jpeg'
+  },
+  {
+    id: 7,
+    titulo: 'Quadra Poliesportiva',
+    descricao: 'Espaço para atividades físicas e treinamento tático',
+    categoria: 'Instalações Esportivas',
+    url: 'https://brejo.com/wp-content/uploads/2023/08/acadepol2.jpeg'
+  },
+  {
+    id: 8,
+    titulo: 'Estande de Tiro',
+    descricao: 'Ambiente seguro para treinamento de tiro',
+    categoria: 'Instalações Esportivas',
+    url: 'https://www.policiacivil.pb.gov.br/noticias/capacitacao-acadepol-promove-cursos-de-tiro-defensivo-investigacao-de-homicidios-e-extracao-de-dados-para-policiais/capacitacao2.jpeg/@@images/bf056900-b1d1-4dc0-9e44-3a3ad75f6bcb.jpeg'
+  }
+];
 
     const fotosFiltradas = computed(() => {
       if (categoriaAtiva.value === 'Todos') {

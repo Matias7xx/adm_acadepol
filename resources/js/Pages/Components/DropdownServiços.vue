@@ -21,14 +21,14 @@
       @mouseleave="closeDropdown"
     >
       <div class="py-1">
-        <Link 
+        <a 
           v-for="(item, index) in menuItems" 
           :key="index"
           :href="item.href"
           class="block px-3 py-2 text-sm text-black hover:text-[#bea55a] rounded-md font-medium hover:bg-gray-100 transition-colors duration-200"  
         >
           {{ item.text }}
-        </Link>
+        </a>
       </div>
     </div>
   </div>
