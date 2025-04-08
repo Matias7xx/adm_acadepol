@@ -2,7 +2,16 @@
 import { Head, Link, useForm } from "@inertiajs/vue3"
 import {
   mdiAccountKey,
-  mdiArrowLeftBoldOutline
+  mdiArrowLeftBoldOutline,
+  mdiAccount,
+  mdiEmail,
+  mdiIdentifier,
+  mdiIdCard,
+  mdiOfficeBuilding,
+  mdiBriefcase,
+  mdiCalendar,
+  mdiPhone,
+  mdiKey
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -14,6 +23,7 @@ import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
+import InputMask from '@/Components/InputMask.vue'
 
 const props = defineProps({
   roles: {
@@ -26,10 +36,27 @@ const form = useForm({
   name: '',
   email: '',
   matricula: '',
+  cpf: '',
+  cargo: '',
+  orgao: '',
+  telefone: '',
+  data_nascimento: '',
   password: '',
   password_confirmation: '',
   roles: []
 })
+
+const submitForm = () => {
+  // Remove caracteres não numéricos do CPF
+  form.cpf = form.cpf.replace(/\D/g, '');
+
+  /* // Remove caracteres não numéricos do telefone
+  form.telefone = form.telefone.replace(/\D/g, ''); */
+  
+  // Enviar formulário
+  form.post(route('admin.user.store'));
+}
+
 </script>
 
 <template>
@@ -52,7 +79,7 @@ const form = useForm({
       </SectionTitleLineWithButton>
       <CardBox
         form
-        @submit.prevent="form.post(route('admin.user.store'))"
+        @submit.prevent="submitForm"
       >
         <FormField
           label="Nome"
@@ -60,6 +87,7 @@ const form = useForm({
         >
           <FormControl
             v-model="form.name"
+            :icon="mdiAccount"
             type="text"
             placeholder="Informe o Nome"
             :error="form.errors.name"
@@ -76,6 +104,7 @@ const form = useForm({
         >
           <FormControl
             v-model="form.email"
+            :icon="mdiEmail"
             type="text"
             placeholder="Informe o E-mail"
             :error="form.errors.email"
@@ -90,17 +119,138 @@ const form = useForm({
           label="Matrícula"
           :class="{ 'text-red-400': form.errors.matricula }"
         >
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg
+                class="w-5 h-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path :d="mdiIdentifier"></path>
+              </svg>
+            </span>
+            <InputMask
+              v-model="form.matricula"
+              mask="#######"
+              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              placeholder="Informe a Matrícula (7 dígitos)"
+            />
+          </div>
+          <div class="text-red-400 text-sm" v-if="form.errors.matricula">
+            {{ form.errors.matricula }}
+          </div>
+        </FormField>
+
+        <FormField
+          label="CPF"
+          :class="{ 'text-red-400': form.errors.cpf }"
+        >
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg
+                class="w-5 h-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path :d="mdiIdCard"></path>
+              </svg>
+            </span>
+            <InputMask
+              v-model="form.cpf"
+              mask="###.###.###-##"
+              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              placeholder="Informe o CPF"
+            />
+          </div>
+          <div class="text-red-400 text-sm" v-if="form.errors.cpf">
+            {{ form.errors.cpf }}
+          </div>
+        </FormField>
+
+        <FormField
+          label="Cargo"
+          :class="{ 'text-red-400': form.errors.cargo }"
+        >
           <FormControl
-            v-model="form.matricula"
+            v-model="form.cargo"
+            :icon="mdiBriefcase"
             type="text"
-            placeholder="Informe a Matrícula"
-            :error="form.errors.matricula"
+            placeholder="Informe o Cargo"
+            :error="form.errors.cargo"
           >
-            <div class="text-red-400 text-sm" v-if="form.errors.matricula">
-              {{ form.errors.matricula }}
+            <div class="text-red-400 text-sm" v-if="form.errors.cargo">
+              {{ form.errors.cargo }}
             </div>
           </FormControl>
         </FormField>
+
+        <FormField
+          label="Órgão"
+          :class="{ 'text-red-400': form.errors.orgao }"
+        >
+          <FormControl
+            v-model="form.orgao"
+            :icon="mdiOfficeBuilding"
+            type="text"
+            placeholder="Informe o Órgão"
+            :error="form.errors.orgao"
+          >
+            <div class="text-red-400 text-sm" v-if="form.errors.orgao">
+              {{ form.errors.orgao }}
+            </div>
+          </FormControl>
+        </FormField>
+
+        <FormField
+          label="Telefone"
+          :class="{ 'text-red-400': form.errors.telefone }"
+        >
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg
+                class="w-5 h-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path :d="mdiPhone"></path>
+              </svg>
+            </span>
+            <InputMask
+              v-model="form.telefone"
+              mask="(##) #####-####"
+              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              placeholder="Informe o Telefone"
+            />
+          </div>
+          <div class="text-red-400 text-sm" v-if="form.errors.telefone">
+            {{ form.errors.telefone }}
+          </div>
+        </FormField>
+
+        <FormField
+          label="Data de Nascimento"
+          :class="{ 'text-red-400': form.errors.data_nascimento }"
+        >
+          <FormControl
+            v-model="form.data_nascimento"
+            :icon="mdiCalendar"
+            type="date"
+            placeholder="Informe a Data de Nascimento"
+            :error="form.errors.data_nascimento"
+          >
+            <div class="text-red-400 text-sm" v-if="form.errors.data_nascimento">
+              {{ form.errors.data_nascimento }}
+            </div>
+          </FormControl>
+        </FormField>
+
+        <BaseDivider />
 
         <FormField
           label="Senha"
@@ -108,6 +258,7 @@ const form = useForm({
         >
           <FormControl
             v-model="form.password"
+            :icon="mdiKey"
             type="password"
             placeholder="Informe uma Senha"
             :error="form.errors.password"
@@ -124,6 +275,7 @@ const form = useForm({
         >
           <FormControl
             v-model="form.password_confirmation"
+            :icon="mdiKey"
             type="password"
             placeholder="Confirme a Senha"
             :error="form.errors.password"

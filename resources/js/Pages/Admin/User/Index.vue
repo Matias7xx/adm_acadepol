@@ -43,6 +43,32 @@ function destroy(id) {
     formDelete.delete(route("admin.user.destroy", id))
   }
 }
+
+// Formatar data se disponível
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR');
+}
+
+const formatPhone = (phone) => {
+  if (!phone) return '-';
+  
+  // Remove caracteres não numéricos
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  if (cleanPhone.length === 11) {
+    // Formata como (XX) XXXXX-XXXX
+    return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  } else if (cleanPhone.length === 10) {
+    // Formata como (XX) XXXX-XXXX
+    return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  }
+  
+  return phone;
+}
+
 </script>
 
 <template>
@@ -55,7 +81,7 @@ function destroy(id) {
         main
       >
         <BaseButton
-          v-if="can.delete"
+          v-if="can.create"
           :route-name="route('admin.user.create')"
           :icon="mdiPlus"
           label="Cadastrar"
@@ -89,7 +115,7 @@ function destroy(id) {
                   focus:ring-opacity-50
                   text-gray-900
                 "
-                placeholder="Search"
+                placeholder="Pesquisar por nome, matrícula ou email"
               />
               <BaseButton
                 label="Pesquisar"
@@ -114,13 +140,16 @@ function destroy(id) {
               <th>
                 <Sort label="Matrícula" attribute="matricula" />
               </th>
+              <th>Cargo</th>
+              <th>Órgão</th>
+              <th>Telefone</th>
               <th v-if="can.edit || can.delete">Ações</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-for="user in users.data" :key="user.id">
-              <td data-label="Name">
+              <td data-label="Nome">
                 <Link
                   :href="route('admin.user.show', user.id)"
                   class="
@@ -138,6 +167,15 @@ function destroy(id) {
               </td>
               <td data-label="Matrícula">
                 {{ user.matricula }}
+              </td>
+              <td data-label="Cargo">
+                {{ user.cargo || '-' }}
+              </td>
+              <td data-label="Órgão">
+                {{ user.orgao || '-' }}
+              </td>
+              <td data-label="Telefone">
+                {{ formatPhone(user.telefone) || '-' }}
               </td>
               <td
                 v-if="can.edit || can.delete"

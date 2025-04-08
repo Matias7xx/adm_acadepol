@@ -177,8 +177,13 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'matricula' => ['required', 'string', 'min:7', 'unique:users,matricula'.\Auth::user()->id],
+            'matricula' => ['required', 'string', 'min:7', 'unique:users,matricula,'.\Auth::user()->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.\Auth::user()->id],
+            'cpf' => ['nullable', 'string', 'max:20'],
+            'cargo' => ['nullable', 'string', 'max:255'],
+            'orgao' => ['nullable', 'string', 'max:255'],
+            'telefone' => ['nullable', 'string', 'max:20'],
+            'data_nascimento' => ['nullable', 'date'],
         ]);
 
         $user = \Auth::user()->update($request->except(['_token']));
