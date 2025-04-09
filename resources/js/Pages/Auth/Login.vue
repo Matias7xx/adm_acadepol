@@ -1,5 +1,5 @@
 <script setup>
-import { useForm, Head, Link } from '@inertiajs/vue3'
+import { useForm, Head, Link, usePage } from '@inertiajs/vue3'
 import { mdiAccount, mdiAsterisk, mdiAccountTieHat, mdiEye, mdiEyeOff } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
@@ -13,8 +13,10 @@ import BaseButtons from '@/Components/BaseButtons.vue'
 import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
+import Toast from '../Components/Toast.vue'
 import imgUrl from '@/src/assets/logo-acadepol.png'
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
   canResetPassword: Boolean,
@@ -24,6 +26,9 @@ const props = defineProps({
   },
   intendedAction: String, // Nova propriedade para a ação pretendida
 })
+
+// Toast
+const { toast } = useToast();
 
 // Título personalizado baseado na ação pretendida
 const loginTitle = computed(() => {
@@ -58,6 +63,24 @@ const form = useForm({
 // Estado para controlar visibilidade da senha
 const isPasswordVisible = ref(false)
 
+// Observar erros e mostrar no Toast quando forem erros de autenticação
+watch(() => usePage().props.errors, (newErrors) => {
+  if (newErrors.matricula) {
+    // Traduzir a mensagem de erro para português
+    let errorMessage = newErrors.matricula;
+    if (errorMessage === 'These credentials do not match our records.') {
+      errorMessage = 'Credenciais inválidas. Verifique sua matrícula e senha.';
+    } else if (errorMessage.includes('Too many login attempts')) {
+      // Traduzir mensagem de tentativas excessivas
+      const matches = errorMessage.match(/(\d+) seconds/);
+      const seconds = matches ? matches[1] : '60';
+      errorMessage = `Muitas tentativas de login. Tente novamente em ${seconds} segundos.`;
+    }
+    
+    toast.error(errorMessage);
+  }
+}, { immediate: true, deep: true });
+
 const submit = () => {
   form
     .transform(data => ({
@@ -65,7 +88,7 @@ const submit = () => {
       remember: form.remember && form.remember.length ? 'on' : ''
     }))
     .post(route('login'), {
-      onFinish: () => form.reset('password'),
+      onFinish: () => form.reset('password')
     })
 }
 </script>
@@ -73,6 +96,7 @@ const submit = () => {
 <template>
   <LayoutGuest>
     <Head :title="loginTitle" />
+    <Toast />
     
     <SectionFullScreen
       v-slot="{ cardClass }"
@@ -85,7 +109,9 @@ const submit = () => {
       >
       <div class="flex items-center mt-2 justify-center "><img :src="imgUrl" class=""/></div>
       
-        <FormValidationErrors />
+        <!-- Somente para erros que não são de autenticação -->
+        <!-- <FormValidationErrors /> -->
+        
         <NotificationBarInCard 
           v-if="status"
           color="info"

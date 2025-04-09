@@ -45,7 +45,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'matricula' => trans('auth.failed'),
+                'matricula' => trans('Credenciais inválidas. Verifique sua matrícula e senha.'),
             ]);
         }
 
