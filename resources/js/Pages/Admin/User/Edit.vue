@@ -48,6 +48,7 @@ const form = useForm({
   cpf: props.user.cpf || '',
   cargo: props.user.cargo || '',
   orgao: props.user.orgao || '',
+  lotacao: props.user.lotacao || '',
   telefone: props.user.telefone || '',
   data_nascimento: props.user.data_nascimento ? props.user.data_nascimento.split('T')[0] : '',
   password: '',
@@ -210,6 +211,23 @@ const submitEdit = () => {
           >
             <div class="text-red-400 text-sm" v-if="form.errors.orgao">
               {{ form.errors.orgao }}
+            </div>
+          </FormControl>
+        </FormField>
+
+        <FormField
+          label="Lotação"
+          :class="{ 'text-red-400': form.errors.lotacao }"
+        >
+          <FormControl
+            v-model="form.lotacao"
+            :icon="mdiOfficeBuilding"
+            type="text"
+            placeholder="Informe a Lotação"
+            :error="form.errors.lotacao"
+          >
+            <div class="text-red-400 text-sm" v-if="form.errors.lotacao">
+              {{ form.errors.lotacao }}
             </div>
           </FormControl>
         </FormField>

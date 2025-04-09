@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
     align: {
+        type: String,
         default: 'right'
     },
     width: {
@@ -10,6 +11,10 @@ const props = defineProps({
     },
     contentClasses: {
         default: () => ['py-1', 'bg-white']
+    },
+    dropdownClasses: {
+        type: String,
+        default: ''
     }
 });
 
@@ -19,13 +24,31 @@ const closeOnEscape = (e) => {
     }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
-onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
+const closeOnClickOutside = (e) => {
+    if (open.value && !dropdown.value?.contains(e.target)) {
+        open.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('click', closeOnClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', closeOnEscape);
+    document.removeEventListener('click', closeOnClickOutside);
+});
 
 const widthClass = computed(() => {
-    return {
+    const widths = {
         '48': 'w-48',
-    }[props.width.toString()];
+        '56': 'w-56',
+        '64': 'w-64',
+        'auto': 'w-auto'
+    };
+    
+    return widths[props.width.toString()] || 'w-48';
 });
 
 const alignmentClasses = computed(() => {
@@ -39,16 +62,14 @@ const alignmentClasses = computed(() => {
 });
 
 const open = ref(false);
+const dropdown = ref(null);
 </script>
 
 <template>
-    <div class="relative">
-        <div @click="open = ! open">
+    <div class="relative" ref="dropdown">
+        <div @click.stop="open = !open">
             <slot name="trigger" />
         </div>
-
-        <!-- Full Screen Dropdown Overlay -->
-        <div v-show="open" class="fixed inset-0 z-40" @click="open = false"></div>
 
         <transition
             enter-active-class="transition ease-out duration-200"
@@ -58,11 +79,10 @@ const open = ref(false);
             leave-from-class="transform opacity-100 scale-100"
             leave-to-class="transform opacity-0 scale-95">
             <div v-show="open"
-                    class="absolute z-50 mt-2 rounded-md shadow-lg"
-                    :class="[widthClass, alignmentClasses]"
-                    style="display: none;"
-                    @click="open = false">
-                <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
+                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                :class="[widthClass, alignmentClasses, dropdownClasses]">
+                <div class="rounded-md ring-1 ring-black/5 shadow-xl bg-white" 
+                    :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

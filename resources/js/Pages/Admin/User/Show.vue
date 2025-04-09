@@ -199,6 +199,23 @@ const formatPhone = (phone) => {
                   lg:block
                 "
               >
+                Lotação
+              </td>
+              <td data-label="Lotação">
+                {{ user.lotacao || '-' }}
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="
+                  p-4
+                  pl-8
+                  text-slate-500
+                  dark:text-slate-400
+                  hidden
+                  lg:block
+                "
+              >
                 Telefone
               </td>
               <td data-label="Telefone">

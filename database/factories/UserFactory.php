@@ -25,6 +25,7 @@ class UserFactory extends Factory
             'cpf' => fake()->numerify('###########'),
             'cargo' => fake()->jobTitle(),
             'orgao' => fake()->company(),
+            'lotacao' => fake()->company(),
             'telefone' => fake()->numerify('###########'),
             'data_nascimento' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password

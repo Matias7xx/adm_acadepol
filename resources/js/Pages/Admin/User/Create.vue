@@ -39,6 +39,7 @@ const form = useForm({
   cpf: '',
   cargo: '',
   orgao: '',
+  lotacao:'',
   telefone: '',
   data_nascimento: '',
   password: '',
@@ -201,6 +202,23 @@ const submitForm = () => {
           >
             <div class="text-red-400 text-sm" v-if="form.errors.orgao">
               {{ form.errors.orgao }}
+            </div>
+          </FormControl>
+        </FormField>
+
+        <FormField
+          label="Lotação"
+          :class="{ 'text-red-400': form.errors.orgao }"
+        >
+          <FormControl
+            v-model="form.lotacao"
+            :icon="mdiOfficeBuilding"
+            type="text"
+            placeholder="Informe a Lotação"
+            :error="form.errors.lotacao"
+          >
+            <div class="text-red-400 text-sm" v-if="form.errors.lotacao">
+              {{ form.errors.lotacao }}
             </div>
           </FormControl>
         </FormField>

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->string('cpf')->nullable()->after('matricula');
             $table->string('cargo')->nullable()->after('cpf');
             $table->string('orgao')->nullable()->after('cargo');
-            $table->string('telefone')->nullable()->after('orgao');
+            $table->string('lotacao')->nullable()->after('orgao');
+            $table->string('telefone')->nullable()->after('lotacao');
             $table->date('data_nascimento')->nullable()->after('telefone');
         });
     }
@@ -26,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['cpf', 'cargo', 'orgao', 'telefone', 'data_nascimento']);
+            $table->dropColumn(['cpf', 'cargo', 'orgao', 'lotacao', 'telefone', 'data_nascimento']);
         });
     }
 };

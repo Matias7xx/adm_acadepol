@@ -29,7 +29,29 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+
+        $additionalValidation = [];
+        if ($request->has('telefone')) {
+            $additionalValidation['telefone'] = ['nullable', 'string', 'max:20'];
+        }
+        if ($request->has('lotacao')) {
+            $additionalValidation['lotacao'] = ['nullable', 'string', 'max:255'];
+        }
+        
+        if (!empty($additionalValidation)) {
+            $request->validate($additionalValidation);
+        }
+
+        $data = $request->validated();
+        
+        if ($request->has('telefone')) {
+            $data['telefone'] = $request->telefone;
+        }
+        if ($request->has('lotacao')) {
+            $data['lotacao'] = $request->lotacao;
+        }
+        
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -37,7 +59,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('message', 'Perfil atualizado com sucesso!');
     }
 
     /**
@@ -58,6 +80,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return Redirect::to('/')->with('message', 'Sua conta foi excluída com sucesso.');
     }
 }

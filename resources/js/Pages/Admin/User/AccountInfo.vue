@@ -41,6 +41,7 @@ const profileForm = useForm({
   cpf: props.user.cpf || '',
   cargo: props.user.cargo || '',
   orgao: props.user.orgao || '',
+  lotacao: props.user.lotacao || '',
   telefone: props.user.telefone || '',
   data_nascimento: props.user.data_nascimento ? props.user.data_nascimento.split('T')[0] : '',
 })
@@ -201,6 +202,22 @@ const passwordForm = useForm({
             >
               <div class="text-red-400 text-sm" v-if="profileForm.errors.orgao">
                 {{ profileForm.errors.orgao }}
+              </div>
+            </FormControl>
+          </FormField>
+
+          <FormField
+            label="Lotação"
+            :class="{ 'text-red-400': profileForm.errors.lotacao }"
+          >
+            <FormControl
+              v-model="profileForm.lotacao"
+              :icon="mdiOfficeBuilding"
+              name="lotacao"
+              :error="profileForm.errors.lotacao"
+            >
+              <div class="text-red-400 text-sm" v-if="profileForm.errors.lotacao">
+                {{ profileForm.errors.lotacao }}
               </div>
             </FormControl>
           </FormField>

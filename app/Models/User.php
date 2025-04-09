@@ -24,6 +24,7 @@ class User extends Authenticatable
         'cpf',
         'cargo',
         'orgao',
+        'lotacao',
         'telefone',
         'data_nascimento',
         'password',

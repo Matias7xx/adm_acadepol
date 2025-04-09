@@ -182,6 +182,7 @@ class UserController extends Controller
             'cpf' => ['nullable', 'string', 'max:20'],
             'cargo' => ['nullable', 'string', 'max:255'],
             'orgao' => ['nullable', 'string', 'max:255'],
+            'lotacao' => ['nullable', 'string', 'max:255'],
             'telefone' => ['nullable', 'string', 'max:20'],
             'data_nascimento' => ['nullable', 'date'],
         ]);
