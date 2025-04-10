@@ -110,6 +110,15 @@ Route::group([
 
         // Rota para alteração de status
         Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
+
+        // Rotas para gerar a ficha de hospedagem (sem breadcrumbs)
+        Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
+        ->name('alojamento.ficha')
+        ->withoutMiddleware([HandleInertiaAdminRequests::class]); // Desabilita o middleware que gera breadcrumbs
+
+        Route::get('/{alojamento}/ficha/visualizar', [AlojamentoController::class, 'visualizarFichaHospedagem'])
+        ->name('alojamento.ficha.visualizar')
+        ->withoutMiddleware([HandleInertiaAdminRequests::class]); // Desabilita o middleware que gera breadcrumbs
     });
 
      /*

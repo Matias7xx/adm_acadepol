@@ -20,19 +20,29 @@ const { toast } = useToast();
 // Estado do formulário
 const termoVisivel = ref(false);
 const isSubmitting = ref(false);
+const documentoSelecionado = ref(null);
+const estadosBrasileiros = ref([
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]);
 
 // Dados para o formulário de pré-reserva
 const formData = ref({
   aceitaTermos: false,
   nome: props.user?.name || '',
-  cargo: '',
+  cargo: props.user?.cargo || '',
   matricula: props.user?.matricula || '',
-  orgao: '',
-  cpf: '',
+  orgao: props.user?.orgao || '',
+  cpf: props.user?.cpf || '',
+  data_nascimento: '',
+  rg: '',
+  orgao_expedidor: '',
+  sexo: '',
+  uf: '',
   motivo: '',
   condicao: '',
   email: props.user?.email || '',
-  telefone: '',
+  telefone: props.user?.telefone || '',
   endereco_rua: '',
   endereco_bairro: '',
   endereco_cidade: '',
@@ -40,6 +50,11 @@ const formData = ref({
   data_inicial: '',
   data_final: ''
 });
+
+// Handler para seleção de documento
+const handleDocumentoChange = (event) => {
+  documentoSelecionado.value = event.target.files[0];
+};
 
 // Verificar se as datas são válidas
 const validarDatas = () => {
@@ -90,13 +105,18 @@ const submeterReserva = () => {
   
   isSubmitting.value = true;
   
-  // Usar o Inertia form helper
+  // Configurar o FormData para enviar arquivos
   const form = useForm({
     nome: formData.value.nome,
     cargo: formData.value.cargo,
     matricula: formData.value.matricula,
     orgao: formData.value.orgao,
     cpf: formData.value.cpf,
+    data_nascimento: formData.value.data_nascimento,
+    rg: formData.value.rg,
+    orgao_expedidor: formData.value.orgao_expedidor,
+    sexo: formData.value.sexo,
+    uf: formData.value.uf,
     motivo: formData.value.motivo,
     condicao: formData.value.condicao,
     email: formData.value.email,
@@ -109,34 +129,15 @@ const submeterReserva = () => {
     },
     data_inicial: formData.value.data_inicial,
     data_final: formData.value.data_final,
-    aceita_termos: formData.value.aceitaTermos
+    aceita_termos: formData.value.aceitaTermos,
+    documento_comprobatorio: documentoSelecionado.value,
   });
 
   form.post(route('alojamento.reserva.store'), {
     preserveScroll: false,
+    forceFormData: true, // Importante para enviar arquivos
     onSuccess: () => {
       isSubmitting.value = false;
-      /* toast.success('Solicitação de pré-reserva enviada com sucesso!'); */
-      
-      // Limpar o formulário / Por enquanto não precisa, pois o usuário será redirecionado para outra página
-      /* formData.value = {
-        aceitaTermos: false,
-        nome: props.user?.name || '',
-        cargo: '',
-        matricula: props.user?.matricula || '',
-        orgao: '',
-        cpf: '',
-        motivo: '',
-        condicao: '',
-        email: props.user?.email || '',
-        telefone: '',
-        endereco_rua: '',
-        endereco_bairro: '',
-        endereco_cidade: '',
-        endereco_numero: '',
-        data_inicial: '',
-        data_final: ''
-      }; */
     },
     onError: (errors) => {
       isSubmitting.value = false;
@@ -153,12 +154,6 @@ const submeterReserva = () => {
 // Exibir/ocultar os termos
 const toggleTermos = () => {
   termoVisivel.value = !termoVisivel.value;
-};
-
-// Formatar data para exibição
-const formatarData = (dataString) => {
-  const data = new Date(dataString);
-  return new Intl.DateTimeFormat('pt-BR').format(data);
 };
 
 // Calcular data mínima (hoje)
@@ -228,7 +223,7 @@ const validarCPF = (cpf) => {
         </div>
         
         <form @submit.prevent="submeterReserva" class="space-y-8">
-          <!-- Informações Pessoais - Redesenhado -->
+          <!-- Informações Pessoais -->
           <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
             <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
@@ -249,7 +244,7 @@ const validarCPF = (cpf) => {
                   type="text" 
                   class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
-                  disabled
+                  readonly
                 >
               </div>
               
@@ -263,12 +258,72 @@ const validarCPF = (cpf) => {
                   v-model="formData.cpf" 
                   type="text" 
                   placeholder="000.000.000-00"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="w-full border-gray-300 rounded-md shadow-sm bg-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  readonly
                   required
                 >
                 <p v-if="formData.cpf && !validarCPF(formData.cpf)" class="mt-1 text-sm text-red-600">
                   CPF inválido. Use o formato 000.000.000-00
                 </p>
+              </div>
+              
+              <!-- Data de Nascimento -->
+              <div>
+                <label for="data_nascimento" class="block text-sm font-medium text-gray-700 mb-1">
+                  Data de Nascimento *
+                </label>
+                <input 
+                  id="data_nascimento" 
+                  v-model="formData.data_nascimento" 
+                  type="date" 
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  required
+                >
+              </div>
+              
+              <!-- RG -->
+              <div>
+                <label for="rg" class="block text-sm font-medium text-gray-700 mb-1">
+                  RG *
+                </label>
+                <input 
+                  id="rg" 
+                  v-model="formData.rg" 
+                  type="text" 
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  required
+                >
+              </div>
+              
+              <!-- Órgão Expedidor -->
+              <div>
+                <label for="orgao_expedidor" class="block text-sm font-medium text-gray-700 mb-1">
+                  Órgão Expedidor *
+                </label>
+                <input 
+                  id="orgao_expedidor" 
+                  v-model="formData.orgao_expedidor" 
+                  type="text" 
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  required
+                >
+              </div>
+              
+              <!-- Sexo -->
+              <div>
+                <label for="sexo" class="block text-sm font-medium text-gray-700 mb-1">
+                  Sexo *
+                </label>
+                <select 
+                  id="sexo" 
+                  v-model="formData.sexo" 
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
               </div>
               
               <!-- Cargo/Função -->
@@ -280,8 +335,9 @@ const validarCPF = (cpf) => {
                   id="cargo" 
                   v-model="formData.cargo" 
                   type="text" 
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
+                  readonly
                 >
               </div>
               
@@ -296,7 +352,7 @@ const validarCPF = (cpf) => {
                   type="text" 
                   class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
-                  disabled
+                  readonly
                 >
               </div>
               
@@ -309,8 +365,9 @@ const validarCPF = (cpf) => {
                   id="orgao" 
                   v-model="formData.orgao" 
                   type="text" 
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
+                  readonly
                 >
               </div>
               
@@ -346,6 +403,26 @@ const validarCPF = (cpf) => {
                   placeholder="Explique o motivo da sua solicitação de alojamento"
                   required
                 ></textarea>
+              </div>
+              
+              <!-- Documento Comprobatório -->
+              <div class="md:col-span-2">
+                <label for="documento_comprobatorio" class="block text-sm font-medium text-gray-700 mb-1">
+                  Documento Comprobatório (PDF, Word, Imagem)
+                </label>
+                <div class="mt-1 flex items-center">
+                  <input 
+                    id="documento_comprobatorio" 
+                    type="file" 
+                    @change="handleDocumentoChange"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+                  >
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                  Envie um documento que comprove o motivo da reserva (ex: licença para curso, documento oficial, etc).
+                  Formatos aceitos: PDF, DOC, DOCX, JPG, JPEG, PNG. Tamanho máximo: 10MB
+                </p>
               </div>
             </div>
           </div>
@@ -442,6 +519,22 @@ const validarCPF = (cpf) => {
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                 >
               </div>
+
+              <!-- UF -->
+          <div>
+                <label for="uf" class="block text-sm font-medium text-gray-700 mb-1">
+                  UF
+                </label>
+                <select 
+                  id="uf" 
+                  v-model="formData.uf" 
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                >
+                  <option value="">Selecione...</option>
+                  <option v-for="uf in estadosBrasileiros" :key="uf" :value="uf">{{ uf }}</option>
+                </select>
+              </div>
+              
             </div>
           </div>
           

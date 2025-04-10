@@ -18,6 +18,11 @@ class Alojamento extends Model
         'matricula',
         'orgao',
         'cpf',
+        'data_nascimento',
+        'rg',
+        'orgao_expedidor',
+        'sexo',
+        'uf',
         'motivo',
         'condicao',
         'email',
@@ -26,13 +31,15 @@ class Alojamento extends Model
         'data_inicial',
         'data_final',
         'status',
-        'motivo_rejeicao'
+        'motivo_rejeicao',
+        'documento_comprobatorio'
     ];
 
     protected $casts = [
         'endereco' => 'array',
         'data_inicial' => 'date',
         'data_final' => 'date',
+        'data_nascimento' => 'date',
     ];
 
     /**
@@ -101,5 +108,17 @@ class Alojamento extends Model
         }
         
         return implode(' - ', $partes);
+    }
+
+    /**
+     * Obter o caminho para o documento comprobatório
+     */
+    public function getDocumentoUrlAttribute()
+    {
+        if (!$this->documento_comprobatorio) {
+            return null;
+        }
+        
+        return asset('storage/' . $this->documento_comprobatorio);
     }
 }

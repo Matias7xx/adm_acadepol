@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, useForm, Head } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
@@ -7,12 +7,17 @@ import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButton from "@/Components/BaseButton.vue"
+import axios from 'axios';
 import {
   mdiAccount,
   mdiArrowLeftBoldOutline,
   mdiCheckCircle,
   mdiCloseCircle,
-  mdiRefresh
+  mdiRefresh,
+  mdiFileDocument,
+  mdiFileDownload,
+  mdiEye,
+  mdiPrinter
 } from "@mdi/js"
 
 // Props
@@ -26,6 +31,7 @@ const { toast } = useToast();
 // Estado local
 const selectedStatus = ref(props.reserva.status);
 const isChangingStatus = ref(false);
+const isGeneratingFicha = ref(false);
 
 // Status de reservas
 const statusLabels = {
@@ -52,6 +58,10 @@ const motivoRejeicao = ref('');
 const isSubmittingRejeicao = ref(false);
 const rejeicaoError = ref('');
 
+// Modal de visualização do documento
+const showDocumentoModal = ref(false);
+const documentoUrl = ref('');
+
 // Formatação de endereço
 const enderecoFormatado = computed(() => {
   if (!props.reserva.endereco) return 'Não informado';
@@ -74,7 +84,7 @@ const enderecoFormatado = computed(() => {
     }
     
     if (endereco.cidade) {
-      partes.push(endereco.cidade);
+      partes.push(`${endereco.cidade}${endereco.uf ? ' - ' + endereco.uf : ''}`);
     }
     
     return partes.length > 0 ? partes.join(' - ') : 'Não informado';
@@ -107,6 +117,11 @@ const duracaoEstadia = computed(() => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   return diffDays + (diffDays === 1 ? ' dia' : ' dias');
+});
+
+// Verificar se há documento comprobatório
+const hasDocumento = computed(() => {
+  return props.reserva.documento_url ? true : false;
 });
 
 // Mostrar modal de rejeição
@@ -183,6 +198,7 @@ const alterarStatus = (novoStatus) => {
         
         // Atualizar o status localmente
         props.reserva.status = novoStatus;
+        selectedStatus.value = novoStatus;
       },
       onError: (errors) => {
         showConfirmModal.value = false;
@@ -209,12 +225,74 @@ const retornarParaPendente = () => {
   alterarStatus('pendente');
 };
 
+// Visualizar documento
+const visualizarDocumento = () => {
+  if (props.reserva.documento_url) {
+    documentoUrl.value = props.reserva.documento_url;
+    showDocumentoModal.value = true;
+  } else {
+    toast.error('Documento não disponível');
+  }
+};
+
+// Fechar modal de documento
+const closeDocumentoModal = () => {
+  showDocumentoModal.value = false;
+  documentoUrl.value = '';
+};
+
 const closeModal = () => {
   showConfirmModal.value = false;
 };
 
 const closeRejeicaoModal = () => {
   showRejeicaoModal.value = false;
+};
+
+// Gerar ficha de hospedagem
+const gerarFichaHospedagem = () => {
+  if (props.reserva.status !== 'aprovada') {
+    toast.error('Apenas reservas aprovadas podem gerar ficha de hospedagem');
+    return;
+  }
+
+  isGeneratingFicha.value = true;
+  
+  // Abrir uma nova aba diretamente para a rota que gera o PDF
+  const url = route('admin.alojamento.ficha', props.reserva.id);
+  window.open(url, '_blank');
+  
+  isGeneratingFicha.value = false;
+};
+
+// Imprimir ficha de hospedagem
+const imprimirFichaHospedagem = () => {
+  if (props.reserva.status !== 'aprovada') {
+    toast.error('Apenas reservas aprovadas podem imprimir ficha de hospedagem');
+    return;
+  }
+  
+  // Abrir a visualização da ficha para impressão
+  const url = route('admin.alojamento.ficha.visualizar', props.reserva.id);
+  
+  // Abrir em uma nova aba
+  const printWindow = window.open(url, '_blank');
+  
+  if (!printWindow) {
+    toast.error('Seu navegador bloqueou a abertura da janela. Por favor, permita popups para este site.');
+    return;
+  }
+  
+  // Após carregar a página, acionar a impressão
+  /* printWindow.onload = function() {
+    setTimeout(() => {
+      try {
+        printWindow.print();
+      } catch (e) {
+        console.error('Erro ao imprimir:', e);
+      }
+    }, 1000); // Pequeno delay para garantir que o conteúdo seja carregado
+  }; */
 };
 
 </script>
@@ -271,6 +349,20 @@ const closeRejeicaoModal = () => {
             </div>
 
             <div v-if="reserva.status === 'aprovada'" class="flex gap-2">
+             <!--  <BaseButton
+                @click="gerarFichaHospedagem"
+                :icon="mdiFileDownload"
+                label="Gerar Ficha"
+                color="info"
+                :loading="isGeneratingFicha"
+                :disabled="isGeneratingFicha"
+              /> -->
+              <BaseButton
+                @click="imprimirFichaHospedagem"
+                :icon="mdiFileDownload"
+                label="Gerar Ficha"
+                color="info"
+              />
               <BaseButton
                 @click="rejeitarReserva"
                 :icon="mdiCloseCircle"
@@ -282,7 +374,7 @@ const closeRejeicaoModal = () => {
                 @click="retornarParaPendente"
                 :icon="mdiRefresh"
                 label="Retornar para Pendente"
-                color="info"
+                color="white"
                 :disabled="isChangingStatus"
               />
             </div>
@@ -299,7 +391,7 @@ const closeRejeicaoModal = () => {
                 @click="retornarParaPendente"
                 :icon="mdiRefresh"
                 label="Retornar para Pendente"
-                color="info"
+                color="white"
                 :disabled="isChangingStatus"
               />
             </div>
@@ -308,91 +400,153 @@ const closeRejeicaoModal = () => {
       </CardBox>
 
       <!-- Informações da Reserva -->
-      <CardBox class="mb-6">
-        <h3 class="text-lg font-medium mb-4">Informações da Reserva</h3>
-        
-        <div class="grid md:grid-cols-2 gap-6">
-          <div>
-            <h4 class="font-medium text-gray-500 dark:text-gray-400 mb-2">Dados Pessoais</h4>
-            <table class="w-full">
-              <tbody>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Nome</td>
-                  <td>{{ reserva.nome }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Matrícula</td>
-                  <td>{{ reserva.matricula }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Cargo</td>
-                  <td>{{ reserva.cargo }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Órgão</td>
-                  <td>{{ reserva.orgao }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">CPF</td>
-                  <td>{{ reserva.cpf }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Condição</td>
-                  <td>{{ reserva.condicao }}</td>
-                </tr>
-              </tbody>
-            </table>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Informações Pessoais -->
+        <CardBox>
+          <h3 class="text-lg font-medium mb-4">Informações Pessoais</h3>
+          <div class="space-y-1">
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Nome:</span>
+              <span class="col-span-2">{{ reserva.nome }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">CPF:</span>
+              <span class="col-span-2">{{ reserva.cpf }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">RG:</span>
+              <span class="col-span-2">{{ reserva.rg || 'Não informado' }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Órgão Expedidor:</span>
+              <span class="col-span-2">{{ reserva.orgao_expedidor || 'Não informado' }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Data de Nascimento:</span>
+              <span class="col-span-2">{{ reserva.data_nascimento ? formatDate(reserva.data_nascimento) : 'Não informado' }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Sexo:</span>
+              <span class="col-span-2">{{ reserva.sexo === 'masculino' ? 'Masculino' : reserva.sexo === 'feminino' ? 'Feminino' : 'Não informado' }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Matrícula:</span>
+              <span class="col-span-2">{{ reserva.matricula }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Cargo/Função:</span>
+              <span class="col-span-2">{{ reserva.cargo }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Órgão/Instituição:</span>
+              <span class="col-span-2">{{ reserva.orgao }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Condição:</span>
+              <span class="col-span-2">{{ reserva.condicao }}</span>
+            </div>
           </div>
+        </CardBox>
           
-          <div>
-            <h4 class="font-medium text-gray-500 dark:text-gray-400 mb-2">Contato e Endereço</h4>
-            <table class="w-full">
-              <tbody>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Email</td>
-                  <td>{{ reserva.email }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Telefone</td>
-                  <td>{{ reserva.telefone }}</td>
-                </tr>
-                <tr>
-                  <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Endereço</td>
-                  <td>{{ enderecoFormatado }}</td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Contato e Endereço -->
+        <CardBox>
+          <h3 class="text-lg font-medium mb-4">Contato e Endereço</h3>
+          <div class="space-y-1">
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Email:</span>
+              <span class="col-span-2">{{ reserva.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Telefone:</span>
+              <span class="col-span-2">{{ reserva.telefone }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Endereço:</span>
+              <span class="col-span-2">{{ enderecoFormatado }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">UF:</span>
+              <span class="col-span-2">{{ reserva.uf || 'Não informado' }}</span>
+            </div>
           </div>
-        </div>
-      </CardBox>
+        </CardBox>
+      </div>
       
       <!-- Detalhes da Estadia -->
-      <CardBox class="mb-6">
-        <h3 class="text-lg font-medium mb-4">Detalhes da Estadia</h3>
-        <table class="w-full">
-          <tbody>
-            <tr>
-              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Data Inicial</td>
-              <td>{{ formatDate(reserva.data_inicial) }}</td>
-            </tr>
-            <tr>
-              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Data Final</td>
-              <td>{{ formatDate(reserva.data_final) }}</td>
-            </tr>
-            <tr>
-              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Duração</td>
-              <td>{{ duracaoEstadia }}</td>
-            </tr>
-            <tr>
-              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Motivo da Solicitação</td>
-              <td>{{ reserva.motivo }}</td>
-            </tr>
-            <tr v-if="reserva.status === 'rejeitada' && reserva.motivo_rejeicao">
-              <td class="py-2 text-gray-600 dark:text-gray-300 font-medium">Motivo da Rejeição</td>
-              <td class="text-red-600">{{ reserva.motivo_rejeicao }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Período e Motivo -->
+        <CardBox>
+          <h3 class="text-lg font-medium mb-4">Detalhes da Estadia</h3>
+          <div class="space-y-1">
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Data Inicial:</span>
+              <span class="col-span-2">{{ formatDate(reserva.data_inicial) }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Data Final:</span>
+              <span class="col-span-2">{{ formatDate(reserva.data_final) }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <span class="font-medium text-gray-600 dark:text-gray-300">Duração:</span>
+              <span class="col-span-2">{{ duracaoEstadia }}</span>
+            </div>
+          </div>
+        </CardBox>
+        
+        <!-- Documento e Motivos -->
+        <CardBox>
+          <h3 class="text-lg font-medium mb-4">Documentação</h3>
+          <div class="space-y-4">
+            <div v-if="hasDocumento" class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+              <div class="flex items-center">
+                <div class="bg-blue-100 dark:bg-blue-900 p-2 rounded-md mr-3">
+                  <svg :class="mdiFileDocument" class="w-6 h-6 text-blue-600 dark:text-blue-300" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6M6,4H13V9H18V20H6V4M8,12V14H16V12H8M8,16V18H13V16H8Z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-medium">Documento Comprobatório</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Documento enviado pelo solicitante</p>
+                </div>
+              </div>
+              <BaseButton
+                @click="visualizarDocumento"
+                :icon="mdiEye"
+                label="Visualizar"
+                color="info"
+                small
+              />
+            </div>
+            <div v-else class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg text-gray-500 dark:text-gray-400 italic">
+              Nenhum documento comprobatório enviado.
+            </div>
+            
+            <div class="pt-4">
+              <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Motivo da Solicitação:</h4>
+              <p class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">{{ reserva.motivo }}</p>
+            </div>
+            
+            <div v-if="reserva.status === 'rejeitada' && reserva.motivo_rejeicao" class="pt-2">
+              <h4 class="font-medium text-red-600 dark:text-red-400 mb-2">Motivo da Rejeição:</h4>
+              <p class="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg">{{ reserva.motivo_rejeicao }}</p>
+            </div>
+          </div>
+        </CardBox>
+      </div>
+      
+      <!-- Informações Adicionais para quando aprovado -->
+      <CardBox v-if="reserva.status === 'aprovada'" class="mb-6">
+        <h3 class="text-lg font-medium mb-4">Informações para Check-in</h3>
+        <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg text-green-800 dark:text-green-200">
+          <div class="font-medium mb-2">Instruções para o Alojado:</div>
+          <ul class="list-disc ml-5 space-y-1">
+            <li>Horário de check-in: entre 8h e 18h</li>
+            <li>Horário de check-out: até 12h do dia de saída</li>
+            <li>Apresentar documento de identificação na chegada</li>
+            <li>Informar que a ACADEPOL <strong>NÃO FORNECE</strong> materiais de higiene pessoal, lençóis, cobertores e toalhas</li>
+            <li>Os quartos são compartilhados (beliches) e separados por sexo</li>
+          </ul>
+        </div>
       </CardBox>
       
       <!-- Modal de Confirmação Padrão -->
@@ -469,6 +623,33 @@ const closeRejeicaoModal = () => {
                 :disabled="isSubmittingRejeicao"
               />
             </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal de Visualização de Documento -->
+      <div 
+        v-if="showDocumentoModal" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      >
+        <div class="relative mx-auto p-0 border w-11/12 md:w-4/5 lg:w-3/4 h-5/6 shadow-lg rounded-md bg-white dark:bg-gray-800">
+          <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Documento Comprobatório</h3>
+            <button 
+              @click="closeDocumentoModal" 
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white focus:outline-none"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="h-full p-2 bg-gray-100 dark:bg-gray-900 flex justify-center overflow-auto">
+            <iframe 
+              :src="documentoUrl" 
+              class="w-full h-full border-0"
+              allowfullscreen
+            ></iframe>
           </div>
         </div>
       </div>
