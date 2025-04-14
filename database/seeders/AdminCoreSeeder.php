@@ -207,17 +207,24 @@ class AdminCoreSeeder extends Seeder
                 'icon' => 'M19 9H17V7H19M19 13H17V11H19M19 17H17V15H19M7 7H5V9H7M7 11H5V13H7M7 15H5V17H7M11 7H9V9H11M11 11H9V13H11M11 15H9V17H11M15 7V17H3V5H21V15H15V7H15M13 5H3V3H21V5H13Z', // Document with margins
             ],
             [
+                'name' => 'Requerimentos',
+                'uri' => '/<admin>/requerimentos',
+                'enabled' => 1,
+                'weight' => 10,
+                'icon' => 'M19 9H17V7H19M19 13H17V11H19M19 17H17V15H19M7 7H5V9H7M7 11H5V13H7M7 15H5V17H7M11 7H9V9H11M11 11H9V13H11M11 15H9V17H11M15 7V17H3V5H21V15H15V7H15M13 5H3V3H21V5H13Z', // Document with margins
+            ],
+            [
                 'name' => 'Notícias',
                 'uri' => '/<admin>/noticias',
                 'enabled' => 1,
-                'weight' => 10,
+                'weight' => 11,
                 'icon' => 'M20 11V8H16V5H12V8H8V5H4V8H2V18H22V11H20M20 16H4V8H6V11H10V8H14V11H18V8H20V16Z', // Newspaper
             ],
             [
                 'name' => 'Fale Conosco',
                 'uri' => '/<admin>/contato',
                 'enabled' => 1,
-                'weight' => 11,
+                'weight' => 12,
                 'icon' => 'M22 11V3H11V5H5V3H2V11H5V9H8V19H22V11M8 9V5H11V9H8M20 19H10V11H20V19Z', // Layers/stack
             ],
         ];

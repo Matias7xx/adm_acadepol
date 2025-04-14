@@ -116,6 +116,28 @@ Breadcrumbs::resource('admin.directors', 'Diretores');
 Breadcrumbs::resource('admin.alojamento', 'Reserva de Alojamento');
 Breadcrumbs::resource('admin.noticias', 'Notícias');
 Breadcrumbs::resource('admin.contato', 'Mensagens de Contato');
+Breadcrumbs::resource('admin.requerimentos', 'Requerimentos');
+
+// Para a rota admin.index
+Breadcrumbs::for('admin.index', function (BreadcrumbTrail $trail) {
+    $trail->push('Dashboard', route('admin.dashboard'));
+});
+
+// Para rotas específicas de requerimentos não cobertas pelo resource
+Breadcrumbs::for('admin.requerimentos.alterar-status', function (BreadcrumbTrail $trail, $requerimento) {
+    $trail->parent('admin.requerimentos.show', $requerimento);
+    $trail->push('Alterar Status', route('admin.requerimentos.alterar-status', $requerimento));
+});
+
+Breadcrumbs::for('admin.requerimentos.deferir', function (BreadcrumbTrail $trail, $requerimento) {
+    $trail->parent('admin.requerimentos.show', $requerimento);
+    $trail->push('Aprovar', route('admin.requerimentos.deferir', $requerimento));
+});
+
+Breadcrumbs::for('admin.requerimentos.indeferir', function (BreadcrumbTrail $trail, $requerimento) {
+    $trail->parent('admin.requerimentos.show', $requerimento);
+    $trail->push('Rejeitar', route('admin.requerimentos.indeferir', $requerimento));
+});
 
 // admin account Info
 Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {

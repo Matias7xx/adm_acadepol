@@ -75,7 +75,8 @@ class Alojamento extends Model
      */
     public function getDuracaoAttribute()
     {
-        return $this->data_inicial->diffInDays($this->data_final) + 1;
+        // determina a duração da estadia . $this->data_inicial->diffInDays($this->data_final) + 1 acrescenta 1 dia
+        return $this->data_inicial->diffInDays($this->data_final);
     }
 
     /**

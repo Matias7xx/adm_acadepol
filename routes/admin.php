@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AlojamentoController;
 use App\Http\Controllers\MatriculaController;
+use App\Http\Controllers\RequerimentoController;
 use App\Http\Controllers\ContatoController;
 use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use App\Http\Middleware\HasAccessAdmin;
@@ -129,6 +130,25 @@ Route::group([
     Route::resource('noticias', NoticiaController::class);
     Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
     ->name('noticias.toggle-destaque');
+
+
+    /*
+|--------------------------------------------------------------------------
+| Gerenciamento de Requerimentos
+|--------------------------------------------------------------------------
+*/
+Route::prefix('requerimentos')->group(function () {
+    // Listagem e visualização
+    Route::get('/', [RequerimentoController::class, 'index'])->name('requerimentos.index');
+    Route::get('/{requerimento}', [RequerimentoController::class, 'show'])->name('requerimentos.show');
+    
+    // Ações de aprovação/rejeição
+    Route::post('/{requerimento}/aprovar', [RequerimentoController::class, 'deferir'])->name('requerimentos.deferir');
+    Route::post('/{requerimento}/rejeitar', [RequerimentoController::class, 'indeferir'])->name('requerimentos.indeferir');
+
+    // Alteração de status
+    Route::patch('/{requerimento}/alterar-status', [RequerimentoController::class, 'alterarStatus'])->name('requerimentos.alterar-status');
+});
 
 
     /*

@@ -13,7 +13,7 @@ const props = defineProps({
   tipo: {
     type: String,
     default: 'alojamento',
-    validator: (value) => ['alojamento', 'matricula', 'contato'].includes(value)
+    validator: (value) => ['alojamento', 'matricula', 'contato', 'requerimento'].includes(value)
   }
 });
 
@@ -49,6 +49,16 @@ const tipoConfig = computed(() => {
       voltarRota: route('home'),
       voltarTexto: 'Voltar ao Início',
       mensagemNotificacao: 'Você receberá um e-mail com a confirmação ou rejeição da sua solicitação de alojamento.'
+    },
+    requerimento: {
+      titulo: 'Confirmação de Requerimento',
+      icone: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      corIcone: 'text-indigo-600',
+      bgIcone: 'bg-indigo-100',
+      mensagemPadrao: 'Seu requerimento foi enviado com sucesso e será analisado pela equipe responsável.',
+      voltarRota: route('home'),
+      voltarTexto: 'Voltar ao Início',
+      mensagemNotificacao: 'Você receberá uma notificação por e-mail quando seu requerimento for analisado.'
     }
   };
   
@@ -76,14 +86,18 @@ const formatarData = (dataString) => {
   }
 };
 
-// Número do protocolo baseado no ID e na data
-/* const protocolo = computed(() => {
-  if (!props.detalhes?.id) return null;
+// Formatação para o tipo de requerimento
+const formatTipoRequerimento = (tipo) => {
+  if (!tipo) return '';
   
-  const id = props.detalhes.id.toString().padStart(5, '0');
-  const timestamp = new Date().getTime().toString().slice(-6);
-  return `${props.tipo.toUpperCase()}-${id}-${timestamp}`;
-}); */
+  const tipos = {
+    'segunda_via_certificado': '2ª Via de Certificado',
+    'declaracao_participacao': 'Declaração de Participação em Curso',
+    'outros': 'Outros'
+  };
+  
+  return tipos[tipo] || tipo;
+};
 
 </script>
 
@@ -124,9 +138,6 @@ const formatarData = (dataString) => {
         <div v-if="detalhes" class="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8 max-w-2xl mx-auto">
           <div class="flex justify-between items-center mb-4 border-b pb-3">
             <h3 class="text-xl font-semibold text-gray-700">Detalhes da Solicitação</h3>
-            <div v-if="protocolo" class="text-sm font-medium text-gray-500">
-              Protocolo: <span class="font-bold text-gray-800">{{ protocolo }}</span>
-            </div>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,6 +151,16 @@ const formatarData = (dataString) => {
                   <span>
                     <span class="font-medium text-gray-700">Nome:</span>
                     <span class="text-gray-800 ml-1">{{ detalhes.nome }}</span>
+                  </span>
+                </p>
+                
+                <p v-if="detalhes.matricula" class="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                  </svg>
+                  <span>
+                    <span class="font-medium text-gray-700">Matrícula:</span>
+                    <span class="text-gray-800 ml-1">{{ detalhes.matricula }}</span>
                   </span>
                 </p>
                 
@@ -192,15 +213,38 @@ const formatarData = (dataString) => {
                   </p>
                 </template>
                 
-                <p class="flex items-start">
+                <template v-if="tipo === 'requerimento'">
+                  <p class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>
+                      <span class="font-medium text-gray-700">Tipo:</span>
+                      <span class="text-gray-800 ml-1">{{ formatTipoRequerimento(detalhes.tipo) }}</span>
+                    </span>
+                  </p>
+                  <p v-if="detalhes.assunto" class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                    <span>
+                      <span class="font-medium text-gray-700">Assunto:</span>
+                      <span class="text-gray-800 ml-1">{{ detalhes.assunto }}</span>
+                    </span>
+                  </p>
+                </template>
+                
+                <p v-if="detalhes.data_inicial || detalhes.data_inicio" class="flex items-start">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span>
                     <span class="font-medium text-gray-700">{{ tipo === 'matricula' ? 'Período do Curso:' : 'Período:' }}</span>
                     <span class="text-gray-800 ml-1">
-                      {{ formatarData(detalhes.data_inicial || detalhes.data_inicio) }} a 
-                      {{ formatarData(detalhes.data_final || detalhes.data_fim) }}
+                      {{ formatarData(detalhes.data_inicial || detalhes.data_inicio) }} 
+                      <template v-if="detalhes.data_final || detalhes.data_fim">
+                        a {{ formatarData(detalhes.data_final || detalhes.data_fim) }}
+                      </template>
                     </span>
                   </span>
                 </p>
@@ -257,18 +301,13 @@ const formatarData = (dataString) => {
             
             <Link
               v-if="tipo === 'matricula'"
-              :href="route('dashboard')"
+              :href="route('home')"
               class="bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 py-3 px-8 rounded-md font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 shadow-sm"
             >
-              Ir para o Dashboard
+            Voltar ao Início
             </Link>
           </div>
         </div>
-      </div>
-      
-      <div v-if="protocolo" class="max-w-3xl mx-auto text-center text-sm text-gray-500 mt-4">
-        <p>Por favor, guarde o número do seu protocolo: <span class="font-mono font-bold text-gray-700">{{ protocolo }}</span></p>
-        <p>Use-o como referência em qualquer comunicação futura sobre esta solicitação.</p>
       </div>
     </div>
     <Footer />

@@ -270,7 +270,7 @@ const submeterInscricao = () => {
               <!-- Restrições de Saúde -->
               <div>
                 <label for="restricoesSaude" class="block text-sm font-medium text-gray-700 mb-1">
-                  Possui alguma restrição de saúde? (opcional)
+                  Possui alguma restrição de saúde? *
                 </label>
                 <input 
                   id="restricoesSaude" 
@@ -278,6 +278,7 @@ const submeterInscricao = () => {
                   type="text"
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   placeholder="Informe se possui alguma restrição médica para atividades físicas"
+                  required
                 >
               </div>
 

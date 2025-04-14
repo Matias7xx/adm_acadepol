@@ -7,6 +7,7 @@ use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\ContatoController;
+use App\Http\Controllers\RequerimentoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -115,6 +116,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/minhas-reservas', 'minhasReservas')->name('minhas-reservas');
         Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
     });
+
+    // Requerimentos
+    Route::controller(RequerimentoController::class)->prefix('requerimentos')->name('requerimentos.')->group(function () {
+    // Criação e confirmação
+    Route::get('/novo', 'create')->name('create');
+    Route::post('/', 'store')->name('store');
+    Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
+});
 });
 
 // Rotas de autenticação
