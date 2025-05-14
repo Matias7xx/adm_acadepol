@@ -10,7 +10,7 @@ const capacitacao = ref([
 
 const formacao = ref([
   { id: 1, titulo: 'Concursos', link: '/concursos' },
-  { id: 2, titulo: 'Manual do Aluno', link: '/manual-do-aluno' },
+  { id: 2, titulo: 'Manual do Aluno', link: '/manual-aluno' },
 ])
 
 const utilidade = ref([

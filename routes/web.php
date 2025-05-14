@@ -57,6 +57,10 @@ Route::get('/organograma', function () {
     return Inertia::render('Organograma');
 })->name('organograma');
 
+Route::get('/manual-aluno', function () {
+    return Inertia::render('ManualAluno');
+})->name('manual.aluno');
+
 // Cursos - acesso público
 Route::get('/cursos', [CursoController::class, 'cursosPublicos'])
     ->name('cursos');

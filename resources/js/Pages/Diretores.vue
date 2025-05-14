@@ -21,6 +21,6 @@
     <Header />
     <SiteNavbar />
       <CardDiretores />
-    <Footer />
   </div>
+      <Footer />
 </template>

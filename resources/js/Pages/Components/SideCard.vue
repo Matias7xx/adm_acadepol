@@ -58,7 +58,7 @@ import { Link } from '@inertiajs/vue3'
           <p class="text-sm text-gray-600 mt-1">
             Envie documentos e faça solicitações online.
           </p>
-          <a href="#" class="text-sm font-medium text-yellow-600 hover:text-yellow-800 inline-block mt-2 group-hover:underline">
+          <a href="/requerimentos/novo" class="text-sm font-medium text-yellow-600 hover:text-yellow-800 inline-block mt-2 group-hover:underline">
             Fazer requerimento →
           </a>
         </div>
