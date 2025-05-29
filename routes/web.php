@@ -10,6 +10,7 @@ use App\Http\Controllers\ContatoController;
 use App\Http\Controllers\RequerimentoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UploadController;
 use Inertia\Inertia;
 
 /*
@@ -27,6 +28,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 })->name('home');
+
+//Rota para upload de imagens na notícia
+Route::post('/api/upload-ckeditor-images', [UploadController::class, 'uploadCKEditorImage'])
+->middleware(['auth', 'verified']);
 
 // Páginas institucionais
 Route::get('/historia', function () {

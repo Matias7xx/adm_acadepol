@@ -60,7 +60,6 @@ const isUploading = ref(false);
 const uploadProgress = ref(0);
 const wordCount = ref(0);
 const editorHeight = ref('400px');
-const hasDraft = ref(false);
 
 // Configurações avançadas do Quill
 const editorOptions = {

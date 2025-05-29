@@ -327,7 +327,7 @@ onMounted(() => {
             :class="{ 'ring-2 ring-[#bea55a] ring-opacity-50': noticia.destaque }"
           >
             <!-- Container da imagem -->
-            <div class="relative h-48">
+            <div v-if="noticia.imagem" class="relative h-48">
               <img 
                 :src="noticia.imagem" 
                 :alt="`Imagem ilustrativa: ${noticia.titulo}`" 

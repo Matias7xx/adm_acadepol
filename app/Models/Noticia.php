@@ -77,10 +77,9 @@ class Noticia extends Model
 
     public function getSanitizedConteudoAttribute()
 {
-    // Sanitizar HTML para evitar XSS e manter formatação básica
     return \Mews\Purifier\Facades\Purifier::clean($this->conteudo, [
-        'HTML.Allowed' => 'p,b,i,u,strong,em,h2,h3,h4,ul,ol,li,a[href|target],br,blockquote',
-        'CSS.AllowedProperties' => [],
+        'HTML.Allowed' => 'p,b,i,u,strong,em,h2,h3,h4,ul,ol,li,a[href|target],br,blockquote,img[src|alt|width|height|class]',
+        'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height',
         'AutoFormat.AutoParagraph' => true,
         'AutoFormat.RemoveEmpty' => true,
     ]);

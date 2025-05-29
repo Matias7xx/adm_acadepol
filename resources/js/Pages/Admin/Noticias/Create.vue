@@ -5,11 +5,8 @@ import {
   mdiArrowLeftBoldOutline,
   mdiCalendarRange,
   mdiStar,
-  mdiFormatText,
   mdiImage,
-  mdiEye,
   mdiContentSave,
-  mdiAlertCircleOutline
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -17,13 +14,11 @@ import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.
 import CardBox from "@/Components/CardBox.vue"
 import FormField from '@/Components/FormField.vue'
 import FormControl from '@/Components/FormControl.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { ref, computed } from 'vue'
+import NoticiasEditor from "./partials/NoticiasEditor.vue"
 
 const props = defineProps({
   statusOptions: {
@@ -38,73 +33,15 @@ const form = useForm({
   conteudo: '',
   destaque: false,
   data_publicacao: new Date().toISOString().substring(0, 10), // Data atual como padrão
-  status: 'rascunho',
+  status: 'publicado', // Status padrão
   imagem: null,
-  imagem_preview: null,
 });
 
 // Estado
-const isPreviewMode = ref(false);
-const editorInstance = ref(null);
 const imagePreview = ref(null);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
 const wordCount = ref(0);
-const editorHeight = ref('400px');
-
-// Configurações avançadas do Quill
-const editorOptions = {
-  modules: {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'align': [] }],
-        ['blockquote', 'code-block'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        [{ 'indent': '-1' }, { 'indent': '+1' }],
-        ['link', 'image', 'video'],
-        ['clean']
-      ],
-      handlers: {
-        //handlers personalizados se necessário
-        // 'image': imageHandler
-      }
-    },
-    clipboard: {
-      matchVisual: false
-    },
-    history: {
-      delay: 1000,
-      maxStack: 50,
-      userOnly: true
-    }
-  },
-  placeholder: 'Escreva o conteúdo da notícia aqui...',
-  theme: 'snow',
-  formats: [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'color', 'background', 'align',
-    'blockquote', 'code-block',
-    'list', 'bullet', 'indent',
-    'link', 'image', 'video'
-  ]
-};
-
-// Método para calcular o número de palavras
-const calculateWordCount = (text) => {
-  // Remove HTML tags
-  const plainText = text.replace(/<[^>]*>/g, ' ');
-  // Split por espaços e filtra strings vazias
-  const words = plainText.split(/\s+/).filter(word => word.length > 0);
-  return words.length;
-};
-
-// Atualizar contagem de palavras quando o conteúdo mudar
-const updateWordCount = (content) => {
-  wordCount.value = calculateWordCount(content);
-};
 
 // Função para lidar com o preview da imagem
 const handleImageUpload = (event) => {
@@ -155,9 +92,9 @@ const handleImageUpload = (event) => {
   form.imagem = file;
 };
 
-// Alternar entre edição e visualização
-const togglePreview = () => {
-  isPreviewMode.value = !isPreviewMode.value;
+// Handler para mudança no contador de palavras
+const handleWordCountChange = (count) => {
+  wordCount.value = count;
 };
 
 // Método para enviar o formulário
@@ -181,67 +118,6 @@ const isFormValid = computed(() => {
          form.data_publicacao && 
          form.status;
 });
-
-const hasDraft = computed(() => {
-  // Verifica se o localStorage está disponível e se existe um rascunho
-  if (typeof localStorage !== 'undefined') {
-    return localStorage.getItem('noticia_draft') !== null;
-  }
-  return false;
-});
-
-// Referência ao editor
-const onEditorMounted = (quill) => {
-  editorInstance.value = quill;
-  
-  // Observar alterações no conteúdo
-  quill.on('text-change', () => {
-    form.conteudo = quill.root.innerHTML;
-    updateWordCount(form.conteudo);
-  });
-};
-
-// Auto-save no localStorage a cada 30 segundos
-let autoSaveInterval;
-
-onMounted(() => {
-  // Carregar rascunho se existir
-  const savedDraft = localStorage.getItem('noticia_draft');
-  if (savedDraft) {
-    try {
-      const draft = JSON.parse(savedDraft);
-      form.titulo = draft.titulo || '';
-      form.descricao_curta = draft.descricao_curta || '';
-      form.conteudo = draft.conteudo || '';
-      form.destaque = draft.destaque || false;
-      form.data_publicacao = draft.data_publicacao || new Date().toISOString().substring(0, 10);
-      form.status = draft.status || 'rascunho';
-      
-      updateWordCount(form.conteudo);
-    } catch (e) {
-      console.error('Error loading draft', e);
-    }
-  }
-  
-  // Configurar auto-save
-  autoSaveInterval = setInterval(() => {
-    if (form.titulo || form.descricao_curta || form.conteudo) {
-      localStorage.setItem('noticia_draft', JSON.stringify({
-        titulo: form.titulo,
-        descricao_curta: form.descricao_curta,
-        conteudo: form.conteudo,
-        destaque: form.destaque,
-        data_publicacao: form.data_publicacao,
-        status: form.status,
-      }));
-    }
-  }, 30000); // 30 segundos
-});
-
-// Limpeza na desmontagem
-onUnmounted(() => {
-  clearInterval(autoSaveInterval);
-});
 </script>
 
 <template>
@@ -262,30 +138,6 @@ onUnmounted(() => {
           small
         />
       </SectionTitleLineWithButton>
-      
-      <!-- Barra de ferramentas flutuante -->
-      <div class="fixed bottom-6 right-6 z-50 flex space-x-2">
-        <BaseButton
-          type="button"
-          color="success"
-          icon-size="24"
-          :icon="mdiContentSave"
-          label="Salvar"
-          rounded-full
-          :class="{ 'opacity-25': form.processing }"
-          :disabled="form.processing || !isFormValid"
-          @click="submit"
-        />
-        <BaseButton
-          type="button"
-          color="info"
-          icon-size="24"
-          :icon="isPreviewMode ? mdiFormatText : mdiEye"
-          :label="isPreviewMode ? 'Editar' : 'Visualizar'"
-          rounded-full
-          @click="togglePreview"
-        />
-      </div>
       
       <CardBox
         form
@@ -333,8 +185,8 @@ onUnmounted(() => {
                 v-model="form.status"
                 type="select"
                 :options="{
-                  'rascunho': 'Rascunho',
                   'publicado': 'Publicado',
+                  'rascunho': 'Rascunho',
                   'arquivado': 'Arquivado'
                 }"
                 :error="form.errors.status"
@@ -495,79 +347,12 @@ onUnmounted(() => {
         </div>
         
         <!-- Editor de Conteúdo -->
-        <div class="p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold text-lg flex items-center">
-              <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.03 6.03L20 7L18.15 8.85L19.03 9.03L19.4 12.41L18.21 13.6L19 15L16.3 17.7L15 17L13.6 18.21L13.03 19.97L10.03 19.97L8.3 18.3L6 19L5 16.5L3.41 14.91L6.83 12.3H7.33L9 13L10.03 13.03V15L12.5 13.5L14 12L12.5 10.5L11 9.1H9.03L5.83 7.5L7.5 5.8L10 5L11 7L14 7L15.56 5.44L19.03 6.03Z" />
-                </svg>
-              </span>
-              Conteúdo da Notícia
-            </h3>
-            
-            <div class="flex items-center space-x-2">
-              <button 
-                type="button" 
-                class="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                @click="editorHeight = editorHeight === '400px' ? '600px' : '400px'"
-              >
-                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10,21V19H6.41L10.91,14.5L9.5,13.09L5,17.59V14H3V21H10M14.5,10.91L19,6.41V10H21V3H14V5H17.59L13.09,9.5L14.5,10.91Z" />
-                </svg>
-                {{ editorHeight === '400px' ? 'Expandir editor' : 'Reduzir editor' }}
-              </button>
-            </div>
-          </div>
-          
-          <div class="border rounded-lg overflow-hidden relative">
-            <!-- Modo visualização -->
-            <div v-if="isPreviewMode" class="p-6 prose max-w-none min-h-[400px]" v-html="form.conteudo"></div>
-            
-            <!-- Modo edição -->
-            <div v-else>
-              <QuillEditor 
-                v-model:content="form.conteudo"
-                content-type="html"
-                :options="editorOptions"
-                :style="{ height: editorHeight, 'max-height': '800px' }"
-                @ready="onEditorMounted"
-              />
-              
-              <div class="flex justify-between items-center px-4 py-2 bg-gray-50 border-t text-xs text-gray-500">
-                <div>
-                  <span>{{ wordCount }} palavras</span>
-                  <span class="mx-2">|</span>
-                  <span>Tempo estimado de leitura: {{ Math.max(1, Math.ceil(wordCount / 200)) }} min</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Badge de erro -->
-            <div 
-              v-if="form.errors.conteudo" 
-              class="absolute top-0 right-0 m-2 px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full"
-            >
-              {{ form.errors.conteudo }}
-            </div>
-          </div>
-          
-          <!-- Dicas de uso do editor -->
-          <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-4 text-sm text-blue-700">
-            <h4 class="font-medium flex items-center mb-2">
-              <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,13H13V17H11V13Z" />
-              </svg>
-              Dicas para um conteúdo de qualidade:
-            </h4>
-            <ul class="list-disc list-inside space-y-1">
-              <li>Use os títulos (H2, H3) para organizar o conteúdo em seções</li>
-              <li>Inclua imagens relevantes ao longo do texto usando o botão de imagem</li>
-              <li>Para incorporar vídeos do YouTube, clique no botão de vídeo</li>
-              <li>O texto deve ter no mínimo 300 palavras para melhor indexação</li>
-              <li>Verifique a formatação e ortografia antes de publicar</li>
-            </ul>
-          </div>
+        <div class="mb-6">
+          <NoticiasEditor
+            v-model="form.conteudo"
+            :error="form.errors.conteudo"
+            @word-count-change="handleWordCountChange"
+          />
         </div>
 
         <BaseDivider />
