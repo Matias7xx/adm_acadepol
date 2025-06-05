@@ -1,84 +1,105 @@
 <script setup>
-  import { ref, computed } from 'vue';
-  import { usePage, Head } from '@inertiajs/vue3';
-  // Componentes
-  import Header from './Components/Header.vue';
-  import SiteNavbar from './Components/SiteNavbar.vue';
-  import Footer from './Components/Footer.vue';
-  import CardSection from './CursoDetalhesComponents/CardSection.vue'
-  import InfoItem from './CursoDetalhesComponents/InfoItem.vue';
-  import CourseHeader from './CursoDetalhesComponents/CourseHeader.vue';
-  import EnrollmentCard from './CursoDetalhesComponents/EnrollmentCard.vue';
-  import SocialShareCard from './CursoDetalhesComponents/SocialShareCard.vue';
-  import { useToast } from '@/Composables/useToast'; 
+import { ref, computed } from 'vue';
+import { usePage, Head } from '@inertiajs/vue3';
+// Componentes
+import Header from './Components/Header.vue';
+import SiteNavbar from './Components/SiteNavbar.vue';
+import Footer from './Components/Footer.vue';
+import CardSection from './CursoDetalhesComponents/CardSection.vue'
+import InfoItem from './CursoDetalhesComponents/InfoItem.vue';
+import CourseHeader from './CursoDetalhesComponents/CourseHeader.vue';
+import EnrollmentCard from './CursoDetalhesComponents/EnrollmentCard.vue';
+import SocialShareCard from './CursoDetalhesComponents/SocialShareCard.vue';
 
-  // Props recebendo o curso da rota
-  const props = defineProps({
-    curso: {
-      type: Object,
-      required: true
+// Props recebendo o curso da rota
+const props = defineProps({
+  curso: {
+    type: Object,
+    required: true
+  }
+});
+
+// Computed properties
+const courseUrl = computed(() => {
+  return `${window.location.origin}/cursos/${props.curso.id}`;
+});
+
+// Funções auxiliares para formatação
+const formatarData = (data) => {
+  if (!data) return 'Não definido';
+  return new Date(data).toLocaleDateString('pt-BR', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric' 
+  });
+};
+
+const formatarTextoHtml = (texto) => {
+  if (!texto) return 'Nenhuma informação disponível';
+  
+  try {
+    // Tentar parsear o JSON se for um array
+    let listaItens = Array.isArray(texto) ? texto : 
+      (typeof texto === 'string' ? JSON.parse(texto) : []);
+
+    // Se for array e não estiver vazio, criar lista HTML
+    if (Array.isArray(listaItens) && listaItens.length > 0) {
+      return `
+        <ul class="list-disc list-inside space-y-2 text-gray-700">
+          ${listaItens.map(item => `<li class="leading-relaxed">${item}</li>`).join('')}
+        </ul>
+      `;
     }
-  });
-  
-  const { showToast } = useToast();
-  
-  // Computed properties
-  const courseUrl = computed(() => {
-    return `${window.location.origin}/cursos/${props.curso.id}`;
-  });
-  
-  // Funções auxiliares para formatação
-  const formatarData = (data) => {
-    if (!data) return 'Não definido';
-    return new Date(data).toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
-    });
-  };
-  
-  const formatarTextoHtml = (texto) => {
-  if (!texto) return '';
-  
-  // Tentar parsear o JSON se for um array
-  let listaItens = Array.isArray(texto) ? texto : 
-    (typeof texto === 'string' ? JSON.parse(texto) : []);
-
-  // Se for array simples, criar lista HTML
-  if (listaItens.length > 0) {
-    return `
-      <ul class="list-disc list-inside space-y-2 text-gray-700">
-        ${listaItens.map(item => `<li>${item}</li>`).join('')}
-      </ul>
-    `;
+  } catch (e) {
+    // Se não conseguir parsear como JSON, tratar como texto plano
   }
 
   // Fallback para texto plano
-  return texto
-    .replace(/\n/g, '<br>')
-    .replace(/- (.*?)(?=<br|$)/g, '<li>$1</li>');
+  if (typeof texto === 'string') {
+    return texto
+      .replace(/\n/g, '<br>')
+      .replace(/- (.*?)(?=<br|$)/g, '<li class="ml-4">$1</li>')
+      .replace(/(<li.*?<\/li>)/g, '<ul class="list-disc list-inside space-y-1 text-gray-700">$1</ul>');
+  }
+
+  return 'Nenhuma informação disponível';
 };
+
+// Verificar se há pré-requisitos
+const temPreRequisitos = computed(() => {
+  if (!props.curso.pre_requisitos) return false;
   
-  /* // Métodos
-  const handleEnrollment = () => {
-    if (props.curso.status !== 'Aberto') {
-      showToast('Inscrições não disponíveis no momento', 'error');
-      return;
-    }
-    
-    // Aqui você pode adicionar a lógica para processar a inscrição
-    // Por exemplo, usando Inertia para fazer uma requisição ao backend
-    // Inertia.post(`/cursos/${props.curso.id}/inscricao`);
-    
-    showToast('Inscrição realizada com sucesso!', 'success');
-  }; */
-  </script>
+  try {
+    const parsed = Array.isArray(props.curso.pre_requisitos) 
+      ? props.curso.pre_requisitos 
+      : JSON.parse(props.curso.pre_requisitos);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return props.curso.pre_requisitos && props.curso.pre_requisitos.length > 0;
+  }
+});
+
+// Verificar se há enxoval
+const temEnxoval = computed(() => {
+  if (!props.curso.enxoval) return false;
+  
+  try {
+    const parsed = Array.isArray(props.curso.enxoval) 
+      ? props.curso.enxoval 
+      : JSON.parse(props.curso.enxoval);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return props.curso.enxoval && props.curso.enxoval.length > 0;
+  }
+});
+</script>
 
 <template>
-  <Head :title="'Curso - '+ curso.nome"/>
+  <Head :title="'Curso - ' + curso.nome"/>
   <div class="bg-gray-100 min-h-screen pb-12">
     <Header />
     <SiteNavbar />
+    
     <!-- Cabeçalho com imagem de capa do curso -->
     <CourseHeader 
       :imagem="curso.imagem"
@@ -94,7 +115,7 @@
           <!-- Card de informações gerais -->
           <CardSection title="Sobre o curso">
             <div class="prose max-w-none text-gray-700">
-              <p>{{ curso.descricao }}</p>
+              <p class="text-base leading-relaxed">{{ curso.descricao || 'Descrição do curso não disponível.' }}</p>
             </div>
             
             <!-- Detalhes adicionais -->
@@ -117,7 +138,7 @@
                 icon="location" 
                 color="green" 
                 label="Localização" 
-                :value="curso.localizacao" 
+                :value="curso.localizacao || 'Local a definir'" 
               />
               
               <InfoItem 
@@ -132,16 +153,31 @@
           <!-- Pré-requisitos -->
           <CardSection title="Pré-requisitos">
             <div class="prose max-w-none text-gray-700">
-              <div v-if="curso.pre_requisitos" v-html="formatarTextoHtml(curso.pre_requisitos)"></div>
-              <p v-else>Não há pré-requisitos específicos para este curso.</p>
+              <div v-if="temPreRequisitos" v-html="formatarTextoHtml(curso.pre_requisitos)"></div>
+              <p v-else class="text-gray-600 italic">Não há pré-requisitos específicos para este curso.</p>
             </div>
           </CardSection>
           
           <!-- Enxoval / Material necessário -->
           <CardSection title="Material necessário">
             <div class="prose max-w-none text-gray-700">
-              <div v-if="curso.enxoval" v-html="formatarTextoHtml(curso.enxoval)"></div>
-              <p v-else>Todos os materiais serão fornecidos durante o curso.</p>
+              <div v-if="temEnxoval" v-html="formatarTextoHtml(curso.enxoval)"></div>
+              <p v-else class="text-gray-600 italic">Todos os materiais serão fornecidos durante o curso.</p>
+            </div>
+          </CardSection>
+
+          <!-- Certificação -->
+          <CardSection title="Certificação" v-if="curso.certificacao">
+            <div class="prose max-w-none text-gray-700">
+              <div class="flex items-center space-x-2 mb-3">
+                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="font-semibold text-green-700">Este curso oferece certificado de conclusão</span>
+              </div>
+              <p v-if="curso.certificacao_modelo" class="text-sm text-gray-600">
+                {{ curso.certificacao_modelo }}
+              </p>
             </div>
           </CardSection>
         </div>
@@ -155,14 +191,12 @@
               :capacidade="curso.capacidade_maxima"
               :dataInicio="curso.data_inicio"
               :curso="curso"
-              
-              @enroll="handleEnrollment"
             />
             
             <!-- Compartilhar e ações -->
             <SocialShareCard 
-            :courseUrl="courseUrl"
-            :courseTitle="`Confira o curso ${curso.nome} na Acadepol!`" 
+              :courseUrl="courseUrl"
+              :courseTitle="`Confira o curso ${curso.nome} na Acadepol!`" 
             />
           </div>
         </div>
@@ -171,3 +205,13 @@
   </div>
   <Footer />
 </template>
+
+<style scoped>
+.prose ul {
+  @apply list-disc list-inside space-y-1;
+}
+
+.prose li {
+  @apply leading-relaxed;
+}
+</style>

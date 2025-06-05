@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Helpers\UploadHelper;
 
 class Curso extends Model
 {
@@ -23,6 +24,15 @@ class Curso extends Model
         'data_inicio' => 'date',
         'data_fim' => 'date',
     ];
+
+    public function getImagemUrlAttribute()
+    {
+        if (!$this->imagem) {
+            return null;
+        }
+        
+        return UploadHelper::getPublicUrl($this->imagem);
+    }
 
     //O alunos não é uma coluna na tabela cursos, mas sim um relacionamento entre cursos e users (alunos) através da tabela matriculas.
     public function alunos()

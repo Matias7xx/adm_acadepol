@@ -34,8 +34,8 @@ const lastSaved = ref('Agora');
 const editorContainer = ref(null);
 let autoSaveTimer = null;
 
-// Classe para o adaptador de upload personalizado
-class MyUploadAdapter {
+// Classe adaptadora para upload usando servidor Laravel
+class LaravelUploadAdapter {
   constructor(loader) {
     this.loader = loader;
   }
@@ -43,67 +43,70 @@ class MyUploadAdapter {
   upload() {
     return this.loader.file.then(file => {
       return new Promise((resolve, reject) => {
+        // Validar tamanho (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          reject(new Error('A imagem deve ter no máximo 5MB'));
+          return;
+        }
+        
+        // Validar tipo
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          reject(new Error('Formato de imagem não suportado. Use JPEG, PNG, GIF ou WebP'));
+          return;
+        }
+        
+        // Criar FormData
         const formData = new FormData();
         formData.append('upload', file);
         
-        if (window.axios) {
-          window.axios.post('/api/upload-ckeditor-images', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            }
-          })
-          .then(response => {
-            if (response.data && response.data.uploaded && response.data.url) {
-              resolve({ default: response.data.url });
-            } else {
-              reject(new Error('Erro no upload: ' + (response.data?.error?.message || 'Resposta inválida do servidor')));
-            }
-          })
-          .catch(error => {
-            console.error('Erro no upload:', error);
-            reject(error);
-          });
-        } else {
-          // Fallback para fetch se axios não estiver disponível
-          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-          
-          fetch('/api/upload-ckeditor-images', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              'X-CSRF-TOKEN': csrfToken
-            }
-          })
-          .then(response => response.json())
-          .then(response => {
-            if (response && response.uploaded && response.url) {
-              resolve({ default: response.url });
-            } else {
-              reject(new Error('Erro no upload: ' + (response?.error?.message || 'Resposta inválida do servidor')));
-            }
-          })
-          .catch(error => {
-            console.error('Erro no upload:', error);
-            reject(error);
-          });
-        }
+        // Obter token CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        // Fazer upload via fetch
+        fetch('/api/upload-ckeditor-images', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw new Error(data.error?.message || `HTTP ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.uploaded && data.url) {
+            console.log('✅ Upload realizado com sucesso:', data.url);
+            resolve({
+              default: data.url
+            });
+          } else {
+            throw new Error(data.error?.message || 'Upload falhou');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Erro no upload:', error);
+          reject(error);
+        });
       });
     });
   }
 
   abort() {
     // Método abort se necessário
-    if (this.xhr) {
-      this.xhr.abort();
-    }
   }
 }
 
-// Função para criar o adaptador de upload personalizado
-function MyCustomUploadAdapterPlugin(editor) {
+// Função para criar o adaptador de upload
+function LaravelUploadAdapterPlugin(editor) {
   editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-    return new MyUploadAdapter(loader);
+    return new LaravelUploadAdapter(loader);
   };
 }
 
@@ -148,18 +151,40 @@ const editorConfig = {
     ]
   },
   mediaEmbed: {
-    previewsInData: true
+    previewsInData: true,
+    providers: [
+      {
+        name: 'youtube',
+        url: [
+          /^(?:m\.)?youtube\.com\/watch\?v=([\w-]+)/,
+          /^(?:m\.)?youtube\.com\/v\/([\w-]+)/,
+          /^youtube\.com\/embed\/([\w-]+)/,
+          /^youtu\.be\/([\w-]+)/
+        ],
+        html: match => {
+          const id = match[1];
+          return (
+            '<div style="position: relative; padding-bottom: 100%; height: 0; padding-bottom: 56.2493%;">' +
+              `<iframe src="https://www.youtube.com/embed/${id}" ` +
+                'style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" ' +
+                'frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>' +
+              '</iframe>' +
+            '</div>'
+          );
+        }
+      }
+    ]
   },
   placeholder: 'Comece a escrever seu conteúdo aqui...',
-  // Adiciona o plugin de upload personalizado
-  extraPlugins: [MyCustomUploadAdapterPlugin],
-  // Configurações de linguagem se necessário
+  extraPlugins: [LaravelUploadAdapterPlugin],
   language: 'pt-br'
 };
 
 // Watch para sincronizar com o v-model
 watch(() => props.modelValue, (newValue) => {
-  content.value = newValue;
+  if (newValue !== content.value) {
+    content.value = newValue;
+  }
 });
 
 watch(content, (newValue) => {
@@ -167,23 +192,35 @@ watch(content, (newValue) => {
   calculateWordCount(newValue);
 });
 
+// Computed para verificar se há imagens em base64
+const hasBase64Images = computed(() => {
+  return content.value && content.value.includes('data:image/');
+});
+
+// Computed para contar imagens em base64
+const base64ImageCount = computed(() => {
+  if (!content.value) return 0;
+  const matches = content.value.match(/data:image\/[^"']*/g);
+  return matches ? matches.length : 0;
+});
+
 // Métodos
 const onEditorReady = (editor) => {
   editorInstance.value = editor;
   calculateWordCount(editor.getData());
   
-  // Verificar se o plugin de upload foi carregado corretamente
+  // Log para verificar se o plugin foi carregado
   try {
     const fileRepository = editor.plugins.get('FileRepository');
-    console.log('Plugin FileRepository carregado com sucesso');
+    console.log('✅ Plugin FileRepository carregado - upload direto para Laravel');
     
-    // Adicionar listener para erros de upload
-    fileRepository.on('uploadError', (evt, data) => {
-      console.error('Erro no upload de imagem:', data);
+    // Listener para uploads
+    fileRepository.on('uploadComplete', (evt, data) => {
+      console.log('✅ Upload completo:', data);
     });
     
   } catch (error) {
-    console.error('Erro ao configurar plugin de upload:', error);
+    console.error('❌ Erro ao configurar plugin de upload:', error);
   }
   
   // Configurar auto-save
@@ -199,6 +236,12 @@ const onEditorChange = () => {
 };
 
 const calculateWordCount = (text) => {
+  if (!text) {
+    wordCount.value = 0;
+    emit('wordCountChange', 0);
+    return;
+  }
+  
   // Remove HTML tags
   const plainText = text.replace(/<[^>]*>/g, ' ');
   // Split por espaços e filtra strings vazias
@@ -238,13 +281,27 @@ const toggleFullScreen = async () => {
 const setupAutoSave = () => {
   // Auto-save a cada 60 segundos
   autoSaveTimer = setInterval(() => {
-    if (content.value) {
-      // Salvar no localStorage
-      localStorage.setItem('noticia_draft', content.value);
-      
-      // Atualizar timestamp
-      const now = new Date();
-      lastSaved.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    if (content.value && content.value.length > 10) {
+      try {
+        // Salvar no localStorage
+        localStorage.setItem('noticia_draft_' + Date.now(), JSON.stringify({
+          content: content.value,
+          timestamp: new Date().toISOString(),
+          wordCount: wordCount.value
+        }));
+        
+        // Atualizar timestamp
+        const now = new Date();
+        lastSaved.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
+        // Limpar drafts antigos (manter apenas os últimos 3)
+        const keys = Object.keys(localStorage).filter(key => key.startsWith('noticia_draft_'));
+        if (keys.length > 3) {
+          keys.sort().slice(0, -3).forEach(key => localStorage.removeItem(key));
+        }
+      } catch (e) {
+        console.warn('Erro ao salvar draft:', e);
+      }
     }
   }, 60000);
 };
@@ -278,6 +335,11 @@ onUnmounted(() => {
 onMounted(() => {
   // Adicionar listener para ESC
   document.addEventListener('keydown', handleEscKey);
+  
+  // Verificar se há meta tag CSRF
+  if (!document.querySelector('meta[name="csrf-token"]')) {
+    console.warn('⚠️ Meta tag CSRF não encontrada. Adicione no layout: <meta name="csrf-token" content="{{ csrf_token() }}">');
+  }
 });
 </script>
 
@@ -305,17 +367,20 @@ onMounted(() => {
         </h3>
         
         <div class="flex items-center space-x-3">
-          <button 
-            type="button" 
-            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center text-sm shadow transition"
-            @click="togglePreview"
-          >
-            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
-              <path v-if="isPreviewMode" d="M17,13H13V17H11V13H7V11H11V7H13V11H17M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
-              <path v-else d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z" />
+          <!-- Badge informativo sobre imagens -->
+          <div v-if="hasBase64Images" class="text-xs bg-amber-600 px-2 py-1 rounded-md flex items-center">
+            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13,9H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />
             </svg>
-            {{ isPreviewMode ? 'Modo Edição' : 'Visualizar' }}
-          </button>
+            {{ base64ImageCount }} imagem(s) temporária(s)
+          </div>
+          
+          <div v-else class="text-xs bg-green-600 px-2 py-1 rounded-md flex items-center">
+            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
+            </svg>
+            Imagens processadas
+          </div>
           
           <button 
             type="button" 
@@ -373,9 +438,17 @@ onMounted(() => {
             </span>
           </div>
           
-          <div>
+          <div class="flex items-center space-x-4">
+            <!-- Indicador de imagens base64 -->
+            <span v-if="hasBase64Images" class="text-xs text-amber-600 font-medium flex items-center">
+              <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5,3A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H14.09C14.03,20.67 14,20.34 14,20C14,19.32 14.12,18.64 14.35,18H5L8.5,13.5L11,16.5L14.5,12L16.73,14.97C17.7,14.34 18.84,14 20,14C20.34,14 20.67,14.03 21,14.09V5C21,3.89 20.1,3 19,3H5M19,16V19H16V21H19V24H21V21H24V19H21V16H19Z" />
+              </svg>
+              {{ base64ImageCount }} temporária(s)
+            </span>
+            
             <span class="text-xs text-gray-500">
-              Última atualização: {{ lastSaved }}
+              Salvo: {{ lastSaved }}
             </span>
           </div>
         </div>
@@ -393,8 +466,24 @@ onMounted(() => {
           <span class="font-medium">{{ error }}</span>
         </div>
       </div>
-    </div>
 
+      <!-- Dica sobre imagens -->
+      <div v-if="hasBase64Images" class="bg-amber-50 border-l-4 border-amber-400 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-amber-700">
+              <strong>{{ base64ImageCount }} imagem(s) serão processadas ao salvar a notícia.</strong> 
+              As imagens são temporariamente armazenadas no editor e serão organizadas adequadamente quando você salvar.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -566,5 +655,26 @@ onMounted(() => {
 .ck.ck-editor__editable table th {
   color: #111827 !important;
   border: 1px solid #d1d5db !important;
+}
+
+/* Imagens temporárias com indicador visual */
+.ck.ck-editor__editable img[src^="data:image"] {
+  border: 2px dashed #f59e0b !important;
+  background-color: #fef3c7 !important;
+  padding: 4px !important;
+  position: relative;
+}
+
+.ck.ck-editor__editable img[src^="data:image"]::after {
+  content: "📸 Temporária";
+  position: absolute;
+  top: -25px;
+  left: 0;
+  background: #f59e0b;
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 3px;
+  font-family: sans-serif;
 }
 </style>

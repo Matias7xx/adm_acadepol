@@ -42,6 +42,7 @@ const imagePreview = ref(null);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
 const wordCount = ref(0);
+const isProcessingImages = ref(false);
 
 // Função para lidar com o preview da imagem
 const handleImageUpload = (event) => {
@@ -97,18 +98,94 @@ const handleWordCountChange = (count) => {
   wordCount.value = count;
 };
 
+// Função para processar imagens base64 no conteúdo
+const processContentImages = async (content) => {
+  if (!content.includes('data:image/')) {
+    return content;
+  }
+
+  isProcessingImages.value = true;
+  let processedContent = content;
+
+  try {
+    // Buscar todas as imagens base64
+    const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
+    const matches = [...content.matchAll(base64ImageRegex)];
+
+    // Processar cada imagem
+    for (const match of matches) {
+      const [fullMatch, extension, base64Data] = match;
+      
+      // Converter base64 para blob
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: `image/${extension}` });
+
+      // Criar FormData para enviar
+      const formData = new FormData();
+      formData.append('upload', blob, `image.${extension}`);
+
+      try {
+        // Usar a rota existente do UploadController
+        const response = await fetch('/api/upload-ckeditor-images', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.uploaded && result.url) {
+          // Substituir a imagem base64 pela URL real
+          processedContent = processedContent.replace(fullMatch, fullMatch.replace(`data:image/${extension};base64,${base64Data}`, result.url));
+        }
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao processar imagens do conteúdo:', error);
+  } finally {
+    isProcessingImages.value = false;
+  }
+
+  return processedContent;
+};
+
 // Método para enviar o formulário
-const submit = () => {
-  form.post(route('admin.noticias.store'), {
-    preserveScroll: true,
-    forceFormData: true,
-    onSuccess: () => {
-      // Reset do formulário após sucesso
-      isUploading.value = false;
-      uploadProgress.value = 0;
-      imagePreview.value = null;
-    },
-  });
+const submit = async () => {
+  try {
+    // Processar imagens no conteúdo antes de enviar
+    if (form.conteudo.includes('data:image/')) {
+      const processedContent = await processContentImages(form.conteudo);
+      form.conteudo = processedContent;
+    }
+
+    form.post(route('admin.noticias.store'), {
+      preserveScroll: true,
+      forceFormData: true,
+      onSuccess: () => {
+        // Reset do formulário após sucesso
+        isUploading.value = false;
+        uploadProgress.value = 0;
+        imagePreview.value = null;
+        isProcessingImages.value = false;
+      },
+      onError: () => {
+        isProcessingImages.value = false;
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao enviar formulário:', error);
+    isProcessingImages.value = false;
+  }
 };
 
 // Verificar se o formulário tem todos os campos obrigatórios
@@ -117,6 +194,11 @@ const isFormValid = computed(() => {
          form.descricao_curta && 
          form.data_publicacao && 
          form.status;
+});
+
+// Verificar se está processando
+const isProcessing = computed(() => {
+  return form.processing || isProcessingImages.value;
 });
 </script>
 
@@ -138,6 +220,17 @@ const isFormValid = computed(() => {
           small
         />
       </SectionTitleLineWithButton>
+      
+      <!-- Indicador de processamento de imagens -->
+      <div v-if="isProcessingImages" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-blue-800 font-medium">Processando imagens do conteúdo...</span>
+        </div>
+      </div>
       
       <CardBox
         form
@@ -364,15 +457,15 @@ const isFormValid = computed(() => {
               color="light"
               label="Cancelar"
               :route-name="route('admin.noticias.index')"
-              :class="{ 'opacity-75': form.processing }"
-              :disabled="form.processing"
+              :class="{ 'opacity-75': isProcessing }"
+              :disabled="isProcessing"
             />
             <BaseButton
               type="button"
               color="info"
-              label="Publicar Notícia"
-              :class="{ 'opacity-25': form.processing }"
-              :disabled="form.processing"
+              :label="isProcessingImages ? 'Processando imagens...' : 'Publicar Notícia'"
+              :class="{ 'opacity-25': isProcessing }"
+              :disabled="isProcessing"
               @click="submit"
             />
           </BaseButtons>

@@ -1,22 +1,21 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from "@inertiajs/vue3";
 import {
   mdiInformationOutline,
   mdiArrowLeftBoldOutline,
   mdiPencilOutline,
-  mdiEye,
-  mdiCalendarRange,
   mdiStar,
   mdiStarOutline,
-  mdiTrashCan
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import { computed } from 'vue'
+  mdiTrashCan,
+} from "@mdi/js";
+import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue";
+import SectionMain from "@/Components/SectionMain.vue";
+import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue";
+import CardBox from "@/Components/CardBox.vue";
+import BaseButton from "@/Components/BaseButton.vue";
+import BaseButtons from "@/Components/BaseButtons.vue";
+import NotificationBar from "@/Components/NotificationBar.vue";
+import { computed, ref } from 'vue';
 
 const props = defineProps({
   noticia: {
@@ -26,42 +25,82 @@ const props = defineProps({
   can: {
     type: Object,
     default: () => ({}),
-  }
-})
+  },
+});
 
 // Formulário para exclusão
-const formDelete = useForm({})
+const formDelete = useForm({});
+const isDeleting = ref(false);
+const deleteMessage = ref(null);
 function destroy() {
   if (confirm("Tem certeza de que deseja remover esta notícia?")) {
-    formDelete.delete(route("admin.noticias.destroy", props.noticia.id))
+    isDeleting.value = true;
+    deleteMessage.value = null;
+    formDelete.delete(route("admin.noticias.destroy", props.noticia.id), {
+      preserveScroll: true,
+      onSuccess: () => {
+        deleteMessage.value = { type: 'success', text: 'Notícia excluída com sucesso!' };
+        isDeleting.value = false;
+      },
+      onError: () => {
+        deleteMessage.value = { type: 'danger', text: 'Erro ao excluir a notícia.' };
+        isDeleting.value = false;
+      },
+    });
   }
 }
 
 // Formulário para alterar destaque
-const formDestaque = useForm({})
+const formDestaque = useForm({});
+const isTogglingDestaque = ref(false);
+const destaqueMessage = ref(null);
 function toggleDestaque() {
-  formDestaque.patch(route("admin.noticias.toggle-destaque", props.noticia.id))
+  isTogglingDestaque.value = true;
+  destaqueMessage.value = null;
+  formDestaque.patch(route("admin.noticias.toggle-destaque", props.noticia.id), {
+    preserveScroll: true,
+    onSuccess: () => {
+      destaqueMessage.value = { type: 'success', text: `Notícia ${props.noticia.destaque ? 'removida do' : 'marcada como'} destaque!` };
+      isTogglingDestaque.value = false;
+    },
+    onError: () => {
+      destaqueMessage.value = { type: 'danger', text: 'Erro ao alterar o status de destaque.' };
+      isTogglingDestaque.value = false;
+    },
+  });
 }
+
+// Função auxiliar para obter URL da imagem
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  if (imagePath.startsWith('/') || imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  return `/storage/${imagePath}`;
+};
 
 // Helper para obter a classe CSS do status
 function getStatusClass(status) {
   switch (status) {
-    case 'publicado': return 'bg-green-100 text-green-800'
-    case 'rascunho': return 'bg-gray-100 text-gray-800'
-    case 'arquivado': return 'bg-orange-100 text-orange-800'
-    default: return 'bg-gray-100 text-gray-800'
+    case 'publicado': return 'bg-green-100 text-green-800';
+    case 'rascunho': return 'bg-gray-100 text-gray-800';
+    case 'arquivado': return 'bg-orange-100 text-orange-800';
+    default: return 'bg-gray-100 text-gray-800';
   }
 }
 
 // Formatar data para exibição
 const dataFormatada = computed(() => {
-  if (!props.noticia.data_publicacao) return ''
+  if (!props.noticia.data_publicacao) return '';
   return new Date(props.noticia.data_publicacao).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
-  })
-})
+    year: 'numeric',
+  });
+});
+
+// Computed para a URL da imagem
+const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
 </script>
 
 <template>
@@ -80,8 +119,25 @@ const dataFormatada = computed(() => {
           color="white"
           rounded-full
           small
+          aria-label="Voltar para a lista de notícias"
         />
       </SectionTitleLineWithButton>
+      
+      <!-- Mensagens de feedback -->
+      <NotificationBar
+        v-if="deleteMessage"
+        :color="deleteMessage.type"
+        :icon="mdiInformationOutline"
+      >
+        {{ deleteMessage.text }}
+      </NotificationBar>
+      <NotificationBar
+        v-if="destaqueMessage"
+        :color="destaqueMessage.type"
+        :icon="mdiInformationOutline"
+      >
+        {{ destaqueMessage.text }}
+      </NotificationBar>
       
       <!-- Cabeçalho com ações -->
       <div class="flex justify-between items-center mb-4">
@@ -107,6 +163,7 @@ const dataFormatada = computed(() => {
             label="Editar"
             color="info"
             small
+            aria-label="Editar notícia"
           />
           <BaseButton
             v-if="can.delete"
@@ -114,7 +171,9 @@ const dataFormatada = computed(() => {
             label="Excluir"
             color="danger"
             small
+            :disabled="isDeleting"
             @click="destroy"
+            aria-label="Excluir notícia"
           />
         </BaseButtons>
       </div>
@@ -143,25 +202,47 @@ const dataFormatada = computed(() => {
         </div>
         
         <!-- Imagem da notícia -->
-        <div v-if="noticia.imagem" class="mb-6">
+        <div v-if="imagemUrl" class="mb-6">
           <img 
-            :src="noticia.imagem"
+            :src="imagemUrl"
             :alt="noticia.titulo"
-            class="rounded-lg max-h-96 object-cover w-full"
+            class="rounded-lg max-h-48 object-contain w-full"
           />
+        </div>
+        <div v-else class="mb-6 flex items-center justify-center border rounded-lg p-4 bg-gray-50 border-dashed text-gray-400">
+          <div class="text-center">
+            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="mt-1">Nenhuma imagem disponível</p>
+          </div>
         </div>
         
         <!-- Descrição curta -->
         <div class="mb-6">
-          <h3 class="text-lg font-semibold mb-2">Descrição Curta</h3>
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 17H7V15H14V17M17 13H7V11H17V13M17 9H7V7H17V9M19 3H5C3.89 3 3 3.89 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.89 20.1 3 19 3Z" />
+              </svg>
+            </span>
+            Descrição Curta
+          </h3>
           <div class="p-4 rounded-lg border border-gray-200">
-            {{ noticia.descricao_curta }}
+            {{ noticia.descricao_curta || 'Nenhuma descrição curta disponível.' }}
           </div>
         </div>
         
         <!-- Conteúdo completo -->
         <div>
-          <h3 class="text-lg font-semibold mb-2">Conteúdo Completo</h3>
+          <h3 class="font-semibold text-lg mb-2 flex items-center">
+            <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.03 6.03L20 7L18.15 8.85L19.03 9.03L19.4 12.41L18.21 13.6L19 15L16.3 17.7L15 17L13.6 18.21L13.03 19.97L10.03 19.97L8.3 18.3L6 19L5 16.5L3.41 14.91L6.83 12.3H7.33L9 13L10.03 13.03V15L12.5 13.5L14 12L12.5 10.5L11 9.1H9.03L5.83 7.5L7.5 5.8L10 5L11 7L14 7L15.56 5.44L19.03 6.03Z" />
+              </svg>
+            </span>
+            Conteúdo Completo
+          </h3>
           <div class="prose max-w-none">
             <div v-if="noticia.conteudo" v-html="noticia.conteudo"></div>
             <div v-else class="text-gray-500 italic">Sem conteúdo detalhado.</div>
@@ -171,7 +252,14 @@ const dataFormatada = computed(() => {
       
       <!-- Metadados -->
       <CardBox class="mb-6">
-        <h3 class="text-lg font-semibold mb-4">Informações Adicionais</h3>
+        <h3 class="font-semibold text-lg mb-4 flex items-center">
+          <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+            </svg>
+          </span>
+          Informações Adicionais
+        </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <span class="text-gray-600 text-sm">ID:</span>
@@ -188,11 +276,11 @@ const dataFormatada = computed(() => {
           </div>
           <div>
             <span class="text-gray-600 text-sm">Data de Criação:</span>
-            <span class="ml-2 font-medium">{{ noticia.created_at }}</span>
+            <span class="ml-2 font-medium">{{ new Date(noticia.created_at).toLocaleString('pt-BR') }}</span>
           </div>
           <div>
             <span class="text-gray-600 text-sm">Última Atualização:</span>
-            <span class="ml-2 font-medium">{{ noticia.updated_at }}</span>
+            <span class="ml-2 font-medium">{{ new Date(noticia.updated_at).toLocaleString('pt-BR') }}</span>
           </div>
           <div>
             <span class="text-gray-600 text-sm">Destaque:</span>
@@ -212,6 +300,7 @@ const dataFormatada = computed(() => {
           :icon="mdiArrowLeftBoldOutline"
           label="Voltar para Notícias"
           color="white"
+          aria-label="Voltar para a lista de notícias"
         />
         <BaseButtons v-if="can.edit">
           <BaseButton
@@ -220,7 +309,8 @@ const dataFormatada = computed(() => {
             :icon="mdiStarOutline"
             label="Remover Destaque"
             color="warning"
-            outlined
+            :disabled="isTogglingDestaque"
+            aria-label="Remover notícia do destaque"
           />
           <BaseButton
             v-else
@@ -228,12 +318,15 @@ const dataFormatada = computed(() => {
             :icon="mdiStar"
             label="Marcar como Destaque"
             color="warning"
+            :disabled="isTogglingDestaque"
+            aria-label="Marcar notícia como destaque"
           />
           <BaseButton
             :route-name="route('admin.noticias.edit', noticia.id)"
             :icon="mdiPencilOutline"
             label="Editar Notícia"
             color="info"
+            aria-label="Editar notícia"
           />
         </BaseButtons>
       </div>
@@ -246,6 +339,9 @@ const dataFormatada = computed(() => {
 .prose img {
   border-radius: 0.375rem;
   margin: 2rem 0;
+  max-height: 28rem;
+  object-fit: contain;
+  width: 100%;
 }
 
 .prose h2 {
@@ -290,6 +386,17 @@ const dataFormatada = computed(() => {
   color: #1d4ed8;
 }
 
+.prose iframe,
+.prose video {
+  width: 100%;
+  max-width: 560px;
+  height: 315px;
+  margin: 2rem auto;
+  display: block;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 /* Animações */
 .transition-opacity {
   transition-property: opacity;
@@ -301,23 +408,5 @@ const dataFormatada = computed(() => {
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 300ms;
-}
-.prose iframe {
-  width: 100%;
-  max-width: 560px;
-  height: 315px;
-  margin: 2rem auto;
-  display: block;
-  border-radius: 0.375rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.prose video {
-  width: 100%;
-  max-width: 560px;
-  margin: 2rem auto;
-  display: block;
-  border-radius: 0.375rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 </style>

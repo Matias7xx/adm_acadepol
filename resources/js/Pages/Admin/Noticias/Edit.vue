@@ -5,11 +5,8 @@ import {
   mdiArrowLeftBoldOutline,
   mdiCalendarRange,
   mdiStar,
-  mdiFormatText,
   mdiImage,
-  mdiEye,
   mdiContentSave,
-  mdiAlertCircleOutline
 } from "@mdi/js";
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue";
 import SectionMain from "@/Components/SectionMain.vue";
@@ -17,14 +14,11 @@ import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.
 import CardBox from "@/Components/CardBox.vue";
 import FormField from '@/Components/FormField.vue';
 import FormControl from '@/Components/FormControl.vue';
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
 import BaseDivider from '@/Components/BaseDivider.vue';
 import BaseButton from '@/Components/BaseButton.vue';
 import BaseButtons from '@/Components/BaseButtons.vue';
-import NotificationBar from "@/Components/NotificationBar.vue";
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import { ref, computed, onMounted } from 'vue';
+import NoticiasEditor from "./partials/NoticiasEditor.vue";
 
 const props = defineProps({
   noticia: {
@@ -54,68 +48,11 @@ const form = useForm({
 
 // Estado
 const isPreviewMode = ref(false);
-const editorInstance = ref(null);
 const imagePreview = ref(null);
 const isUploading = ref(false);
 const uploadProgress = ref(0);
 const wordCount = ref(0);
-const editorHeight = ref('400px');
-
-// Configurações avançadas do Quill
-const editorOptions = {
-  modules: {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'align': [] }],
-        ['blockquote', 'code-block'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        [{ 'indent': '-1' }, { 'indent': '+1' }],
-        ['link', 'image', 'video'],
-        ['clean']
-      ],
-      handlers: {
-        //handlers personalizados se necessário
-      }
-    },
-    clipboard: {
-      matchVisual: false
-    },
-    history: {
-      delay: 1000,
-      maxStack: 50,
-      userOnly: true
-    }
-  },
-  placeholder: 'Escreva o conteúdo da notícia aqui...',
-  theme: 'snow',
-  formats: [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'color', 'background', 'align',
-    'blockquote', 'code-block',
-    'list', 'bullet', 'indent',
-    'link', 'image', 'video'
-  ]
-};
-
-// Método para calcular o número de palavras
-const calculateWordCount = (text) => {
-  // Remove HTML tags
-  const plainText = text.replace(/<[^>]*>/g, ' ');
-  // Split por espaços e filtra strings vazias
-  const words = plainText.split(/\s+/).filter(word => word.length > 0);
-  return words.length;
-};
-
-// Atualizar contagem de palavras quando o conteúdo mudar
-const updateWordCount = (content) => {
-  wordCount.value = calculateWordCount(content);
-};
-
-// Inicializar a contagem de palavras
-updateWordCount(form.conteudo);
+const isProcessingImages = ref(false);
 
 // Função para lidar com o preview da imagem
 const handleImageUpload = (event) => {
@@ -123,7 +60,6 @@ const handleImageUpload = (event) => {
   
   if (!file) {
     if (!form.remover_imagem && props.noticia.imagem) {
-      // Restaurar a imagem original se não houver uma nova selecionada
       imagePreview.value = getImageUrl(props.noticia.imagem);
     } else {
       imagePreview.value = null;
@@ -188,9 +124,6 @@ onMounted(() => {
   if (props.noticia.imagem && !form.remover_imagem) {
     imagePreview.value = getImageUrl(props.noticia.imagem);
   }
-  
-  // Atualizar contagem de palavras inicial
-  updateWordCount(form.conteudo);
 });
 
 // Remover imagem
@@ -208,9 +141,96 @@ const cancelarRemocao = () => {
   }
 };
 
-// Alternar entre edição e visualização
-const togglePreview = () => {
-  isPreviewMode.value = !isPreviewMode.value;
+// Função para processar imagens base64 no conteúdo
+const processContentImages = async (content) => {
+  if (!content.includes('data:image/')) {
+    return content;
+  }
+
+  isProcessingImages.value = true;
+  let processedContent = content;
+
+  try {
+    // Buscar todas as imagens base64
+    const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
+    const matches = [...content.matchAll(base64ImageRegex)];
+
+    // Processar cada imagem
+    for (const match of matches) {
+      const [fullMatch, extension, base64Data] = match;
+      
+      // Converter base64 para blob
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: `image/${extension}` });
+
+      // Criar FormData para enviar
+      const formData = new FormData();
+      formData.append('upload', blob, `image.${extension}`);
+
+      try {
+        // Usar a rota existente do UploadController
+        const response = await fetch('/api/upload-ckeditor-images', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.uploaded && result.url) {
+          // Substituir a imagem base64 pela URL real
+          processedContent = processedContent.replace(fullMatch, fullMatch.replace(`data:image/${extension};base64,${base64Data}`, result.url));
+        }
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao processar imagens do conteúdo:', error);
+  } finally {
+    isProcessingImages.value = false;
+  }
+
+  return processedContent;
+};
+
+// Método para enviar o formulário
+const submit = async () => {
+  try {
+    // Processar imagens no conteúdo antes de enviar
+    if (form.conteudo.includes('data:image/')) {
+      const processedContent = await processContentImages(form.conteudo);
+      form.conteudo = processedContent;
+    }
+
+    form.transform((data) => ({
+      ...data,
+      _method: 'PUT',
+    })).post(route('admin.noticias.update', props.noticia.id), {
+      preserveScroll: true,
+      forceFormData: true,
+      onSuccess: () => {
+        // Reset após sucesso
+        isUploading.value = false;
+        uploadProgress.value = 0;
+        isProcessingImages.value = false;
+      },
+      onError: () => {
+        isProcessingImages.value = false;
+      },
+    });
+  } catch (error) {
+    console.error('Erro ao enviar formulário:', error);
+    isProcessingImages.value = false;
+  }
 };
 
 // Verificar se o formulário tem todos os campos obrigatórios
@@ -221,54 +241,24 @@ const isFormValid = computed(() => {
          form.status;
 });
 
-// Método para enviar o formulário
-const submit = () => {
-  form.transform((data) => ({
-    ...data,
-    _method: 'PUT',
-  })).post(route('admin.noticias.update', props.noticia.id), {
-    preserveScroll: true,
-    forceFormData: true,
-    onSuccess: () => {
-      // Reset após sucesso
-      isUploading.value = false;
-      uploadProgress.value = 0;
-    },
-    onError: (errors) => {
-      console.error("Erros no envio:", errors);
-    },
-  });
-};
+// Verificar se está processando
+const isProcessing = computed(() => {
+  return form.processing || isProcessingImages.value;
+});
 
-// Referência ao editor
-const onEditorMounted = (quill) => {
-  editorInstance.value = quill;
-  
-  // Observar alterações no conteúdo
-  quill.on('text-change', () => {
-    form.conteudo = quill.root.innerHTML;
-    updateWordCount(form.conteudo);
-  });
+// Handler para mudança no contador de palavras
+const handleWordCountChange = (count) => {
+  wordCount.value = count;
 };
 
 // Computed property para o preview da imagem
 const currentImagePreview = computed(() => {
   if (form.remover_imagem) return null;
   if (imagePreview.value) return imagePreview.value;
-  
   if (props.noticia.imagem) {
     return getImageUrl(props.noticia.imagem);
   }
-  
   return null;
-});
-
-// Carrega o editor com o conteúdo existente
-onMounted(() => {
-  // Se já tem conteúdo, atualiza a contagem de palavras
-  if (form.conteudo) {
-    updateWordCount(form.conteudo);
-  }
 });
 </script>
 
@@ -291,36 +281,15 @@ onMounted(() => {
         />
       </SectionTitleLineWithButton>
       
-      <NotificationBar
-        v-if="$page.props.flash.message"
-        color="success"
-        :icon="mdiAlertCircleOutline"
-      >
-        {{ $page.props.flash.message }}
-      </NotificationBar>
-      
-      <!-- Barra de ferramentas flutuante -->
-      <div class="fixed bottom-6 right-6 z-50 flex space-x-2">
-        <BaseButton
-          type="button"
-          color="success"
-          icon-size="24"
-          :icon="mdiContentSave"
-          label="Salvar"
-          rounded-full
-          :class="{ 'opacity-25': form.processing }"
-          :disabled="form.processing || !isFormValid"
-          @click="submit"
-        />
-        <BaseButton
-          type="button"
-          color="info"
-          icon-size="24"
-          :icon="isPreviewMode ? mdiFormatText : mdiEye"
-          :label="isPreviewMode ? 'Editar' : 'Visualizar'"
-          rounded-full
-          @click="togglePreview"
-        />
+      <!-- Indicador de processamento de imagens -->
+      <div v-if="isProcessingImages" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-blue-800 font-medium">Processando imagens do conteúdo...</span>
+        </div>
       </div>
       
       <CardBox
@@ -369,8 +338,8 @@ onMounted(() => {
                 v-model="form.status"
                 type="select"
                 :options="{
-                  'rascunho': 'Rascunho',
                   'publicado': 'Publicado',
+                  'rascunho': 'Rascunho',
                   'arquivado': 'Arquivado'
                 }"
                 :error="form.errors.status"
@@ -567,97 +536,34 @@ onMounted(() => {
         </div>
         
         <!-- Editor de Conteúdo -->
-        <div class="p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold text-lg flex items-center">
-              <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.03 6.03L20 7L18.15 8.85L19.03 9.03L19.4 12.41L18.21 13.6L19 15L16.3 17.7L15 17L13.6 18.21L13.03 19.97L10.03 19.97L8.3 18.3L6 19L5 16.5L3.41 14.91L6.83 12.3H7.33L9 13L10.03 13.03V15L12.5 13.5L14 12L12.5 10.5L11 9.1H9.03L5.83 7.5L7.5 5.8L10 5L11 7L14 7L15.56 5.44L19.03 6.03Z" />
-                </svg>
-              </span>
-              Conteúdo da Notícia
-            </h3>
-            
-            <div class="flex items-center space-x-2">
-              <button 
-                type="button" 
-                class="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                @click="editorHeight = editorHeight === '400px' ? '600px' : '400px'"
-              >
-                <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10,21V19H6.41L10.91,14.5L9.5,13.09L5,17.59V14H3V21H10M14.5,10.91L19,6.41V10H21V3H14V5H17.59L13.09,9.5L14.5,10.91Z" />
-                </svg>
-                {{ editorHeight === '400px' ? 'Expandir editor' : 'Reduzir editor' }}
-              </button>
-            </div>
-          </div>
-          
-          <div class="border rounded-lg overflow-hidden relative">
-            <!-- Modo visualização -->
-            <div v-if="isPreviewMode" class="p-6 prose max-w-none min-h-[400px]" v-html="form.conteudo"></div>
-            
-            <!-- Modo edição -->
-            <div v-else>
-              <QuillEditor 
-                v-model:content="form.conteudo"
-                content-type="html"
-                :options="editorOptions"
-                :style="{ height: editorHeight, 'max-height': '800px' }"
-                @ready="onEditorMounted"
-              />
-              
-              <div class="flex justify-between items-center px-4 py-2 bg-gray-50 border-t text-xs text-gray-500">
-                <div>
-                  <span>{{ wordCount }} palavras</span>
-                  <span class="mx-2">|</span>
-                  <span>Tempo estimado de leitura: {{ Math.max(1, Math.ceil(wordCount / 200)) }} min</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Badge de erro -->
-            <div 
-              v-if="form.errors.conteudo" 
-              class="absolute top-0 right-0 m-2 px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full"
-            >
-              {{ form.errors.conteudo }}
-            </div>
-          </div>
-
-            <!-- Dicas de uso do editor -->
-          <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-4 text-sm text-blue-700">
-            <h4 class="font-medium flex items-center mb-2">
-              <svg class="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,13H13V17H11V13Z" />
-              </svg>
-              Dicas para um conteúdo de qualidade:
-            </h4>
-            <ul class="list-disc list-inside space-y-1">
-              <li>Use os títulos (H2, H3) para organizar o conteúdo em seções</li>
-              <li>Inclua imagens relevantes ao longo do texto usando o botão de imagem</li>
-              <li>Para incorporar vídeos do YouTube, clique no botão de vídeo</li>
-              <li>O texto deve ter no mínimo 300 palavras para melhor indexação</li>
-              <li>Verifique a formatação e ortografia antes de publicar</li>
-            </ul>
-          </div>
+        <div class="mb-6">
+          <NoticiasEditor
+            v-if="!isPreviewMode"
+            v-model="form.conteudo"
+            :error="form.errors.conteudo"
+            @word-count-change="handleWordCountChange"
+          />
         </div>
+
+        <BaseDivider />
 
         <template #footer>
           <BaseButtons>
             <BaseButton
               type="button"
-              color="info"
-              :icon="mdiContentSave"
-              label="Salvar Alterações"
-              :disabled="form.processing"
-              :loading="form.processing"
-              @click="submit"
+              color="light"
+              label="Cancelar"
+              :route-name="route('admin.noticias.index')"
+              :class="{ 'opacity-75': isProcessing }"
+              :disabled="isProcessing"
             />
             <BaseButton
-              :route-name="route('admin.noticias.index')"
-              label="Cancelar"
+              type="button"
               color="info"
-              outlined
+              :label="isProcessingImages ? 'Processando imagens...' : 'Salvar Alterações'"
+              :class="{ 'opacity-25': isProcessing }"
+              :disabled="isProcessing || !isFormValid"
+              @click="submit"
             />
           </BaseButtons>
         </template>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Helpers\UploadHelper;
 
 class Director extends Model
 {
@@ -22,6 +23,15 @@ class Director extends Model
         'data_fim' => 'date',
         'atual' => 'boolean',
     ];
+
+    public function getImagemUrlAttribute()
+    {
+        if (!$this->imagem) {
+            return '/images/placeholder-profile.jpg';
+        }
+        
+        return UploadHelper::getPublicUrl($this->imagem);
+    }
 
     /**
      * Retorna o período formatado (ex: "10/02/2023 - ATUALMENTE" ou "11/09/2013 - 13/04/2022")

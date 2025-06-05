@@ -22,7 +22,7 @@ const fetchNoticias = async (isRetry = false) => {
     }
     error.value = null;
     
-    const response = await fetch('/api/ultimas-noticias', {
+    const response = await fetch('/api/noticias-home', {
       headers: {
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'

@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Curso;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-
 
 class CursoController extends Controller
 {
-    public function index()
+        public function index()
     {
         $this->authorize('adminViewAny', Curso::class);
         $cursos = (new Curso)->newQuery();
@@ -37,8 +36,13 @@ class CursoController extends Controller
                     ->onEachSide(config('admin.paginate.each_side'))
                     ->appends(request()->query());
 
-        /* $cursos = Curso::all(); */
-        return Inertia::render('Admin/Cursos/Index', ['cursos' => $cursos,
+        $cursos->getCollection()->transform(function($curso) {
+            $curso->imagem = $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null;
+            return $curso;
+        });
+
+        return Inertia::render('Admin/Cursos/Index', [
+            'cursos' => $cursos,
             'filters' => request()->all('search'),
             'can' => [
                 'create' => Auth::user()->can('curso create'),
@@ -48,14 +52,19 @@ class CursoController extends Controller
         ]);
     }
 
-    public function cursosPublicos() //Exibe os cursos na aba "Cursos" do layout principal
+        public function cursosPublicos()
     {
-    $cursos = Curso::where('status', 'aberto')->paginate(3);
+        $cursos = Curso::where('status', 'aberto')->paginate(3);
 
+        // Transformar os dados para incluir URLs corretas das imagens
+        $cursos->getCollection()->transform(function($curso) {
+            $curso->imagem = $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null;
+            return $curso;
+        });
 
-    return Inertia::render('Cursos', [
-        'cursos' => $cursos,
-    ]);
+        return Inertia::render('Cursos', [
+            'cursos' => $cursos,
+        ]);
     }
 
     public function create()
@@ -67,191 +76,253 @@ class CursoController extends Controller
 
     public function store(Request $request)
     {
-    $validated = $request->validate([
-        'nome' => 'required|string|max:255',
-        'descricao' => 'nullable|string',
-        'imagem' => 'nullable|string',
-        'imagem_file' => 'nullable|image|max:2048', // Aceita imagens até 2MB
-        'data_inicio' => 'required|date',
-        'data_fim' => 'required|date|after_or_equal:data_inicio',
-        'carga_horaria' => 'required|integer|min:1',
-        'pre_requisitos' => 'nullable|array',
-        'enxoval' => 'nullable|array',
-        'localizacao' => 'required|string|max:255',
-        'capacidade_maxima' => 'required|integer|min:1',
-        'modalidade' => 'required|string|max:20',
-        /* 'material_complementar' => 'nullable|array', */
-        'certificacao' => 'boolean',
-        'certificacao_modelo' => 'nullable|string',
-        'status' => 'required|string|max:20',
-    ]);
+        $validated = $request->validate([
+            'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'imagem_file' => 'nullable|image|max:2048',
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'carga_horaria' => 'required|integer|min:1',
+            'pre_requisitos' => 'nullable|array',
+            'enxoval' => 'nullable|array',
+            'localizacao' => 'required|string|max:255',
+            'capacidade_maxima' => 'required|integer|min:1',
+            'modalidade' => 'required|string|max:20',
+            'certificacao' => 'boolean',
+            'certificacao_modelo' => 'nullable|string',
+            'status' => 'required|string|max:20',
+        ]);
 
-   /*  // Processa o upload da imagem se enviada
-    if ($request->hasFile('imagem_file')) {
-        $path = $request->file('imagem_file')->store('cursos', 'public'); // Salva em storage/app/public/cursos
-        $validated['imagem'] = Storage::url($path); // Armazena o URL do arquivo
+        // Processar upload da imagem se enviada
+        if ($request->hasFile('imagem_file')) {
+            $imagePath = UploadHelper::uploadImage(
+                $request->file('imagem_file'),
+                'cursos',
+                $validated['nome'],
+                'curso'
+            );
+            $validated['imagem'] = $imagePath;
+        }
+
+        // Converter arrays para JSON
+        $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
+        $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
+
+        // Remover arquivo da validação antes de criar
+        unset($validated['imagem_file']);
+
+        Curso::create($validated);
+
+        return redirect()->route('admin.cursos.index')
+            ->with('message', 'Curso cadastrado com sucesso!');
     }
- */
-    if ($request->hasFile('imagem_file')) {  //Salva em C:\Code\adm-acadepol\public\images
-        $file = $request->file('imagem_file');
-        $filename = time() . '.' . $file->getClientOriginalExtension();
-        $file->move(public_path('images/cursos'), $filename);
-        $validated['imagem'] = '/images/cursos/' . $filename;
-    } 
 
-    // Converte arrays para JSON (caso precise armazenar em colunas do tipo JSON)
-    $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
-    $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
-    /* $validated['material_complementar'] = json_encode($validated['material_complementar'] ?? []); */
-
-    Curso::create($validated);
-
-    return redirect()->route('admin.cursos.index')->with('message', 'Curso cadastrado com sucesso!');
-    }
-
-    public function show(Curso $curso)
+        public function show(Curso $curso)
     {
         $this->authorize('adminView', $curso);
 
+        // Formatar os dados do curso incluindo URL correta da imagem
+        $cursoData = [
+            'id' => $curso->id,
+            'nome' => $curso->nome,
+            'descricao' => $curso->descricao,
+            'imagem' => $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null,
+            'data_inicio' => $curso->data_inicio,
+            'data_fim' => $curso->data_fim,
+            'carga_horaria' => $curso->carga_horaria,
+            'pre_requisitos' => is_string($curso->pre_requisitos) 
+                ? json_decode($curso->pre_requisitos, true) 
+                : $curso->pre_requisitos,
+            'enxoval' => is_string($curso->enxoval) 
+                ? json_decode($curso->enxoval, true) 
+                : $curso->enxoval,
+            'localizacao' => $curso->localizacao,
+            'capacidade_maxima' => $curso->capacidade_maxima,
+            'modalidade' => $curso->modalidade,
+            'certificacao' => $curso->certificacao,
+            'certificacao_modelo' => $curso->certificacao_modelo,
+            'status' => $curso->status,
+            'created_at' => $curso->created_at,
+            'updated_at' => $curso->updated_at,
+        ];
+
         return Inertia::render('Admin/Cursos/Show', [
-            'curso' => $curso,
+            'curso' => $cursoData,
         ]);
     }
 
-    public function showCurso(Curso $curso)//Exibe os detalhes do curso para a o usuário fazer matrícula
+        public function showCurso(Curso $curso)
     {
+        //Formatar os dados do curso para exibição pública
+        $cursoData = [
+            'id' => $curso->id,
+            'nome' => $curso->nome,
+            'descricao' => $curso->descricao,
+            'imagem' => $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null,
+            'data_inicio' => $curso->data_inicio,
+            'data_fim' => $curso->data_fim,
+            'carga_horaria' => $curso->carga_horaria,
+            'pre_requisitos' => is_string($curso->pre_requisitos) 
+                ? json_decode($curso->pre_requisitos, true) 
+                : $curso->pre_requisitos,
+            'enxoval' => is_string($curso->enxoval) 
+                ? json_decode($curso->enxoval, true) 
+                : $curso->enxoval,
+            'localizacao' => $curso->localizacao,
+            'capacidade_maxima' => $curso->capacidade_maxima,
+            'modalidade' => $curso->modalidade,
+            'certificacao' => $curso->certificacao,
+            'certificacao_modelo' => $curso->certificacao_modelo,
+            'status' => $curso->status,
+        ];
+
         return Inertia::render('CursoDetalhe', [
-            'curso' => $curso,
+            'curso' => $cursoData,
         ]);
     }
 
-    public function exibirAlunos($id)//ID DO CURSO. Exibir quantidade e dados dos alunos inscritos
+    public function exibirAlunos($id)
     {
-    $curso = Curso::with('alunos')->findOrFail($id);
+        $curso = Curso::with('alunos')->findOrFail($id);
 
-    return response()->json([
-        'curso' => $curso,
-        'quantidade_inscritos' => $curso->alunos->count(),
-        'inscritos' => $curso->alunos
-    ]);
+        return response()->json([
+            'curso' => $curso,
+            'quantidade_inscritos' => $curso->alunos->count(),
+            'inscritos' => $curso->alunos
+        ]);
     }
 
-    public function edit(Curso $curso)
+        public function edit(Curso $curso)
     {
-    $this->authorize('adminUpdate', $curso);
+        $this->authorize('adminUpdate', $curso);
 
-    return Inertia::render('Admin/Cursos/Edit', [
-        'curso' => $curso,
-    ]);
+        // Formatar os dados do curso para edição
+        $cursoData = [
+            'id' => $curso->id,
+            'nome' => $curso->nome,
+            'descricao' => $curso->descricao,
+            'imagem' => $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null,
+            'data_inicio' => $curso->data_inicio ? $curso->data_inicio->format('Y-m-d') : null,
+            'data_fim' => $curso->data_fim ? $curso->data_fim->format('Y-m-d') : null,
+            'carga_horaria' => $curso->carga_horaria,
+            'pre_requisitos' => is_string($curso->pre_requisitos) 
+                ? json_decode($curso->pre_requisitos, true) 
+                : $curso->pre_requisitos,
+            'enxoval' => is_string($curso->enxoval) 
+                ? json_decode($curso->enxoval, true) 
+                : $curso->enxoval,
+            'localizacao' => $curso->localizacao,
+            'capacidade_maxima' => $curso->capacidade_maxima,
+            'modalidade' => $curso->modalidade,
+            'certificacao' => $curso->certificacao,
+            'certificacao_modelo' => $curso->certificacao_modelo,
+            'status' => $curso->status,
+        ];
+
+        return Inertia::render('Admin/Cursos/Edit', [
+            'curso' => $cursoData,
+        ]);
     }
 
-    /**
- * Update the specified resource in storage.
- *
- * @param  \Illuminate\Http\Request  $request
- * @param  \App\Models\Curso  $curso
- * @return \Illuminate\Http\RedirectResponse
- */
     public function update(Request $request, Curso $curso)
     {
-
         \Log::info('Request recebida:', $request->all());
-    $this->authorize('adminUpdate', $curso);
+        $this->authorize('adminUpdate', $curso);
 
-    // Valide os dados do formulário
-    $validated = $request->validate([
-        'nome' => 'required|string|max:255',
-        'descricao' => 'nullable|string',
-        'imagem' => 'nullable|string',
-        'imagem_file' => 'nullable|image|max:2048',
-        'data_inicio' => 'required|date',
-        'data_fim' => 'required|date|after_or_equal:data_inicio',
-        'carga_horaria' => 'required|integer|min:1',
-        'pre_requisitos' => 'nullable|array',
-        'enxoval' => 'nullable|array',
-        'localizacao' => 'required|string|max:255',
-        'capacidade_maxima' => 'required|integer|min:1',
-        'modalidade' => 'required|string',
-        'certificacao' => 'boolean',
-        'certificacao_modelo' => 'nullable|string',
-        'status' => 'required|string',
-    ]);
+        $validated = $request->validate([
+            'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'imagem_file' => 'nullable|image|max:2048',
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after_or_equal:data_inicio',
+            'carga_horaria' => 'required|integer|min:1',
+            'pre_requisitos' => 'nullable|array',
+            'enxoval' => 'nullable|array',
+            'localizacao' => 'required|string|max:255',
+            'capacidade_maxima' => 'required|integer|min:1',
+            'modalidade' => 'required|string',
+            'certificacao' => 'boolean',
+            'certificacao_modelo' => 'nullable|string',
+            'status' => 'required|string',
+        ]);
 
-    // Processar upload de imagem, se fornecido
-    if ($request->hasFile('imagem_file')) {
-        // Remover imagem antiga se existir
-        if ($curso->imagem && file_exists(public_path($curso->imagem))) {
-            unlink(public_path($curso->imagem));
+        // Verificar se o nome do curso mudou (para mover imagens)
+        $nomeAntigo = $curso->nome;
+        $nomeNovo = $validated['nome'];
+        $nomeMudou = $nomeAntigo !== $nomeNovo;
+
+        // Processar upload de nova imagem
+        if ($request->hasFile('imagem_file')) {
+            // Remover imagem antiga
+            if ($curso->imagem) {
+                UploadHelper::deleteImage($curso->imagem);
+            }
+            
+            // Upload nova imagem
+            $imagePath = UploadHelper::uploadImage(
+                $request->file('imagem_file'),
+                'cursos',
+                $validated['nome'],
+                'curso'
+            );
+            $validated['imagem'] = $imagePath;
+        } else if ($nomeMudou && $curso->imagem) {
+            // Se o nome mudou mas não há nova imagem, mover a imagem existente
+            $novaImagemPath = UploadHelper::moveImage(
+                $curso->imagem,
+                'cursos',
+                $validated['nome'],
+                'curso'
+            );
+            if ($novaImagemPath) {
+                $validated['imagem'] = $novaImagemPath;
+            }
         }
-        
-        $file = $request->file('imagem_file');
-        $filename = time() . '.' . $file->getClientOriginalExtension();
-        $file->move(public_path('images/cursos'), $filename);
-        $validated['imagem'] = '/images/cursos/' . $filename;
-    }
 
-    // Converter arrays para JSON antes de salvar
-    $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
-    $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
+        // Converter arrays para JSON
+        $validated['pre_requisitos'] = json_encode($validated['pre_requisitos'] ?? []);
+        $validated['enxoval'] = json_encode($validated['enxoval'] ?? []);
 
-    // Atualizar o curso
-    $curso->update($validated);
+        // Remover arquivo da validação antes de atualizar
+        unset($validated['imagem_file']);
 
-    return redirect()->route('admin.cursos.index')
-        ->with('message', 'Curso atualizado com sucesso!');
+        // Atualizar o curso
+        $curso->update($validated);
+
+        // Limpar pasta antiga se o nome mudou
+        if ($nomeMudou) {
+            $pastaAntiga = 'cursos/' . UploadHelper::sanitizeFolderName($nomeAntigo);
+            UploadHelper::cleanupEmptyFolder($pastaAntiga);
+        }
+
+        return redirect()->route('admin.cursos.index')
+            ->with('message', 'Curso atualizado com sucesso!');
     }
 
     public function destroy(Curso $curso)
     {
-    $this->authorize('adminDelete', $curso);
+        $this->authorize('adminDelete', $curso);
 
-    // Verificar se há matrículas associadas antes de excluir. Se tiver algum usuário com matrícula APROVADA ou PENDENTE ele não remove.
-    $matriculasAtivas = $curso->alunos()->whereIn('status', ['aprovada', 'pendente'])->count();
-    
-    if ($matriculasAtivas > 0) {
+        // Verificar se há matrículas associadas
+        $matriculasAtivas = $curso->alunos()->whereIn('status', ['aprovada', 'pendente'])->count();
+        
+        if ($matriculasAtivas > 0) {
+            return redirect()->route('admin.cursos.index')
+                ->with('message', 'Não é possível excluir um curso com matrículas ativas.');
+        }
+        
+        // Remover a imagem do curso
+        if ($curso->imagem) {
+            UploadHelper::deleteImage($curso->imagem);
+        }
+        
+        $curso->delete();
+
+        // Limpar pasta do curso
+        $pastaCurso = 'cursos/' . UploadHelper::sanitizeFolderName($curso->nome);
+        UploadHelper::cleanupEmptyFolder($pastaCurso);
+        
         return redirect()->route('admin.cursos.index')
-            ->with('message', 'Não é possível excluir um curso com matrículas ativas.');
+            ->with('message', 'Curso excluído com sucesso!');
     }
-    
-    // Remover a imagem do curso, se existir
-    if ($curso->imagem && file_exists(public_path($curso->imagem))) {
-        unlink(public_path($curso->imagem));
-    }
-    
-    $curso->delete();
-    
-    return redirect()->route('admin.cursos.index')
-        ->with('message', 'Curso excluído com sucesso!');
-    }
-    /* public function matricularAluno(Request $request, Curso $curso) {
-        //$aluno = \Auth::user(); // Obtém o usuário logado
-        $aluno = auth()->user();
-    
-        // Verifica se o aluno já está matriculado
-        if ($curso->alunos()->where('user_id', $aluno->id)->exists()) {
-            return response()->json(['message' => 'Você já está matriculado neste curso.'], 400);
-        }
-    
-        // Verifica a capacidade do curso
-        if ($curso->alunos()->count() >= $curso->capacidade_maxima) {
-            return response()->json(['message' => 'O curso atingiu a capacidade máxima.'], 400);
-        }
-    
-        // Verifica pré-requisitos
-        $preRequisitos = is_string($curso->pre_requisitos) 
-            ? json_decode($curso->pre_requisitos, true) ?? [] 
-            : [];
-
-        foreach ($preRequisitos as $preRequisitoId) {
-    if (!$aluno->cursos()->where('curso_id', $preRequisitoId)->exists()) {
-        return response()->json([
-            'message' => 'Você não atende aos pré-requisitos.'
-        ], 400);
-    }
-}
-    
-        // Matricula o aluno
-        $curso->alunos()->attach($aluno->id);
-        return response()->json(['message' => 'Matrícula realizada com sucesso!']);
-    } */
 }

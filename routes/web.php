@@ -8,9 +8,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\ContatoController;
 use App\Http\Controllers\RequerimentoController;
+use App\Http\Controllers\UploadController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UploadController;
 use Inertia\Inertia;
 
 /*
@@ -29,9 +29,8 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-//Rota para upload de imagens na notícia
 Route::post('/api/upload-ckeditor-images', [UploadController::class, 'uploadCKEditorImage'])
-->middleware(['auth', 'verified']);
+    ->middleware(['web']); // Apenas middleware web para CSRF
 
 // Páginas institucionais
 Route::get('/historia', function () {
@@ -73,16 +72,17 @@ Route::get('/cursos', [CursoController::class, 'cursosPublicos'])
 Route::get('/cursos/{curso}', [CursoController::class, 'showCurso'])
     ->name('detalhes');
 
-    //Rotas públicas para notícias
+// Rotas públicas para notícias
 Route::get('/noticias', [NoticiaController::class, 'ListarTodas'])->name('noticias');
 Route::get('/noticias/{id}', [NoticiaController::class, 'exibir'])->name('noticias.exibir');
 Route::get('/api/ultimas-noticias', [NoticiaController::class, 'ultimasNoticias'])->name('api.ultimas-noticias');
+Route::get('/api/noticias-home', [NoticiaController::class, 'noticiasHome'])->name('api.noticias-home');
 
 // API para notícias paginadas com suporte a busca
 Route::get('/api/noticias', [NoticiaController::class, 'apiNoticias'])
     ->name('api.noticias');
 
-    // Fale Conosco (rota pública)
+// Fale Conosco (rota pública)
 Route::controller(ContatoController::class)->prefix('fale-conosco')->name('contato.')->group(function () {
     Route::get('/', 'create')->name('create');
     Route::post('/', 'store')->name('store');
@@ -128,11 +128,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Requerimentos
     Route::controller(RequerimentoController::class)->prefix('requerimentos')->name('requerimentos.')->group(function () {
-    // Criação e confirmação
-    Route::get('/novo', 'create')->name('create');
-    Route::post('/', 'store')->name('store');
-    Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
-});
+        // Criação e confirmação
+        Route::get('/novo', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
+    });
 });
 
 // Rotas de autenticação

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->text('descricao_curta');
-            $table->text('conteudo')->nullable();
+            $table->longText('conteudo')->nullable()->default('');
             $table->string('imagem')->nullable();
             $table->boolean('destaque')->default(false);
             $table->date('data_publicacao');
