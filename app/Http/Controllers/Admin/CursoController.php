@@ -8,6 +8,7 @@ use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CursoController extends Controller
 {
@@ -17,7 +18,15 @@ class CursoController extends Controller
         $cursos = (new Curso)->newQuery();
 
         if (request()->has('search')) {
-            $cursos->where('nome', 'Like', '%'.request()->input('search').'%');
+            $searchTerm = trim(request()->input('search'));
+            if (!empty($searchTerm)) {
+                $cursos->where(function($query) use ($searchTerm) {
+                    $query->whereRaw('LOWER(nome) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                          ->orWhereRaw('LOWER(descricao) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                          ->orWhereRaw('LOWER(localizacao) LIKE ?', ['%' . strtolower($searchTerm) . '%'])
+                          ->orWhereRaw('LOWER(modalidade) LIKE ?', ['%' . strtolower($searchTerm) . '%']);
+                });
+            }
         }
 
         if (request()->query('sort')) {
@@ -53,23 +62,60 @@ class CursoController extends Controller
     }
 
     /**
-     * Exibe cursos
+     * Exibe cursos públicos com busca case-insensitive melhorada
      */
-    public function cursosPublicos()
+    public function cursosPublicos(Request $request)
     {
-        // Buscar todos os cursos, ordenados por criação (mais novos primeiro)
-        $cursos = Curso::orderBy('created_at', 'desc')
-                      ->orderBy('id', 'desc')
-                      ->paginate(6);
+        $query = Curso::query();
+
+        // Aplicar busca case-insensitive se fornecida
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->get('search'));
+            
+            if (!empty($searchTerm)) {
+                $query->where(function($q) use ($searchTerm) {
+                    // Converter tanto o termo de busca quanto os campos para minúsculas
+                    $searchLower = strtolower($searchTerm);
+                    
+                    $q->whereRaw('LOWER(nome) LIKE ?', ["%{$searchLower}%"])
+                      ->orWhereRaw('LOWER(descricao) LIKE ?', ["%{$searchLower}%"])
+                      ->orWhereRaw('LOWER(localizacao) LIKE ?', ["%{$searchLower}%"])
+                      ->orWhereRaw('LOWER(modalidade) LIKE ?', ["%{$searchLower}%"])
+                      ->orWhereRaw('LOWER(status) LIKE ?', ["%{$searchLower}%"]);
+                });
+            }
+        }
+
+        $cursos = $query->orderByRaw("
+                CASE 
+                    WHEN status = 'aberto' THEN 1
+                    WHEN status = 'fechado' THEN 2
+                    WHEN status = 'suspenso' THEN 3
+                    WHEN status = 'concluido' THEN 4
+                    ELSE 5
+                END
+            ")
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(8) // 8 por página
+            ->withQueryString(); // Mantém parâmetros de busca na paginação
 
         // Transformar os dados para incluir URLs corretas das imagens
         $cursos->getCollection()->transform(function($curso) {
             $curso->imagem = $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null;
+            
+            // Garantir que o status está correto para o frontend
+            $curso->is_concluido = in_array($curso->status, ['concluido', 'fechado']);
+            $curso->is_aberto = $curso->status === 'aberto';
+            
             return $curso;
         });
 
         return Inertia::render('Cursos', [
             'cursos' => $cursos,
+            'filters' => [
+                'search' => $request->get('search'),
+            ],
         ]);
     }
 

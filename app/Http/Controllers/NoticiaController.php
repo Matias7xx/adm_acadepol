@@ -109,7 +109,7 @@ class NoticiaController extends Controller
     {
         $cacheKey = 'noticias_destaque_banner';
         
-        $noticias = \Cache::remember($cacheKey, now()->addMinutes(30), function() {
+        $noticias = \Cache::remember($cacheKey, now()->addMinutes(10), function() {
             return Noticia::where('status', 'publicado')
                 ->where('data_publicacao', '<=', now())
                 ->where('destaque', true) // <<<< SÓ DESTAQUES
@@ -139,15 +139,14 @@ class NoticiaController extends Controller
     {
         $cacheKey = 'noticias_home_lista';
         
-        $noticias = \Cache::remember($cacheKey, now()->addMinutes(30), function() {
+        $noticias = \Cache::remember($cacheKey, now()->addMinutes(10), function() {
             return Noticia::where('status', 'publicado')
                 ->where('data_publicacao', '<=', now())
                 ->whereNull('deleted_at')
-                // NÃO FILTRAR POR DESTAQUE - TODAS AS PUBLICADAS
                 ->orderBy('data_publicacao', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->orderBy('id', 'desc')
-                ->take(6) // ou quantas você quiser na home
+                ->take(6)
                 ->get()
                 ->map(function($noticia) {
                     return [
@@ -165,18 +164,14 @@ class NoticiaController extends Controller
         return response()->json($noticias);
     }
 
-    /**
-     * API para listar notícias paginadas com suporte a busca
-     * Rota: /api/noticias
-     */
         public function apiNoticias(Request $request)
     {
-        $perPage = $request->input('per_page', 5);
+        $perPage = $request->input('per_page', 10);
         $search = $request->input('search', '');
         $page = $request->input('page', 1);
         
         // Validar e limitar os itens por página
-        $perPage = min(max($perPage, 3), 6);
+        $perPage = min(max($perPage, 5), 10);
         
         // Criar chave de cache única baseada nos parâmetros
         $cacheKey = 'noticias_api_' . md5($perPage . '_' . $search . '_' . $page);
@@ -185,7 +180,6 @@ class NoticiaController extends Controller
             $noticias = Noticia::where('status', 'publicado')
                 ->where('data_publicacao', '<=', now())
                 ->whereNull('deleted_at')
-                // NÃO FILTRAR POR DESTAQUE
                 ->when($request->search, function($query, $search) {
                     $query->where(function($q) use ($search) {
                         $q->where('titulo', 'like', "%{$search}%")

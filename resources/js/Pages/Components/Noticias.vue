@@ -13,12 +13,12 @@ const mounted = ref(false);
 // Configurações
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
-const MAX_PREVIEW_ITEMS = 3;
+const MAX_PREVIEW_ITEMS = 5;
 
 // Debounce controller para evitar múltiplas requisições
 let abortController = null;
 
-// Buscar notícias da API com mecanismo de retry e tratamento de erro robusto
+// Buscar notícias da API
 const fetchNoticias = async (isRetry = false) => {
   try {
     // Cancelar requisição anterior se existir
@@ -98,17 +98,15 @@ const fetchNoticias = async (isRetry = false) => {
 // Tratamento de erro de imagem com fallback
 const handleImageError = (event, noticia) => {
   const img = event.target;
-  
-  // Evitar loop infinito de erro
   if (img.dataset.fallbackAttempted) {
     img.style.display = 'none';
     return;
   }
-  
   img.dataset.fallbackAttempted = 'true';
-  img.src = '/images/placeholder-news.png';
+  img.src = '/images/placeholder-news2.png';
   img.alt = `Imagem não disponível para: ${noticia.titulo}`;
   img.classList.add('placeholder-image');
+  console.log('Fallback aplicado para:', noticia.titulo);
 };
 
 // Função para formatar datas com fallback
@@ -306,7 +304,7 @@ onUnmounted(() => {
                     :alt="`Imagem ilustrativa da notícia: ${noticia.titulo}`" 
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
-                    @error="(e) => handleImageError(e, noticia)"
+                    @error="handleImageError"
                   />
                   <div 
                     v-else 
