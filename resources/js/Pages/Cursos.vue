@@ -10,55 +10,110 @@
           <h1 class="text-4xl font-sans text-[#bea55a] uppercase tracking-wider">CURSOS</h1>
         </div>
         
-        <div v-if="hasCursos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div v-if="hasCursos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <div 
             v-for="curso in cursos.data" 
             :key="curso.id"
-            class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col relative"
-            :class="{'ring-1 ring-[#bea55a] ring-offset-2': curso.status === 'aberto'}"
+            class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col relative h-[420px]"
+            :class="{
+              'ring-1 ring-[#bea55a] ring-offset-2 hover:shadow-lg': curso.status === 'aberto',
+              'bg-gray-100 opacity-80': curso.status === 'fechado'
+            }"
           >
-            <!-- Faixa "Inscrições Abertas" -->
+            <!-- Faixa de status -->
             <div 
               v-if="curso.status === 'aberto'" 
-              class="absolute top-5 -right-10 bg-[#bea55a] text-white py-1 px-10 transform rotate-45 z-10 shadow-md"
+              class="absolute top-4 -right-10 bg-[#bea55a] text-white py-1 px-10 transform rotate-45 z-10 shadow-md"
             >
               <span class="text-xs font-bold uppercase tracking-wider">Inscrições Abertas</span>
             </div>
             
-            <div class="relative">
+            <!-- Badge de curso concluído -->
+            <div 
+              v-if="curso.status === 'fechado'" 
+              class="absolute top-3 left-3 bg-gray-600 text-white px-3 py-1 rounded-full z-10"
+            >
+              <span class="text-xs font-medium">Concluído</span>
+            </div>
+            
+            <!-- Imagem do curso -->
+            <div class="relative h-48">
               <img 
                 :src="curso.imagem || '/images/default-curso.jpg'" 
                 :alt="`Curso de ${curso.nome}`" 
-                class="w-full h-56 object-cover" 
+                class="w-full h-full object-cover" 
+                :class="{'filter grayscale': curso.status === 'fechado'}"
                 @error="handleImageError"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
-              <div class="absolute bottom-0 left-0 right-0 p-4">
-                <span class="bg-[#bea55a] text-white text-xs px-2 py-1 rounded uppercase font-bold">Acadepol</span>
+              <div 
+                class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"
+                :class="{'opacity-40': curso.status === 'fechado'}"
+              ></div>
+              <div class="absolute bottom-0 left-0 right-0 p-3">
+                <span 
+                  class="bg-[#bea55a] text-white text-xs px-2 py-1 rounded uppercase font-bold"
+                  :class="{'bg-gray-500': curso.status === 'fechado'}"
+                >
+                  Acadepol
+                </span>
               </div>
             </div>
             
-            <div class="p-5 flex flex-col flex-grow">
-              <h3 class="text-xl font-bold text-gray-800 mb-3">{{ curso.nome }}</h3>
-              <p class="text-gray-600 mb-4 line-clamp-3 flex-grow">{{ curso.descricao }}</p>
+            <!-- Conteúdo do card -->
+            <div class="p-4 flex flex-col flex-grow">
+              <h3 
+                class="text-lg font-bold mb-3 line-clamp-2"
+                :class="curso.status === 'fechado' ? 'text-gray-600' : 'text-gray-800'"
+              >
+                {{ curso.nome }}
+              </h3>
               
-              <div class="flex flex-col space-y-3 mt-auto">              
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center text-sm text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Carga Horária: {{ curso.carga_horaria || 'Consultar' }}H
-                  </div>
-                  <Link 
-                    :href="`/cursos/${curso.id}`" 
-                    class="bg-[#bea55a] text-white px-5 py-2 rounded font-medium hover:bg-[#a38e4d] transition-colors flex items-center"
-                  >
-                    Ver Detalhes
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
+              <p 
+                class="text-sm mb-4 line-clamp-3 flex-grow"
+                :class="curso.status === 'fechado' ? 'text-gray-500' : 'text-gray-600'"
+              >
+                {{ curso.descricao }}
+              </p>
+              
+              <!-- Informações do curso -->
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-xs text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ curso.carga_horaria || 'Consultar' }}H
+                </div>
+                
+                <div class="flex items-center text-xs text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {{ curso.modalidade || 'Presencial' }}
+                </div>
+              </div>
+              
+              <!-- Ação do card -->
+              <div class="mt-auto">
+                <Link 
+                  v-if="curso.status === 'aberto'"
+                  :href="`/cursos/${curso.id}`" 
+                  class="w-full bg-[#bea55a] text-white py-2 rounded font-medium hover:bg-[#a38e4d] transition-colors flex items-center justify-center text-sm"
+                >
+                  Ver Detalhes
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                
+                <div 
+                  v-else
+                  class="w-full bg-gray-400 text-white py-2 rounded font-medium flex items-center justify-center text-sm cursor-default"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Curso Concluído
                 </div>
               </div>
             </div>
@@ -66,7 +121,7 @@
         </div>
         
         <!-- Paginação -->
-        <div v-if="cursos.links && cursos.links.length > 3" class="mt-8">
+        <div v-if="cursos.links && cursos.links.length > 3" class="mt-12">
           <div class="flex justify-center space-x-1">
             <template v-for="(link, index) in cursos.links" :key="index">
               <!-- Link anterior -->
@@ -104,6 +159,7 @@
           </div>
         </div>
         
+        <!-- Estado vazio -->
         <div v-else-if="!hasCursos" class="bg-white p-8 rounded-lg shadow-md text-center">
           <div class="bg-gray-100 p-6 rounded-full inline-block mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#bea55a]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -148,12 +204,16 @@ const hasCursos = computed(() => props.cursos.data && props.cursos.data.length >
 const handleImageError = (event) => {
   event.target.src = '/images/placeholder-news2.png';
 };
-
-// Para debugging da paginação
-console.log('Links de paginação:', props.cursos.links);
 </script>
 
 <style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;

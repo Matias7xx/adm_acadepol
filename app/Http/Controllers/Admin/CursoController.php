@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CursoController extends Controller
 {
-        public function index()
+    public function index()
     {
         $this->authorize('adminViewAny', Curso::class);
         $cursos = (new Curso)->newQuery();
@@ -52,9 +52,15 @@ class CursoController extends Controller
         ]);
     }
 
-        public function cursosPublicos()
+    /**
+     * Exibe cursos
+     */
+    public function cursosPublicos()
     {
-        $cursos = Curso::where('status', 'aberto')->paginate(3);
+        // Buscar todos os cursos, ordenados por criação (mais novos primeiro)
+        $cursos = Curso::orderBy('created_at', 'desc')
+                      ->orderBy('id', 'desc')
+                      ->paginate(6);
 
         // Transformar os dados para incluir URLs corretas das imagens
         $cursos->getCollection()->transform(function($curso) {
@@ -117,7 +123,7 @@ class CursoController extends Controller
             ->with('message', 'Curso cadastrado com sucesso!');
     }
 
-        public function show(Curso $curso)
+    public function show(Curso $curso)
     {
         $this->authorize('adminView', $curso);
 
@@ -151,7 +157,7 @@ class CursoController extends Controller
         ]);
     }
 
-        public function showCurso(Curso $curso)
+    public function showCurso(Curso $curso)
     {
         //Formatar os dados do curso para exibição pública
         $cursoData = [
@@ -192,7 +198,7 @@ class CursoController extends Controller
         ]);
     }
 
-        public function edit(Curso $curso)
+    public function edit(Curso $curso)
     {
         $this->authorize('adminUpdate', $curso);
 
