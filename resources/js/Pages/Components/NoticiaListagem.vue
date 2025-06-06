@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { Link, router, Head } from '@inertiajs/vue3';
 import Header from './Header.vue';
 import SiteNavbar from './SiteNavbar.vue';
@@ -15,14 +15,25 @@ const totalPages = ref(1);
 const totalItems = ref(0);
 const itemsPerPage = ref(6);
 const retryCount = ref(0);
+const mounted = ref(false);
 
 // Configurações
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 2000; // ms
+const RETRY_DELAY = 2000;
+
+// Debounce controller para evitar múltiplas requisições
+let abortController = null;
 
 // Buscar notícias da API com paginação e busca
 const fetchNoticias = async (isRetry = false) => {
   try {
+    // Cancelar requisição anterior se existir
+    if (abortController) {
+      abortController.abort();
+    }
+    
+    abortController = new AbortController();
+    
     if (!isRetry) {
       loading.value = true;
     }
@@ -38,43 +49,66 @@ const fetchNoticias = async (isRetry = false) => {
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       },
+      signal: abortController.signal,
       cache: 'no-cache'
     });
     
     if (!response.ok) {
-      throw new Error(`Erro ${response.status}: ${response.statusText || 'Não foi possível carregar as notícias'}`);
+      const errorMessage = response.status === 404 
+        ? 'Serviço de notícias indisponível' 
+        : `Erro ${response.status}: ${response.statusText || 'Não foi possível carregar as notícias'}`;
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
     
+    // Validar estrutura dos dados
+    if (!data || !Array.isArray(data.data)) {
+      throw new Error('Formato de dados inválido recebido do servidor');
+    }
+    
     // Processar dados da API paginada
-    noticias.value = data.data.map(noticia => ({
-      ...noticia,
-      data_publicacao: formatDate(noticia.data_publicacao)
-    }));
+    noticias.value = data.data
+      .map(noticia => ({
+        ...noticia,
+        id: noticia.id || Math.random().toString(36).substr(2, 9),
+        titulo: noticia.titulo || 'Título não disponível',
+        descricao_curta: noticia.descricao_curta || 'Descrição não disponível',
+        data_publicacao: formatDate(noticia.data_publicacao),
+        visualizacoes: parseInt(noticia.visualizacoes) || 0,
+        destaque: Boolean(noticia.destaque)
+      }))
+      .filter(noticia => noticia.titulo !== 'Título não disponível');
     
     // Atualizar informações de paginação
-    currentPage.value = data.current_page;
-    totalPages.value = data.last_page;
-    totalItems.value = data.total;
-    itemsPerPage.value = data.per_page;
+    currentPage.value = data.current_page || 1;
+    totalPages.value = data.last_page || 1;
+    totalItems.value = data.total || 0;
+    itemsPerPage.value = data.per_page || 6;
     
     loading.value = false;
     retryCount.value = 0;
     
-    // Atualizar URL com os parâmetros de busca e paginação (opcional)
+    // Atualizar URL com os parâmetros de busca e paginação
     updateUrlParams();
     
   } catch (err) {
+    // Ignorar erros de abort (cancelamento de requisição)
+    if (err.name === 'AbortError') {
+      return;
+    }
+    
     console.error('Erro ao carregar notícias:', err);
     
-    // Implementar lógica de retry
-    if (retryCount.value < MAX_RETRIES) {
+    if (retryCount.value < MAX_RETRIES && mounted.value) {
       retryCount.value++;
       console.log(`Tentativa ${retryCount.value} de ${MAX_RETRIES}...`);
-      setTimeout(() => fetchNoticias(true), RETRY_DELAY);
+      setTimeout(() => {
+        if (mounted.value) fetchNoticias(true);
+      }, RETRY_DELAY);
     } else {
       error.value = err.message;
       loading.value = false;
@@ -84,6 +118,8 @@ const fetchNoticias = async (isRetry = false) => {
 
 // Atualizar parâmetros da URL sem recarregar a página
 const updateUrlParams = () => {
+  if (typeof window === 'undefined') return;
+  
   const params = new URLSearchParams(window.location.search);
   
   if (currentPage.value !== 1) {
@@ -92,8 +128,8 @@ const updateUrlParams = () => {
     params.delete('page');
   }
   
-  if (searchQuery.value) {
-    params.set('search', searchQuery.value);
+  if (searchQuery.value.trim()) {
+    params.set('search', searchQuery.value.trim());
   } else {
     params.delete('search');
   }
@@ -103,18 +139,38 @@ const updateUrlParams = () => {
 };
 
 // Tratamento de erro de imagem com fallback
-const handleImageError = (event) => {
-  event.target.src = '/images/placeholder-news.png';
-  event.target.classList.add('placeholder-image');
+const handleImageError = (event, noticia) => {
+  const img = event.target;
+  
+  // Evitar loop infinito de erro
+  if (img.dataset.fallbackAttempted) {
+    img.style.display = 'none';
+    return;
+  }
+  
+  img.dataset.fallbackAttempted = 'true';
+  img.src = '/images/placeholder-news.png';
+  img.alt = `Imagem não disponível para: ${noticia.titulo}`;
+  img.classList.add('placeholder-image');
 };
 
-// Função para formatar datas
+// Função para formatar datas com fallback
 const formatDate = (dateString) => {
-  if (!dateString) return '';
+  if (!dateString) return 'Data não informada';
   
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
+    // Tentar diferentes formatos de data
+    let date;
+    if (dateString.includes('/')) {
+      const [day, month, year] = dateString.split('/');
+      date = new Date(year, month - 1, day);
+    } else {
+      date = new Date(dateString);
+    }
+    
+    if (isNaN(date.getTime())) {
+      return dateString; // Retorna o valor original se não conseguir converter
+    }
     
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -127,10 +183,27 @@ const formatDate = (dateString) => {
   }
 };
 
-// Truncar texto para evitar quebras de layout
-const truncateText = (text, length = 120) => {
-  if (!text || text.length <= length) return text;
-  return text.substring(0, length).trim() + '...';
+// Truncar texto
+const truncateText = (text, length = 100) => {
+  if (!text || typeof text !== 'string') return '';
+  if (text.length <= length) return text;
+  
+  const truncated = text.substring(0, length);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  if (lastSpace > length * 0.7) {
+    return truncated.substring(0, lastSpace).trim() + '...';
+  }
+  
+  return truncated.trim() + '...';
+};
+
+// Formatar número de visualizações
+const formatViews = (views) => {
+  if (views >= 1000) {
+    return (views / 1000).toFixed(1) + 'k';
+  }
+  return views.toString();
 };
 
 // Realizar busca
@@ -147,28 +220,30 @@ const clearSearch = () => {
 
 // Mudar página
 const changePage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
+  if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
     currentPage.value = page;
     fetchNoticias();
-    // Scroll para o topo da lista
+    // Scroll suave para o topo da lista
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 };
 
 // Inicializar a partir dos parâmetros da URL
 const initFromUrl = () => {
+  if (typeof window === 'undefined') return;
+  
   const params = new URLSearchParams(window.location.search);
   
   // Pegar página da URL
   const pageParam = params.get('page');
   if (pageParam && !isNaN(parseInt(pageParam))) {
-    currentPage.value = parseInt(pageParam);
+    currentPage.value = Math.max(1, parseInt(pageParam));
   }
   
   // Pegar termo de busca da URL
   const searchParam = params.get('search');
   if (searchParam) {
-    searchQuery.value = searchParam;
+    searchQuery.value = searchParam.trim();
   }
   
   // Buscar notícias com esses parâmetros
@@ -184,115 +259,193 @@ const debounce = (fn, delay) => {
   };
 };
 
-const debouncedSearch = debounce(handleSearch, 400);
+const debouncedSearch = debounce(() => {
+  if (mounted.value) {
+    handleSearch();
+  }
+}, 500);
 
 // Observar mudanças na query de busca
-watch(searchQuery, () => {
-  debouncedSearch();
+watch(searchQuery, (newValue, oldValue) => {
+  // Só executar se o componente estiver montado e o valor realmente mudou
+  if (mounted.value && newValue !== oldValue) {
+    debouncedSearch();
+  }
 });
 
-// Buscar notícias ao montar o componente
+// Gerar array de páginas para paginação
+const getPaginationPages = () => {
+  const pages = [];
+  const current = currentPage.value;
+  const total = totalPages.value;
+  
+  if (total <= 7) {
+    // Se temos 7 ou menos páginas, mostrar todas
+    for (let i = 1; i <= total; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Sempre mostrar primeira página
+    pages.push(1);
+    
+    if (current > 3) {
+      pages.push('...');
+    }
+    
+    // Mostrar páginas ao redor da atual
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (current < total - 2) {
+      pages.push('...');
+    }
+    
+    // Sempre mostrar última página
+    if (total > 1) {
+      pages.push(total);
+    }
+  }
+  
+  return pages;
+};
+
 onMounted(() => {
+  mounted.value = true;
   initFromUrl();
+});
+
+onUnmounted(() => {
+  mounted.value = false;
+  if (abortController) {
+    abortController.abort();
+  }
 });
 </script>
 
 <template>
-  <Head title="Todas as Notícias" />
+  <Head title="Todas as Notícias - ACADEPOL" />
   <SiteNavbar />
   <Header />
-    <div class="py-12 bg-gray-100">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+  
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Breadcrumb/Voltar -->
+      <Link 
+        href="/" 
+        class="inline-flex items-center text-sm text-gray-600 hover:text-[#bea55a] mb-6 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2 rounded-md"
+      >
+        <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Voltar para Home
+      </Link>
 
-        <Link 
-          href="/" 
-          class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800 mb-4"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Voltar
-        </Link>
-
-        <!-- Cabeçalho da página -->
-        <div class="mb-8 md:flex md:items-end md:justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-800">Notícias</h1>
-            <p class="mt-2 text-gray-600">Fique por dentro das últimas informações da ACADEPOL</p>
+      <!-- Cabeçalho da página -->
+      <div class="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+        <div class="lg:flex lg:items-center lg:justify-between">
+          <div class="flex-1 min-w-0">
+            <h1 class="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              Todas as Notícias
+            </h1>
+            <p class="text-gray-600 text-md">
+              Explore nosso arquivo completo de notícias e fique sempre atualizado sobre as atividades da ACADEPOL
+            </p>
           </div>
           
           <!-- Barra de pesquisa -->
-          <div class="mt-4 md:mt-0 md:ml-4 w-full md:w-auto">
-            <div class="relative w-full md:w-64 lg:w-80">
+          <div class="mt-6 lg:mt-0 lg:ml-8 w-full lg:w-auto">
+            <div class="relative w-full lg:w-80">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <input
                 v-model="searchQuery"
                 type="text"
                 placeholder="Buscar notícias..."
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#bea55a] focus:border-[#bea55a] focus:outline-none transition-colors"
+                class="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[#bea55a] focus:border-[#bea55a] text-gray-900 transition-colors"
               />
-              <button 
-                v-if="searchQuery"
-                @click="clearSearch" 
-                class="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                aria-label="Limpar busca"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <button 
-                @click="handleSearch"
-                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                aria-label="Buscar"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
+              <div class="absolute inset-y-0 right-0 flex items-center">
+                <button 
+                  v-if="searchQuery"
+                  @click="clearSearch" 
+                  class="p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2 rounded-md transition-colors"
+                  aria-label="Limpar busca"
+                >
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Estado de carregamento -->
-        <div v-if="loading" class="flex justify-center items-center py-20" aria-live="polite" aria-busy="true">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#bea55a]" role="status"></div>
-          <span class="sr-only">Carregando notícias...</span>
+      <!-- Estado de carregamento -->
+      <div 
+        v-if="loading" 
+        class="flex flex-col justify-center items-center py-20 lg:py-32" 
+        aria-live="polite" 
+        aria-busy="true"
+      >
+        <div class="relative">
+          <div class="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-[#bea55a]" role="status"></div>
+          <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-yellow-400 animate-pulse"></div>
         </div>
+        <p class="mt-4 text-gray-600 font-medium">Carregando notícias...</p>
+        <span class="sr-only">Carregando notícias...</span>
+      </div>
 
-        <!-- Estado de erro -->
-        <div v-else-if="error" class="bg-red-100 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6 shadow-sm" aria-live="assertive">
-          <div class="flex items-start">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-700">Erro ao carregar notícias</h3>
-              <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+      <!-- Estado de erro -->
+      <div 
+        v-else-if="error" 
+        class="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 rounded-lg p-6 mb-8 shadow-sm" 
+        aria-live="assertive"
+      >
+        <div class="flex items-start">
+          <svg class="h-6 w-6 text-red-400 mt-1 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex-1">
+            <h3 class="text-red-800 font-semibold text-lg">Erro ao carregar notícias</h3>
+            <p class="text-red-700 mt-2">{{ error }}</p>
+            <div class="mt-4 flex flex-wrap gap-3">
               <button 
                 @click="fetchNoticias" 
-                class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none transition-colors"
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 focus:outline-none transition-all duration-200 shadow-sm"
               >
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 Tentar novamente
               </button>
             </div>
           </div>
         </div>
+      </div>
 
+      <!-- Template de resultados -->
+      <template v-else>
         <!-- Resultados da busca -->
-        <div v-else-if="searchQuery" class="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
+        <div v-if="searchQuery" class="mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
           <div class="flex justify-between items-center">
-            <p>
-              <span v-if="totalItems === 0">Nenhum resultado encontrado para </span>
-              <span v-else>{{ totalItems }} resultado(s) para </span>
-              <strong>"{{ searchQuery }}"</strong>
+            <p class="text-blue-800">
+              <span v-if="totalItems === 0" class="font-medium">Nenhum resultado encontrado para </span>
+              <span v-else class="font-medium">{{ totalItems }} resultado{{ totalItems !== 1 ? 's' : '' }} para </span>
+              <strong class="text-blue-900">"{{ searchQuery }}"</strong>
             </p>
             <button 
               @click="clearSearch" 
-              class="text-[#bea55a] hover:underline focus:outline-none ml-2 flex items-center"
+              class="text-[#bea55a] hover:text-yellow-600 focus:outline-none focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2 rounded-md flex items-center font-medium transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               Limpar
@@ -301,127 +454,166 @@ onMounted(() => {
         </div>
 
         <!-- Sem resultados -->
-        <div v-if="!loading && !error && noticias.length === 0" class="bg-white rounded-lg shadow-sm p-8 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-          </svg>
-          <h3 class="text-lg font-medium text-gray-900">Nenhuma notícia encontrada</h3>
-          <p class="mt-1 text-gray-500">
-            {{ searchQuery ? `Não encontramos resultados para "${searchQuery}".` : 'Não há notícias publicadas no momento.' }}
-          </p>
-          <button 
-            v-if="searchQuery" 
-            @click="clearSearch" 
-            class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#bea55a] hover:bg-[#a69247] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#bea55a]"
-          >
-            Limpar busca
-          </button>
+        <div v-if="noticias.length === 0" class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div class="mx-auto max-w-md">
+            <svg 
+              class="h-20 w-20 text-gray-300 mx-auto mb-6" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor" 
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-900 mb-3">Nenhuma notícia encontrada</h3>
+            <p class="text-gray-500 mb-6">
+              {{ searchQuery ? `Não encontramos resultados para "${searchQuery}". Tente uma busca diferente.` : 'Não há notícias publicadas no momento.' }}
+            </p>
+            <button 
+              v-if="searchQuery" 
+              @click="clearSearch" 
+              class="inline-flex items-center px-6 py-3 bg-[#bea55a] text-white font-medium rounded-lg hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-200 focus:outline-none transition-all duration-200 shadow-md"
+            >
+              Limpar busca
+            </button>
+          </div>
         </div>
 
-        <!-- Grade de notícias -->
-        <div v-else-if="!loading && !error" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Lista compacta de notícias -->
+        <div v-else class="space-y-4">
           <article 
-            v-for="noticia in noticias" 
+            v-for="(noticia, index) in noticias" 
             :key="noticia.id"
-            class="bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow duration-300 flex flex-col h-full"
-            :class="{ 'ring-2 ring-[#bea55a] ring-opacity-50': noticia.destaque }"
+            class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[#bea55a]/30"
+            :class="[
+              noticia.destaque ? 'ring-1 ring-[#bea55a]/30 border-[#bea55a]/30' : '',
+              'transform hover:-translate-y-0.5'
+            ]"
           >
-            <!-- Container da imagem -->
-            <div v-if="noticia.imagem" class="relative h-48">
-              <img 
-                :src="noticia.imagem" 
-                :alt="`Imagem ilustrativa: ${noticia.titulo}`" 
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-                @error="handleImageError"
-              />
-              <span 
-                v-if="noticia.destaque" 
-                class="absolute top-2 left-2 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                aria-label="Notícia em destaque"
-              >
-                Destaque
-              </span>
-            </div>
-            
-            <!-- Conteúdo -->
-            <div class="p-5 flex flex-col flex-grow">
-              <!-- Data com ícone -->
-              <div class="text-sm text-gray-500 mb-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <time :datetime="noticia.data_publicacao">{{ noticia.data_publicacao }}</time>
-              </div>
-              
-              <!-- Título da notícia -->
-              <h2 class="text-lg font-bold text-gray-800 mb-3 line-clamp-2">
-                {{ noticia.titulo }}
-              </h2>
-              
-              <!-- Descrição -->
-              <p class="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3 flex-grow">
-                {{ truncateText(noticia.descricao_curta, 130) }}
-              </p>
-              
-              <div class="mt-auto">
-                <!-- Visualizações -->
-                <div class="flex items-center text-gray-500 text-sm mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+            <div class="flex h-32 sm:h-36">
+              <!-- Imagem compacta -->
+              <div class="w-32 sm:w-48 relative overflow-hidden flex-shrink-0">
+                <img 
+                  v-if="noticia.imagem"
+                  :src="noticia.imagem" 
+                  :alt="`Imagem ilustrativa da notícia: ${noticia.titulo}`" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                  @error="(e) => handleImageError(e, noticia)"
+                />
+                <div 
+                  v-else 
+                  class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+                >
+                  <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>{{ noticia.visualizacoes }} visualizações</span>
                 </div>
                 
-                <!-- Botão de "Saiba mais" -->
-                <Link 
-                  :href="`/noticias/${noticia.id}`"
-                  class="inline-flex items-center text-sm font-medium text-yellow-600 hover:text-yellow-800 transition-colors focus:outline-none focus:underline"
-                  :aria-label="`Leia mais sobre: ${noticia.titulo}`"
+                <!-- Badge de destaque -->
+                <div 
+                  v-if="noticia.destaque" 
+                  class="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-[#bea55a] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm"
+                  aria-label="Notícia em destaque"
                 >
-                  Leia mais
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </Link>
+                  Destaque
+                </div>
+              </div>
+              
+              <!-- Conteúdo compacto -->
+              <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
+                <div>
+                  <!-- Metadados -->
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center text-xs text-gray-500">
+                      <svg class="h-3 w-3 mr-1 text-[#bea55a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <time :datetime="noticia.data_publicacao">
+                        {{ noticia.data_publicacao }}
+                      </time>
+                    </div>
+                    
+                    <div class="flex items-center text-xs text-gray-500">
+                      <svg class="h-3 w-3 mr-1 text-[#bea55a]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                      </svg>
+                      <span>{{ formatViews(noticia.visualizacoes) }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Título -->
+                  <h2 class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300">
+                    {{ noticia.titulo }}
+                  </h2>
+                  
+                  <!-- Descrição -->
+                  <p class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">
+                    {{ truncateText(noticia.descricao_curta, 100) }}
+                  </p>
+                </div>
+                
+                <!-- Ação -->
+                <div class="mt-3">
+                  <Link 
+                    :href="`/noticias/${noticia.id}`"
+                    class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-sm group-hover:gap-2 gap-1 transition-all duration-300"
+                    :aria-label="`Leia a notícia completa: ${noticia.titulo}`"
+                  >
+                    Leia mais
+                    <svg class="h-3 w-3 transform group-hover:translate-x-0.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
           </article>
         </div>
         
-        <!-- Paginação -->
-        <div v-if="!loading && !error && totalPages > 1" class="flex justify-center items-center mt-10">
-          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Paginação">
+        <!-- Paginação aprimorada -->
+        <div v-if="totalPages > 1" class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
+          <!-- Informação de paginação -->
+          <div class="text-sm text-gray-600 order-2 sm:order-1">
+            Mostrando <span class="font-medium">{{ ((currentPage - 1) * itemsPerPage) + 1 }}</span> 
+            a <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span> 
+            de <span class="font-medium">{{ totalItems }}</span> 
+            resultado{{ totalItems !== 1 ? 's' : '' }}
+          </div>
+          
+          <!-- Controles de paginação -->
+          <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px order-1 sm:order-2" aria-label="Paginação">
             <!-- Botão anterior -->
             <button
               @click="changePage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium"
-              :class="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'"
+              class="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium transition-colors"
+              :class="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2'"
             >
               <span class="sr-only">Anterior</span>
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             
             <!-- Números de página -->
-            <template v-for="page in totalPages" :key="page">
-              <!-- Lógica para mostrar apenas algumas páginas em volta da atual -->
+            <template v-for="(page, index) in getPaginationPages()" :key="`page-${index}`">
               <button
-                v-if="page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1) || (totalPages <= 7) || (page === 2 && currentPage > 3) || (page === totalPages - 1 && currentPage < totalPages - 2)"
+                v-if="typeof page === 'number'"
                 @click="changePage(page)"
                 :aria-current="page === currentPage ? 'page' : undefined"
-                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                :class="page === currentPage ? 'z-10 bg-[#bea55a] border-[#bea55a] text-white' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'"
+                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2"
+                :class="page === currentPage 
+                  ? 'z-10 bg-[#bea55a] border-[#bea55a] text-white' 
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
               >
                 {{ page }}
               </button>
               
               <!-- Separador "..." -->
               <span
-                v-else-if="(page === 2 && currentPage > 3) || (page === totalPages - 1 && currentPage < totalPages - 2)"
+                v-else
                 class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
               >
                 ...
@@ -432,53 +624,62 @@ onMounted(() => {
             <button
               @click="changePage(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium"
-              :class="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'"
+              class="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium transition-colors"
+              :class="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2'"
             >
               <span class="sr-only">Próximo</span>
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </nav>
-          
-          <!-- Informação de paginação -->
-          <div class="text-xs text-gray-500 ml-4">
-            Mostrando {{ noticias.length }} de {{ totalItems }} resultado(s)
-          </div>
         </div>
-      </div>
+      </template>
     </div>
+  </div>
+  
   <Footer />
 </template>
 
 <style scoped>
+/* Animações e transições */
+.transform {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Animação de carregamento */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .animate-spin {
   animation: spin 1s linear infinite;
 }
 
-/* Estilos para placeholder de imagem */
-.placeholder-image {
-  opacity: 0.85;
-  background-color: #f3f4f6;
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Limitar linhas de texto */
+/* Estilos para placeholder de imagem */
+.placeholder-image {
+  opacity: 0.8;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  filter: grayscale(100%);
+}
+
+/* Limitar linhas de texto para layout compacto */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.4;
 }
 
 .line-clamp-3 {
@@ -486,5 +687,77 @@ onMounted(() => {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.4;
+}
+
+/* responsividade */
+@media (max-width: 640px) {
+  .aspect-video {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* Efeitos de hover */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+.group:hover .group-hover\:translate-x-0.5 {
+  transform: translateX(0.125rem);
+}
+
+.group:hover .group-hover\:gap-2 {
+  gap: 0.5rem;
+}
+
+/* Estados de foco */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #bea55a;
+  outline-offset: 2px;
+}
+
+/* Gradientes */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+/* Transições para inputs */
+input[type="text"] {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input[type="text"]:focus {
+  border-color: #bea55a;
+  box-shadow: 0 0 0 3px rgba(190, 165, 90, 0.1);
+}
+
+/* Estados de loading para botões */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Melhorar scrollbar em navegadores WebKit */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bea55a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a69247;
 }
 </style>
