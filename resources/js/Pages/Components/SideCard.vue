@@ -84,7 +84,7 @@ import { Link } from '@inertiajs/vue3'
           <p class="text-sm text-gray-600 mt-1">
             Faça a pré-reserva de Alojamento.
           </p>
-          <a href="/alojamento/pre-reserva" class="text-sm font-medium text-yellow-600 hover:text-yellow-800 inline-block mt-2 group-hover:underline">
+          <a href="/alojamento/escolha-tipo" class="text-sm font-medium text-yellow-600 hover:text-yellow-800 inline-block mt-2 group-hover:underline">
             Reservar agora →
           </a>
         </div>

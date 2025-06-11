@@ -12,7 +12,9 @@ import {
   mdiEye,
   mdiCheckCircle,
   mdiCloseCircle,
-  mdiSwapHorizontal
+  mdiSwapHorizontal,
+  mdiAccount,
+  mdiAccountGroup
 } from "@mdi/js"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
@@ -22,8 +24,38 @@ import BaseButtons from "@/Components/BaseButtons.vue"
 // Props
 const props = defineProps({
   reservas: Object,
-  filters: Object
+  filters: Object,
+  estatisticas: Object
 });
+
+console.log('=== DADOS BRUTOS RECEBIDOS DO BACKEND ===');
+props.reservas.data.forEach((reserva, index) => {
+  console.log(`Reserva ${index + 1}:`, {
+    id: reserva.id,
+    nome: reserva.nome,
+    tipo: reserva.tipo,
+    tipo_original: reserva.tipo,
+    todosOsCampos: Object.keys(reserva)
+  });
+});
+
+const getShowRoute = (reserva) => {
+  if (reserva.tipo === 'visitante') {
+    return route('admin.visitante.show', reserva.id)
+  } else {
+    return route('admin.alojamento.show', reserva.id)
+  }
+}
+
+// Função para obter a rota baseada no tipo
+const getRouteForStatus = (reserva) => {
+  console.log('=== DEBUG getRouteForStatus ===');
+  console.log('Reserva:', {
+    id: reserva.id,
+    nome: reserva.nome,
+    tipo: reserva.tipo
+  });
+};
 
 // Toast
 const { toast } = useToast();
@@ -38,13 +70,6 @@ const confirmModalTitle = ref('');
 const confirmModalMessage = ref('');
 const confirmModalAction = ref(() => {});
 
-// Modal de rejeição
-const showRejeicaoModal = ref(false);
-const reservaParaRejeitar = ref(null);
-const motivoRejeicao = ref('');
-const isSubmittingRejeicao = ref(false);
-const rejeicaoError = ref('');
-
 // Status de reservas
 const statusLabels = {
   pendente: 'Pendente',
@@ -58,6 +83,24 @@ const statusColors = {
   rejeitada: 'danger'
 };
 
+// Cores para tipos de reserva
+const tipoReservaColors = {
+  usuario: {
+    background: 'bg-blue-50 dark:bg-blue-900/20',
+    border: 'border-l-4 border-blue-500',
+    icon: mdiAccount,
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    label: 'Servidor'
+  },
+  visitante: {
+    background: 'bg-green-50 dark:bg-green-900/20',
+    border: 'border-l-4 border-green-500',
+    icon: mdiAccountGroup,
+    iconColor: 'text-green-600 dark:text-green-400',
+    label: 'Visitante'
+  }
+};
+
 // Formatação de data
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -66,6 +109,22 @@ const formatDate = (dateString) => {
     month: '2-digit',
     year: 'numeric'
   }).format(date);
+};
+
+// Função para obter as classes de estilo baseadas no tipo
+const getReservaClasses = (reserva) => {
+  const tipo = reserva.tipo || 'usuario';
+  const config = tipoReservaColors[tipo];
+  return {
+    background: config.background,
+    border: config.border
+  };
+};
+
+// Função para obter o ícone e cor do tipo
+const getTipoConfig = (reserva) => {
+  const tipo = reserva.tipo || 'usuario';
+  return tipoReservaColors[tipo];
 };
 
 // Enviar formulário de busca
@@ -86,57 +145,6 @@ const clearFilters = () => {
   submitSearch();
 };
 
-// Funções de Ação
-const alterarStatus = (id, novoStatus, mensagemConfirmacao) => {
-  // Se for rejeição, abre o modal específico
-  if (novoStatus === 'rejeitada') {
-    const reserva = props.reservas.data.find(r => r.id === id);
-    if (reserva) {
-      reservaParaRejeitar.value = reserva;
-      motivoRejeicao.value = '';
-      rejeicaoError.value = '';
-      showRejeicaoModal.value = true;
-    }
-    return;
-  }
-  
-  const mensagens = {
-    aprovada: 'aprovar',
-    pendente: 'retornar para pendente'
-  };
-  
-  confirmModalTitle.value = `${mensagens[novoStatus].charAt(0).toUpperCase() + mensagens[novoStatus].slice(1)} Reserva`;
-  confirmModalMessage.value = mensagemConfirmacao || `Tem certeza que deseja ${mensagens[novoStatus]} esta reserva?`;
-  
-  // Define a função de confirmação diretamente
-  confirmModalAction.value = () => {
-    // Criar novo form para cada solicitação
-    const form = useForm({
-      status: novoStatus
-    });
-    
-    form.patch(route('admin.alojamento.alterar-status', id), {
-      onSuccess: () => {
-        closeConfirmModal();
-        toast.success(`Reserva ${novoStatus === 'aprovada' ? 'aprovada' : 'atualizada'} com sucesso!`);
-        
-        // Atualiza o item na lista local em vez de recarregar a página
-        const index = props.reservas.data.findIndex(r => r.id === id);
-        if (index !== -1) {
-          props.reservas.data[index].status = novoStatus;
-        }
-      },
-      onError: (errors) => {
-        closeConfirmModal();
-        toast.error(`Erro ao ${mensagens[novoStatus]} reserva`);
-        console.error(errors);
-      }
-    });
-  };
-  
-  showConfirmModal.value = true;
-};
-
 // Confirmar rejeição
 const confirmarRejeicao = () => {
   // Validar motivo
@@ -153,58 +161,10 @@ const confirmarRejeicao = () => {
     status: 'rejeitada',
     motivo_rejeicao: motivoRejeicao.value.trim()
   });
-  
-  form.patch(route('admin.alojamento.alterar-status', reservaParaRejeitar.value.id), {
-    onSuccess: () => {
-      showRejeicaoModal.value = false;
-      isSubmittingRejeicao.value = false;
-      toast.success('Reserva rejeitada com sucesso!');
-      
-      // Atualiza o item na lista local
-      const index = props.reservas.data.findIndex(r => r.id === reservaParaRejeitar.value.id);
-      if (index !== -1) {
-        props.reservas.data[index].status = 'rejeitada';
-        props.reservas.data[index].motivo_rejeicao = motivoRejeicao.value.trim();
-      }
-      
-      // Limpa o estado
-      reservaParaRejeitar.value = null;
-      motivoRejeicao.value = '';
-    },
-    onError: (errors) => {
-      isSubmittingRejeicao.value = false;
-      if (errors.motivo_rejeicao) {
-        rejeicaoError.value = errors.motivo_rejeicao;
-      } else {
-        rejeicaoError.value = 'Ocorreu um erro ao processar a rejeição. Por favor, tente novamente.';
-        toast.error('Erro ao rejeitar reserva');
-      }
-      console.error('Erro ao rejeitar reserva:', errors);
-    }
-  });
-};
-
-const aprovarReserva = (id) => {
-  alterarStatus(id, 'aprovada', 'Tem certeza que deseja aprovar esta reserva? O solicitante será notificado e terá acesso ao alojamento.');
-};
-
-const rejeitarReserva = (id) => {
-  alterarStatus(id, 'rejeitada');
-};
-
-const retornarParaPendente = (id) => {
-  alterarStatus(id, 'pendente', 'Tem certeza que deseja retornar esta reserva para pendente?');
 };
 
 const closeConfirmModal = () => {
   showConfirmModal.value = false;
-};
-
-const closeRejeicaoModal = () => {
-  showRejeicaoModal.value = false;
-  reservaParaRejeitar.value = null;
-  motivoRejeicao.value = '';
-  rejeicaoError.value = '';
 };
 </script>
 
@@ -225,7 +185,22 @@ const closeRejeicaoModal = () => {
           rounded-full
           small
         />
-      </SectionTitleLineWithButton>
+      </SectionTitleLineWithButton>      
+      
+      <!-- Legenda de Cores -->
+      <CardBox class="mb-6">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Legenda:</div>
+          <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <BaseButton :icon="mdiAccount" small color="info" outline class="!p-1" />
+            <span class="text-sm text-blue-600 dark:text-blue-400 font-medium">Servidor PCPB</span>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <BaseButton :icon="mdiAccountGroup" small color="success" outline class="!p-1" />
+            <span class="text-sm text-green-600 dark:text-green-400 font-medium">Visitante</span>
+          </div>
+        </div>
+      </CardBox>
 
       <!-- Filtros -->
       <CardBox class="mb-6">
@@ -277,16 +252,36 @@ const closeRejeicaoModal = () => {
           <thead>
             <tr>
               <th>ID</th>
+              <th>Tipo</th>
               <th>Nome</th>
               <th>Órgão</th>
               <th>Período</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th>Ver</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="reserva in props.reservas.data" :key="reserva.id">
+            <tr 
+              v-for="reserva in props.reservas.data" 
+              :key="reserva.id"
+              :class="[getReservaClasses(reserva).background, getReservaClasses(reserva).border]"
+            >
               <td data-label="ID">{{ reserva.id }}</td>
+              <td data-label="Tipo" class="lg:w-1">
+                <div class="flex items-center gap-2">
+                  <BaseButton 
+                    :icon="getTipoConfig(reserva).icon"
+                    :color="reserva.tipo === 'visitante' ? 'success' : 'info'"
+                    outline
+                    small
+                    :title="getTipoConfig(reserva).label"
+                    class="!p-1"
+                  />
+                  <span class="text-xs font-medium" :class="getTipoConfig(reserva).iconColor">
+                    {{ getTipoConfig(reserva).label }}
+                  </span>
+                </div>
+              </td>
               <td data-label="Nome">
                 <div>{{ reserva.nome }}</div>
                 <small class="text-gray-500 dark:text-gray-400">{{ reserva.matricula }}</small>
@@ -308,80 +303,20 @@ const closeRejeicaoModal = () => {
               <td data-label="Ações" class="lg:w-1 whitespace-nowrap">
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
-                    :route-name="route('admin.alojamento.show', reserva.id)"
+                    :route-name="getShowRoute(reserva)"
                     :icon="mdiEye"
                     small
                     color="info"
                     outline
                     title="Ver detalhes"
                   />
-                  
-                  <!-- Ações para status pendente -->
-                  <template v-if="reserva.status === 'pendente'">
-                    <BaseButton
-                      @click="aprovarReserva(reserva.id)"
-                      :icon="mdiCheckCircle"
-                      small
-                      color="success"
-                      outline
-                      title="Aprovar"
-                    />
-                    <BaseButton
-                      @click="rejeitarReserva(reserva.id)"
-                      :icon="mdiCloseCircle"
-                      small
-                      color="danger"
-                      outline
-                      title="Rejeitar"
-                    />
-                  </template>
-                  
-                  <!-- Ações para status aprovado -->
-                  <template v-if="reserva.status === 'aprovada'">
-                    <BaseButton
-                      @click="rejeitarReserva(reserva.id)"
-                      :icon="mdiSwapHorizontal"
-                      small
-                      color="danger"
-                      outline
-                      title="Mudar para Rejeitado"
-                    />
-                    <BaseButton
-                      @click="retornarParaPendente(reserva.id)"
-                      :icon="mdiSwapHorizontal"
-                      small
-                      color="warning"
-                      outline
-                      title="Retornar para Pendente"
-                    />
-                  </template>
-                  
-                  <!-- Ações para status rejeitado -->
-                  <template v-if="reserva.status === 'rejeitada'">
-                    <BaseButton
-                      @click="aprovarReserva(reserva.id)"
-                      :icon="mdiSwapHorizontal"
-                      small
-                      color="success"
-                      outline
-                      title="Mudar para Aprovado"
-                    />
-                    <BaseButton
-                      @click="retornarParaPendente(reserva.id)"
-                      :icon="mdiSwapHorizontal"
-                      small
-                      color="warning"
-                      outline
-                      title="Retornar para Pendente"
-                    />
-                  </template>
                 </BaseButtons>
               </td>
             </tr>
             
             <!-- Mensagem de "Sem resultados" -->
             <tr v-if="props.reservas.data.length === 0">
-              <td colspan="6" class="text-center py-4">
+              <td colspan="7" class="text-center py-4">
                 Nenhuma reserva encontrada com os filtros selecionados.
               </td>
             </tr>
@@ -432,55 +367,6 @@ const closeRejeicaoModal = () => {
                 @click="closeConfirmModal" 
                 label="Cancelar"
                 color="white"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Modal de Rejeição -->
-      <div 
-        v-if="showRejeicaoModal" 
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-      >
-        <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-          <div class="mt-3">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white text-center">Rejeitar Reserva</h3>
-            <div class="mt-2 px-7 py-3">
-              <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">
-                Você está prestes a rejeitar a reserva de <span class="font-semibold">{{ reservaParaRejeitar?.nome }}</span>. 
-                Por favor, forneça um motivo para a rejeição:
-              </p>
-              
-              <div class="mb-4">
-                <label for="motivo_rejeicao" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Motivo da Rejeição *
-                </label>
-                <textarea
-                  id="motivo_rejeicao"
-                  v-model="motivoRejeicao"
-                  rows="4"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Explique o motivo da rejeição. Esta informação será enviada ao solicitante."
-                  :disabled="isSubmittingRejeicao"
-                ></textarea>
-                <p v-if="rejeicaoError" class="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {{ rejeicaoError }}
-                </p>
-              </div>
-            </div>
-            <div class="flex justify-center gap-4 mt-4">
-              <BaseButton 
-                @click="confirmarRejeicao" 
-                label="Rejeitar Reserva"
-                color="danger"
-                :loading="isSubmittingRejeicao"
-              />
-              <BaseButton 
-                @click="closeRejeicaoModal" 
-                label="Cancelar"
-                color="white"
-                :disabled="isSubmittingRejeicao"
               />
             </div>
           </div>

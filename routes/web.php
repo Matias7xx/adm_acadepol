@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CursoController;
 use App\Http\Controllers\Admin\DirectorController;
 use App\Http\Controllers\AlojamentoController;
+use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NoticiaController;
@@ -32,7 +33,27 @@ Route::get('/', function () {
 Route::post('/api/upload-ckeditor-images', [UploadController::class, 'uploadCKEditorImage'])
     ->middleware(['web']); // Apenas middleware web para CSRF
 
-// Páginas institucionais
+/*
+|--------------------------------------------------------------------------
+| API Públicas
+|--------------------------------------------------------------------------
+*/
+
+// API para diretores
+Route::get('/api/directors', [DirectorController::class, 'listarDiretores'])
+    ->name('api.directors');
+
+// API para visitantes (busca por CPF)
+Route::prefix('api/visitante')->name('api.visitante.')->group(function () {
+    Route::post('/buscar-cpf', [VisitanteController::class, 'buscarPorCpf'])->name('buscar.cpf');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Páginas Institucionais
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/historia', function () {
     return Inertia::render('Historia');
 })->name('historia');
@@ -49,10 +70,6 @@ Route::get('/estrutura', function () {
     return Inertia::render('Estrutura');
 })->name('estrutura');
 
-// API pública
-Route::get('/api/directors', [DirectorController::class, 'listarDiretores'])
-    ->name('api.directors');
-
 Route::get('/regimento-interno', function () {
     return Inertia::render('RegimentoInterno');
 })->name('regimento.interno');
@@ -65,14 +82,24 @@ Route::get('/manual-aluno', function () {
     return Inertia::render('ManualAluno');
 })->name('manual.aluno');
 
-// Cursos - acesso público
+/*
+|--------------------------------------------------------------------------
+| Cursos - Acesso Público
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/cursos', [CursoController::class, 'cursosPublicos'])
     ->name('cursos');
 
 Route::get('/cursos/{curso}', [CursoController::class, 'showCurso'])
     ->name('detalhes');
 
-// Rotas públicas para notícias
+/*
+|--------------------------------------------------------------------------
+| Notícias - Rotas Públicas
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/noticias', [NoticiaController::class, 'ListarTodas'])->name('noticias');
 Route::get('/noticias/{id}', [NoticiaController::class, 'exibir'])->name('noticias.exibir');
 Route::get('/api/ultimas-noticias', [NoticiaController::class, 'ultimasNoticias'])->name('api.ultimas-noticias');
@@ -82,10 +109,33 @@ Route::get('/api/noticias-home', [NoticiaController::class, 'noticiasHome'])->na
 Route::get('/api/noticias', [NoticiaController::class, 'apiNoticias'])
     ->name('api.noticias');
 
-// Fale Conosco (rota pública)
+/*
+|--------------------------------------------------------------------------
+| Fale Conosco - Rota Pública
+|--------------------------------------------------------------------------
+*/
+
 Route::controller(ContatoController::class)->prefix('fale-conosco')->name('contato.')->group(function () {
     Route::get('/', 'create')->name('create');
     Route::post('/', 'store')->name('store');
+    Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rotas de Visitantes (Públicas)
+|--------------------------------------------------------------------------
+*/
+
+// Alojamento - Página intermediária de escolha
+Route::get('/alojamento/escolha-tipo', function () {
+    return Inertia::render('Components/TipoSolicitante');
+})->name('alojamento.escolha.tipo');
+
+Route::controller(VisitanteController::class)->prefix('visitante')->name('visitante.')->group(function () {
+    // Formulário de reserva para visitantes
+    Route::get('/reserva', 'formularioReserva')->name('formulario');
+    Route::post('/reserva', 'store')->name('store');
     Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
 });
 
@@ -118,7 +168,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/matricula/confirmacao', 'confirmacao')->name('confirmacao');
     });
 
-    // Alojamento
+    // Alojamento - Para usuários logados (policiais civis da PB)
     Route::controller(AlojamentoController::class)->prefix('alojamento')->name('alojamento.')->group(function () {
         Route::get('/pre-reserva', 'reservaForm')->name('reserva.form');
         Route::post('/pre-reserva', 'store')->name('reserva.store');

@@ -144,3 +144,13 @@ Breadcrumbs::for('admin.account.info', function (BreadcrumbTrail $trail) {
     $trail->parent('admin.dashboard');
     $trail->push('Informações da Conta', route('admin.account.info'));
 });
+
+Breadcrumbs::for('admin.visitante.show', function (BreadcrumbTrail $trail, $visitante) {
+    $trail->parent('admin.alojamento.index');
+    $trail->push('Detalhes - ' . $visitante->nome, route('admin.visitante.show', $visitante));
+});
+
+Breadcrumbs::for('admin.visitante.alterar-status', function (BreadcrumbTrail $trail, $visitante) {
+    $trail->parent('admin.visitante.show', $visitante);
+    $trail->push('Alterar Status', route('admin.visitante.alterar-status', $visitante));
+});

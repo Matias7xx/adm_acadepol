@@ -1,16 +1,16 @@
 <?php
 
-use App\Http\Controllers\Admin\CategoryTypeController;
 use App\Http\Controllers\Admin\CursoController;
 use App\Http\Controllers\Admin\DirectorController;
 use App\Http\Controllers\Admin\MediaController;
-use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\NoticiaController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AlojamentoController;
+use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\RequerimentoController;
 use App\Http\Controllers\ContatoController;
@@ -63,11 +63,7 @@ Route::group([
     Route::resource('menu', MenuController::class)->except(['show']);
     Route::resource('menu.item', MenuItemController::class)->except(['show']);
     
-    // Categorias
-    Route::prefix('category')->name('category.')->group(function () {
-        Route::resource('type', CategoryTypeController::class)->except(['show']);
-        Route::resource('type.item', 'CategoryController');
-    });
+    
     
     // Mídia
     Route::resource('media', MediaController::class);
@@ -86,7 +82,7 @@ Route::group([
 
     // Matrículas
     Route::prefix('matriculas')->group(function () {
-        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index'); //Todas as matrículas em todos os cursos (fazer o count futuramente)
+        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index');
         Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso');
         Route::get('/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
         Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
@@ -101,25 +97,59 @@ Route::group([
     */
     
     Route::prefix('alojamento')->group(function () {
+    // Listagem e visualização
+    Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
+    
+    // Rota para visualizar reservas de qualquer tipo
+    Route::get('/{tipo}/{id}', [AlojamentoController::class, 'showReserva'])
+        ->where(['tipo' => 'usuario|visitante', 'id' => '[0-9]+'])
+        ->name('alojamento.show.reserva');
+    
+    // Visualização de reservas de usuário
+    Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
+    
+    // Ações de aprovação/rejeição
+    Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
+    Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
+    Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
+
+    // Ficha de hospedagem para usuários
+    Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
+        ->name('alojamento.ficha')
+        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+});
+
+Route::prefix('visitante')->group(function () {
+    // Visualização
+    Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('visitante.show');
+    
+    // Rota para alteração de status
+    Route::patch('/{visitante}/alterar-status', [VisitanteController::class, 'alterarStatus'])->name('visitante.alterar-status');
+
+    // Rotas para gerar a ficha de hospedagem
+    Route::get('/{visitante}/ficha', [VisitanteController::class, 'gerarFichaHospedagem'])
+        ->name('visitante.ficha')
+        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+
+    Route::get('/{visitante}/ficha/visualizar', [VisitanteController::class, 'visualizarFichaHospedagem'])
+        ->name('visitante.ficha.visualizar')
+        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+});
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Visitantes
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('visitantes')->name('visitantes.')->group(function () {
         // Listagem e visualização
-        Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
-        Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
+        Route::get('/', [VisitanteController::class, 'index'])->name('index');
+        Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('show');
         
         // Ações de aprovação/rejeição
-        Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
-        Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
-
-        // Rota para alteração de status
-        Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
-
-        // Rotas para gerar a ficha de hospedagem (sem breadcrumbs)
-        Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
-        ->name('alojamento.ficha')
-        ->withoutMiddleware([HandleInertiaAdminRequests::class]); // Desabilita o middleware que gera breadcrumbs
-
-        Route::get('/{alojamento}/ficha/visualizar', [AlojamentoController::class, 'visualizarFichaHospedagem'])
-        ->name('alojamento.ficha.visualizar')
-        ->withoutMiddleware([HandleInertiaAdminRequests::class]); // Desabilita o middleware que gera breadcrumbs
+        Route::patch('/{visitante}/aprovar', [VisitanteController::class, 'aprovar'])->name('aprovar');
+        Route::patch('/{visitante}/rejeitar', [VisitanteController::class, 'rejeitar'])->name('rejeitar');
     });
 
      /*
@@ -131,25 +161,23 @@ Route::group([
     Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
     ->name('noticias.toggle-destaque');
 
-
     /*
-|--------------------------------------------------------------------------
-| Gerenciamento de Requerimentos
-|--------------------------------------------------------------------------
-*/
-Route::prefix('requerimentos')->group(function () {
-    // Listagem e visualização
-    Route::get('/', [RequerimentoController::class, 'index'])->name('requerimentos.index');
-    Route::get('/{requerimento}', [RequerimentoController::class, 'show'])->name('requerimentos.show');
-    
-    // Ações de aprovação/rejeição
-    Route::post('/{requerimento}/aprovar', [RequerimentoController::class, 'deferir'])->name('requerimentos.deferir');
-    Route::post('/{requerimento}/rejeitar', [RequerimentoController::class, 'indeferir'])->name('requerimentos.indeferir');
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Requerimentos
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('requerimentos')->group(function () {
+        // Listagem e visualização
+        Route::get('/', [RequerimentoController::class, 'index'])->name('requerimentos.index');
+        Route::get('/{requerimento}', [RequerimentoController::class, 'show'])->name('requerimentos.show');
+        
+        // Ações de aprovação/rejeição
+        Route::post('/{requerimento}/aprovar', [RequerimentoController::class, 'deferir'])->name('requerimentos.deferir');
+        Route::post('/{requerimento}/rejeitar', [RequerimentoController::class, 'indeferir'])->name('requerimentos.indeferir');
 
-    // Alteração de status
-    Route::patch('/{requerimento}/alterar-status', [RequerimentoController::class, 'alterarStatus'])->name('requerimentos.alterar-status');
-});
-
+        // Alteração de status
+        Route::patch('/{requerimento}/alterar-status', [RequerimentoController::class, 'alterarStatus'])->name('requerimentos.alterar-status');
+    });
 
     /*
     |--------------------------------------------------------------------------

@@ -408,20 +408,20 @@ const validarCPF = (cpf) => {
               <!-- Documento Comprobatório -->
               <div class="md:col-span-2">
                 <label for="documento_comprobatorio" class="block text-sm font-medium text-gray-700 mb-1">
-                  Documento Comprobatório (PDF, Word, Imagem)
+                  Documento Comprobatório (PDF)
                 </label>
                 <div class="mt-1 flex items-center">
                   <input 
                     id="documento_comprobatorio" 
                     type="file" 
                     @change="handleDocumentoChange"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    accept=".pdf"
                     class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
                   >
                 </div>
                 <p class="mt-1 text-xs text-gray-500">
                   Envie um documento que comprove o motivo da reserva (ex: licença para curso, documento oficial, etc).
-                  Formatos aceitos: PDF, DOC, DOCX, JPG, JPEG, PNG. Tamanho máximo: 10MB
+                  Formato aceito: PDF. Tamanho máximo: 10MB
                 </p>
               </div>
             </div>
