@@ -647,13 +647,14 @@ onMounted(() => {
               <!-- CEP -->
               <div>
                 <label for="cep" class="block text-sm font-medium text-gray-700 mb-1">
-                  CEP
+                  CEP *
                 </label>
                 <input
                   id="cep"
                   v-model="form.endereco.cep"
                   type="text"
                   maxlength="9"
+                  required
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   placeholder="00000-000"
                   @input="handleCepInput"

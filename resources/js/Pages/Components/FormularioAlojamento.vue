@@ -47,6 +47,7 @@ const formData = ref({
   endereco_bairro: '',
   endereco_cidade: '',
   endereco_numero: '',
+  endereco_cep: '',
   data_inicial: '',
   data_final: ''
 });
@@ -96,7 +97,7 @@ const submeterReserva = () => {
   }
   
   // Validar campos obrigatórios
-  for (const campo of ['nome', 'cargo', 'matricula', 'orgao', 'cpf', 'motivo', 'condicao', 'email', 'telefone']) {
+  for (const campo of ['nome', 'cargo', 'matricula', 'orgao', 'cpf', 'motivo', 'condicao', 'email', 'telefone', 'endereco_rua', 'endereco_bairro', 'endereco_cidade', 'endereco_cep']) {
     if (!formData.value[campo]) {
       toast.error(`Por favor, preencha o campo ${campo.replace('_', ' ')}`);
       return;
@@ -125,7 +126,8 @@ const submeterReserva = () => {
       rua: formData.value.endereco_rua,
       bairro: formData.value.endereco_bairro,
       cidade: formData.value.endereco_cidade,
-      numero: formData.value.endereco_numero
+      numero: formData.value.endereco_numero,
+      cep: formData.value.endereco_cep
     },
     data_inicial: formData.value.data_inicial,
     data_final: formData.value.data_final,
@@ -163,6 +165,18 @@ const dataMinima = new Date().toISOString().split('T')[0];
 const validarCPF = (cpf) => {
   const regex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/;
   return regex.test(cpf);
+};
+
+// Funções de formatação
+const formatarCep = (valor) => {
+  return valor.replace(/\D/g, '')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .replace(/(-\d{3})\d+?$/, '$1');
+};
+
+const handleCepInput = (event) => {
+  const formatted = formatarCep(event.target.value);
+  formData.value.endereco_cep = formatted;
 };
 </script>
 
@@ -428,10 +442,16 @@ const validarCPF = (cpf) => {
           </div>
           
           <!-- Informações de Contato -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-3">Informações de Contato</h3>
+          <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+              </svg>
+              Informações de Contato
+            </h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Email -->
               <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
@@ -464,19 +484,25 @@ const validarCPF = (cpf) => {
           </div>
           
           <!-- Endereço -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-3">Endereço</h3>
+          <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              Endereço
+            </h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Rua -->
-              <div>
+              <div class="md:col-span-2">
                 <label for="endereco_rua" class="block text-sm font-medium text-gray-700 mb-1">
-                  Rua
+                  Rua/Avenida *
                 </label>
                 <input 
                   id="endereco_rua" 
                   v-model="formData.endereco_rua" 
                   type="text" 
+                  required
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                 >
               </div>
@@ -497,12 +523,13 @@ const validarCPF = (cpf) => {
               <!-- Bairro -->
               <div>
                 <label for="endereco_bairro" class="block text-sm font-medium text-gray-700 mb-1">
-                  Bairro
+                  Bairro *
                 </label>
                 <input 
                   id="endereco_bairro" 
                   v-model="formData.endereco_bairro" 
                   type="text" 
+                  required
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                 >
               </div>
@@ -510,39 +537,62 @@ const validarCPF = (cpf) => {
               <!-- Cidade -->
               <div>
                 <label for="endereco_cidade" class="block text-sm font-medium text-gray-700 mb-1">
-                  Cidade
+                  Cidade *
                 </label>
                 <input 
                   id="endereco_cidade" 
                   v-model="formData.endereco_cidade" 
                   type="text" 
+                  required
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                 >
               </div>
 
               <!-- UF -->
-          <div>
+              <div>
                 <label for="uf" class="block text-sm font-medium text-gray-700 mb-1">
-                  UF
+                  UF *
                 </label>
                 <select 
                   id="uf" 
                   v-model="formData.uf" 
+                  required
                   class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                 >
                   <option value="">Selecione...</option>
                   <option v-for="uf in estadosBrasileiros" :key="uf" :value="uf">{{ uf }}</option>
                 </select>
               </div>
-              
+
+              <!-- CEP -->
+              <div>
+                <label for="endereco_cep" class="block text-sm font-medium text-gray-700 mb-1">
+                  CEP *
+                </label>
+                <input 
+                  id="endereco_cep" 
+                  v-model="formData.endereco_cep" 
+                  type="text" 
+                  maxlength="9"
+                  required
+                  placeholder="00000-000"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  @input="handleCepInput"
+                >
+              </div>
             </div>
           </div>
           
           <!-- Período de Reserva -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-3">Período de Reserva</h3>
+          <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+              </svg>
+              Período de Reserva
+            </h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Data Inicial -->
               <div>
                 <label for="data_inicial" class="block text-sm font-medium text-gray-700 mb-1">

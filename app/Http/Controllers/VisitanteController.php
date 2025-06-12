@@ -127,7 +127,7 @@ class VisitanteController extends Controller
             'endereco.bairro' => 'required|string|max:100',
             'endereco.cidade' => 'required|string|max:100',
             'endereco.uf' => 'required|string|size:2',
-            'endereco.cep' => 'nullable|string|max:10',
+            'endereco.cep' => 'required|string|max:10',
             'orgao_trabalho' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
             'matricula_funcional' => 'nullable|string|max:50',
@@ -464,13 +464,14 @@ class VisitanteController extends Controller
             $enderecoFormatado = '';
             $bairro = '';
             $cidade = '';
+            $cep = '';
             $uf = '';
 
             if (is_array($endereco) && !empty($endereco)) {
-                $enderecoFormatado = ($endereco['rua'] ?? '') . 
-                    (isset($endereco['numero']) && !empty($endereco['numero']) ? ', ' . $endereco['numero'] : '');
+                $enderecoFormatado = $endereco['rua'] ?? ''; // SEM o número
                 $bairro = $endereco['bairro'] ?? '';
                 $cidade = $endereco['cidade'] ?? '';
+                $cep = $endereco['cep'] ?? '';
                 $uf = $endereco['uf'] ?? '';
             }
 
@@ -493,6 +494,7 @@ class VisitanteController extends Controller
                 'numero' => $endereco['numero'] ?? '',
                 'bairro' => $bairro,
                 'cidade' => $cidade,
+                'cep' => $cep,
                 'uf' => $uf,
                 'motivo' => $visitante->motivo,
                 'orgao_instituicao' => $visitante->orgao_trabalho,
@@ -547,7 +549,72 @@ class VisitanteController extends Controller
             if ($visitante->status !== 'aprovada') {
                 return redirect()->back()->with('error', 'Apenas reservas aprovadas podem gerar ficha de hospedagem');
             }
-            
+
+            // Formatar dados do endereço
+            $endereco = $visitante->endereco ?? [];
+            $enderecoFormatado = '';
+            $bairro = '';
+            $cidade = '';
+            $cep = '';
+            $uf = '';
+
+            if (is_array($endereco) && !empty($endereco)) {
+                $enderecoFormatado = $endereco['rua'] ?? ''; // SEM o número
+                $bairro = $endereco['bairro'] ?? '';
+                $cidade = $endereco['cidade'] ?? '';
+                $cep = $endereco['cep'] ?? '';
+                $uf = $endereco['uf'] ?? '';
+            }
+
+            // Formatar datas
+            $dataInicial = $visitante->data_inicial ? $visitante->data_inicial->format('d/m/Y') : '';
+            $dataFinal = $visitante->data_final ? $visitante->data_final->format('d/m/Y') : '';
+
+            // Preparar os dados para o template
+            $dados = [
+                'nome' => $visitante->nome,
+                'rg' => $visitante->rg ?? '',
+                'orgao_expedidor' => $visitante->orgao_expedidor_rg ?? '',
+                'cpf' => $visitante->cpf,
+                'data_nascimento' => $visitante->data_nascimento ? $visitante->data_nascimento->format('d/m/Y') : '',
+                'matricula' => $visitante->matricula_funcional,
+                'sexo' => $visitante->sexo === 'masculino' ? 'M' : ($visitante->sexo === 'feminino' ? 'F' : ''),
+                'cargo' => $visitante->cargo,
+                'telefone' => $visitante->telefone,
+                'email' => $visitante->email,
+                'endereco' => $enderecoFormatado,
+                'numero' => $endereco['numero'] ?? '',
+                'bairro' => $bairro,
+                'cidade' => $cidade,
+                'cep' => $cep,
+                'uf' => $uf,
+                'motivo' => $visitante->motivo,
+                'orgao_instituicao' => $visitante->orgao_trabalho,
+                'condicao' => $visitante->condicao,
+                'data_inicial' => $dataInicial,
+                'data_final' => $dataFinal,
+                'apartamento' => '',
+                'check_in_data' => '',
+                'check_in_hora' => '',
+                'check_out_data' => '',
+                'check_out_hora' => '',
+            ];
+
+            // Gerar HTML da ficha
+            $html = view('ficha.hospedagem', $dados)->render();
+
+            // Configurar DOMPDF
+            $options = new Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isPhpEnabled', true);
+            $options->set('isRemoteEnabled', true);
+            $options->set('defaultFont', 'Arial');
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+
             return $dompdf->stream('ficha_hospedagem_visitante_' . $visitante->id . '.pdf', [
                 'Attachment' => false
             ]);

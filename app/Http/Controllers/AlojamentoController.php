@@ -76,7 +76,12 @@ class AlojamentoController extends Controller
             'condicao' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'telefone' => 'required|string|max:20',
-            'endereco' => 'array',
+            'endereco' => 'required|array',
+            'endereco.rua' => 'nullable|string|max:255',
+            'endereco.numero' => 'nullable|string|max:10',
+            'endereco.bairro' => 'required|string|max:100',
+            'endereco.cidade' => 'required|string|max:100',
+            'endereco.cep' => 'nullable|string|max:10',
             'data_inicial' => 'required|date|after_or_equal:today',
             'data_final' => 'required|date|after_or_equal:data_inicial',
             'aceita_termos' => 'required|boolean|accepted',
@@ -463,13 +468,14 @@ class AlojamentoController extends Controller
             $enderecoFormatado = '';
             $bairro = '';
             $cidade = '';
+            $cep = '';
             $uf = $alojamento->uf ?? '';
 
             if (!empty($endereco)) {
-                $enderecoFormatado = ($endereco['rua'] ?? '') . 
-                    (isset($endereco['numero']) && !empty($endereco['numero']) ? ', ' . $endereco['numero'] : '');
+                $enderecoFormatado = $endereco['rua'] ?? ''; // SEM o número
                 $bairro = $endereco['bairro'] ?? '';
                 $cidade = $endereco['cidade'] ?? '';
+                $cep = $endereco['cep'] ?? '';
             }
 
             // Formatar datas
@@ -492,6 +498,7 @@ class AlojamentoController extends Controller
                 'numero' => $endereco['numero'] ?? '',
                 'bairro' => $bairro,
                 'cidade' => $cidade,
+                'cep' => $cep,
                 'uf' => $uf,
                 'motivo' => $alojamento->motivo,
                 'orgao_instituicao' => $alojamento->orgao,
@@ -551,13 +558,14 @@ class AlojamentoController extends Controller
             $enderecoFormatado = '';
             $bairro = '';
             $cidade = '';
+            $cep = '';
             $uf = $alojamento->uf ?? '';
 
             if (!empty($endereco)) {
-                $enderecoFormatado = ($endereco['rua'] ?? '') . 
-                    (isset($endereco['numero']) && !empty($endereco['numero']) ? ', ' . $endereco['numero'] : '');
+                $enderecoFormatado = $endereco['rua'] ?? ''; // SEM o número
                 $bairro = $endereco['bairro'] ?? '';
                 $cidade = $endereco['cidade'] ?? '';
+                $cep = $endereco['cep'] ?? '';
             }
 
             // Formatar datas
@@ -580,6 +588,7 @@ class AlojamentoController extends Controller
                 'numero' => $endereco['numero'] ?? '',
                 'bairro' => $bairro,
                 'cidade' => $cidade,
+                'cep' => $cep,
                 'uf' => $uf,
                 'motivo' => $alojamento->motivo,
                 'orgao_instituicao' => $alojamento->orgao,

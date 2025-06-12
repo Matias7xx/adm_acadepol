@@ -86,14 +86,12 @@ const statusColors = {
 // Cores para tipos de reserva
 const tipoReservaColors = {
   usuario: {
-    background: 'bg-blue-50 dark:bg-blue-900/20',
     border: 'border-l-4 border-blue-500',
     icon: mdiAccount,
     iconColor: 'text-blue-600 dark:text-blue-400',
     label: 'Servidor'
   },
   visitante: {
-    background: 'bg-green-50 dark:bg-green-900/20',
     border: 'border-l-4 border-green-500',
     icon: mdiAccountGroup,
     iconColor: 'text-green-600 dark:text-green-400',
@@ -116,7 +114,6 @@ const getReservaClasses = (reserva) => {
   const tipo = reserva.tipo || 'usuario';
   const config = tipoReservaColors[tipo];
   return {
-    background: config.background,
     border: config.border
   };
 };
@@ -197,7 +194,7 @@ const closeConfirmModal = () => {
           </div>
           <div class="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
             <BaseButton :icon="mdiAccountGroup" small color="success" outline class="!p-1" />
-            <span class="text-sm text-green-600 dark:text-green-400 font-medium">Visitante</span>
+            <span class="text-sm text-green-600 dark:text-green-400 font-medium">Visitante Externo</span>
           </div>
         </div>
       </CardBox>
@@ -264,7 +261,7 @@ const closeConfirmModal = () => {
             <tr 
               v-for="reserva in props.reservas.data" 
               :key="reserva.id"
-              :class="[getReservaClasses(reserva).background, getReservaClasses(reserva).border]"
+              :class="getReservaClasses(reserva).border"
             >
               <td data-label="ID">{{ reserva.id }}</td>
               <td data-label="Tipo" class="lg:w-1">

@@ -124,7 +124,11 @@ const enderecoFormatado = computed(() => {
     const partes = [];
     
     if (endereco.rua) {
-      partes.push(`${endereco.rua}${endereco.numero ? ', ' + endereco.numero : ''}`);
+      partes.push(endereco.rua);
+    }
+
+    if (endereco.numero) {
+      partes.push(endereco.numero);
     }
     
     if (endereco.bairro) {
@@ -140,6 +144,10 @@ const enderecoFormatado = computed(() => {
         cidadeCompleta += ' - ' + props.reserva.uf;
       }
       partes.push(cidadeCompleta);
+    }
+
+    if (endereco.cep) {
+      partes.push(endereco.cep);
     }
     
     return partes.length > 0 ? partes.join(' - ') : 'Não informado';
