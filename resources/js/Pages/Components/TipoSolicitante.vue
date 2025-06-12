@@ -25,7 +25,7 @@ import imgUrl from '@/src/assets/logo-acadepol.png'
         </div>
         
         <!-- Título e Descrição -->
-        <div class="w-full sm:max-w-md mt-6 px-1 py-1 overflow-hidden sm:rounded-lg text-center">
+        <div class="w-full mt-6 px-1 py-1 overflow-hidden text-center flex flex-col items-center">
           <h1 class="text-2xl font-bold text-gray-900 mb-2">Reserva de Alojamento</h1>
           <p class="text-gray-600 mb-6">Escolha o tipo de solicitante para continuar</p>
         </div>

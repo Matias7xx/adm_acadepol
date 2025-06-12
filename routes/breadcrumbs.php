@@ -154,3 +154,13 @@ Breadcrumbs::for('admin.visitante.alterar-status', function (BreadcrumbTrail $tr
     $trail->parent('admin.visitante.show', $visitante);
     $trail->push('Alterar Status', route('admin.visitante.alterar-status', $visitante));
 });
+
+Breadcrumbs::for('admin.matriculas.relatorio.pdf', function (BreadcrumbTrail $trail, $curso) {
+    $trail->parent('admin.matriculas.curso', $curso);
+    $trail->push('Relatório PDF', route('admin.matriculas.relatorio.pdf', $curso));
+});
+  
+Breadcrumbs::for('admin.matriculas.relatorio.excel', function (BreadcrumbTrail $trail, $curso) {
+    $trail->parent('admin.matriculas.curso', $curso);
+    $trail->push('Relatório Excel', route('admin.matriculas.relatorio.excel', $curso));
+});

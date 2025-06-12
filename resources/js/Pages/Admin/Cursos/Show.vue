@@ -185,7 +185,7 @@ const props = defineProps({
         </table>
       </CardBox>
       <BaseButton
-          :route-name="route('admin.matriculas.index')"
+          :route-name="route('admin.matriculas.curso', curso.id)"
           :icon="mdiArrowRightBoldOutline"
           :id="curso.id"
           label="Matrículas"

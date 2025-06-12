@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { usePage, Head } from '@inertiajs/vue3';
-// Componentes
+import { Link } from '@inertiajs/vue3';
 import Header from './Components/Header.vue';
 import SiteNavbar from './Components/SiteNavbar.vue';
 import Footer from './Components/Footer.vue';
@@ -108,8 +108,21 @@ const temEnxoval = computed(() => {
       :status="curso.status"
     />
   
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-      <div class="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Botão de retorno -->
+      <div class="relative z-10 mt-3 mb-6">
+        <Link 
+          :href="route('cursos')"
+          class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-medium text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 shadow-sm"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Voltar para Cursos
+        </Link>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 -mt-2">
         <!-- Conteúdo principal -->
         <div class="w-full lg:w-2/3 space-y-4 md:space-y-6">
           <!-- Card de informações gerais -->

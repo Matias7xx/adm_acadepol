@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('visitantes', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->string('cpf', 20);
+            $table->string('cpf', 20)->unique();
             $table->string('rg', 20);
             $table->string('orgao_expedidor_rg', 20);
             $table->date('data_nascimento');
             $table->enum('sexo', ['masculino', 'feminino']);
             $table->string('telefone', 20);
-            $table->string('email');
+            $table->string('email')->unique();
             $table->json('endereco')->nullable();
             $table->string('orgao_trabalho');
             $table->string('cargo');

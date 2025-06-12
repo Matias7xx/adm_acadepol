@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AlojamentoController;
+use App\Http\Controllers\MatriculaRelatorioController;
 use App\Http\Controllers\VisitanteController;
 use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\RequerimentoController;
@@ -82,12 +83,15 @@ Route::group([
 
     // Matrículas
     Route::prefix('matriculas')->group(function () {
-        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index');
-        Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso');
+        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index'); //Não será usada
+        Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso'); //Será usada, recupera curso específico (ID)
         Route::get('/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
         Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
         Route::patch('/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
         Route::patch('/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])->name('matriculas.alterar-status');
+        
+        Route::get('/relatorio/{curso}/pdf', [MatriculaRelatorioController::class, 'gerarRelatorioPDF'])->name('matriculas.relatorio.pdf');
+        Route::get('/relatorio/{curso}/excel', [MatriculaRelatorioController::class, 'gerarRelatorioExcel'])->name('matriculas.relatorio.excel');
     });
     
     /*

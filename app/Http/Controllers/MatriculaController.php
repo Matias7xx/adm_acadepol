@@ -100,7 +100,7 @@ class MatriculaController extends Controller
 
         if ($matriculaExistente) {
             return back()->withErrors([
-                'enrollment' => 'Você já está matriculado neste curso.'
+                'enrollment' => 'Você já realizou sua inscrição neste curso.'
             ]);
         }
 
@@ -177,7 +177,7 @@ class MatriculaController extends Controller
             ->where('user_id', $user->id)
             ->exists()) {
             return redirect()->route('cursos')
-                ->with('message', 'Você já está matriculado neste curso.');
+                ->with('message', 'Você já realizou sua inscrição neste curso.');
         }
     
         // Verifica a capacidade do curso
