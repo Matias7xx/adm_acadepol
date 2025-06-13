@@ -51,7 +51,7 @@ const submit = () => {
         </NotificationBarInCard>
 
         <FormField>
-          <div class="mb-4 text-sm text-gray-600">
+          <div class="mb-4 text-sm text-gray-400">
             Esqueceu sua senha? Sem problemas. Basta nos informar seu endereço de e-mail e enviaremos por e-mail um link de redefinição de senha que permitirá que você escolha uma nova.          </div>
         </FormField>
 

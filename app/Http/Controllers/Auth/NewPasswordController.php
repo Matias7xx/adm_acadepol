@@ -38,6 +38,14 @@ class NewPasswordController extends Controller
             'token' => 'required',
             'email' => 'required|email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password_confirmation' => 'required',
+        ], [
+            'password.confirmed' => 'A confirmação da senha não confere.',
+            'password_confirmation.required' => 'A confirmação da senha é obrigatória.',
+            'password.required' => 'A senha é obrigatória.',
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Formato de e-mail inválido.',
+            'token.required' => 'Token de redefinição inválido.',
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we
@@ -59,7 +67,7 @@ class NewPasswordController extends Controller
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
         if ($status == Password::PASSWORD_RESET) {
-            return redirect()->route('login')->with('status', __($status));
+            return redirect()->route('login')->with('status', 'Sua senha foi redefinida com sucesso!');
         }
 
         throw ValidationException::withMessages([

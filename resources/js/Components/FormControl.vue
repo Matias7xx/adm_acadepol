@@ -44,6 +44,8 @@ const props = defineProps({
   borderless: Boolean,
   transparent: Boolean,
   ctrlKFocus: Boolean,
+  readonly: Boolean,
+  disabled: Boolean,
   error: {
     type: String,
     default: null
@@ -73,6 +75,14 @@ const inputElClass = computed(() => {
     base.push('pl-10')
   }
 
+  if (props.readonly) {
+    base.push('bg-gray-100 dark:bg-gray-700 cursor-not-allowed')
+  }
+  
+  if (props.disabled) {
+    base.push('bg-gray-100 dark:bg-gray-700 cursor-not-allowed opacity-60')
+  }
+
   return base
 })
 
@@ -83,9 +93,7 @@ const controlIconH = computed(() => props.type === 'textarea' ? 'h-full' : 'h-12
 const mainStore = useMainStore()
 
 const selectEl = ref(null)
-
 const textareaEl = ref(null)
-
 const inputEl = ref(null)
 
 onMounted(() => {
@@ -132,6 +140,8 @@ if (props.ctrlKFocus) {
       v-model="computedValue"
       :name="name"
       :class="inputElClass"
+      :disabled="disabled"
+      :readonly="readonly"
     >
       <option value="" v-if="placeholder"> {{ placeholder }}</option>
       <option
@@ -150,6 +160,8 @@ if (props.ctrlKFocus) {
       :name="name"
       :placeholder="placeholder"
       :required="required"
+      :disabled="disabled"
+      :readonly="readonly"
     />
     <input
       v-else
@@ -163,6 +175,8 @@ if (props.ctrlKFocus) {
       :placeholder="placeholder"
       :type="computedType"
       :class="inputElClass"
+      :disabled="disabled"
+      :readonly="readonly"
     >
     <FormControlIcon
       v-if="icon"

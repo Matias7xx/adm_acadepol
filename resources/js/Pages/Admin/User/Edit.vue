@@ -71,7 +71,7 @@ const submitEdit = () => {
 
 <template>
   <LayoutAuthenticated>
-    <Head title="Atualizar usuário" />
+    <Head title="Atualizar Usuário" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiAccountKey"
@@ -144,7 +144,7 @@ const submitEdit = () => {
             <InputMask
               v-model="form.matricula"
               mask="#######"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe a Matrícula (7 dígitos)"
             />
           </div>
@@ -172,7 +172,7 @@ const submitEdit = () => {
             <InputMask
               v-model="form.cpf"
               mask="###.###.###-##"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe o CPF"
             />
           </div>
@@ -251,7 +251,7 @@ const submitEdit = () => {
             <InputMask
               v-model="form.telefone"
               mask="(##) #####-####"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe o Telefone"
             />
           </div>

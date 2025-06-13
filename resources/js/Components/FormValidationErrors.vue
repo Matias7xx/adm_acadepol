@@ -13,7 +13,10 @@ const hasErrors = computed(() => Object.keys(errors.value).length > 0)
     v-if="hasErrors"
     color="danger"
   >
-    <b>Whoops! Something went wrong.</b>
-    <span v-for="(error, key) in errors" :key="key">{{ error }}</span>
+    <div class="flex flex-col space-y-1">
+      <span v-for="(error, key) in errors" :key="key" class="text-sm">
+        {{ Array.isArray(error) ? error[0] : error }}
+      </span>
+    </div>
   </NotificationBarInCard>
 </template>

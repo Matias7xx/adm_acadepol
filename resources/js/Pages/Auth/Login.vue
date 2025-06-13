@@ -119,7 +119,7 @@ const submit = () => {
           {{ status }}
         </NotificationBarInCard>
         <div class="w-full mt-2 px-1 py-1 overflow-hidden text-center flex justify-center">
-          <p class="text-gray-600 mb-3">{{ loginDescription }}</p>
+          <p class="text-gray-400 mb-3">{{ loginDescription }}</p>
         </div>
         <FormField
           label="Matrícula"

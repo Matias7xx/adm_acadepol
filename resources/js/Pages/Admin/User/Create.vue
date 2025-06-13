@@ -62,7 +62,7 @@ const submitForm = () => {
 
 <template>
   <LayoutAuthenticated>
-    <Head title="Novo usuário" />
+    <Head title="Novo Usuário" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiAccountKey"
@@ -135,7 +135,7 @@ const submitForm = () => {
             <InputMask
               v-model="form.matricula"
               mask="#######"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe a Matrícula (7 dígitos)"
             />
           </div>
@@ -163,7 +163,7 @@ const submitForm = () => {
             <InputMask
               v-model="form.cpf"
               mask="###.###.###-##"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe o CPF"
             />
           </div>
@@ -171,7 +171,6 @@ const submitForm = () => {
             {{ form.errors.cpf }}
           </div>
         </FormField>
-
         <FormField
           label="Cargo"
           :class="{ 'text-red-400': form.errors.cargo }"
@@ -242,7 +241,7 @@ const submitForm = () => {
             <InputMask
               v-model="form.telefone"
               mask="(##) #####-####"
-              class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
+              class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
               placeholder="Informe o Telefone"
             />
           </div>

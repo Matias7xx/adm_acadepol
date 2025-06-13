@@ -30,15 +30,18 @@ const form = useForm({
 
 const submit = () => {
   form
-    .post(route('password.update'), {
+    .post(route('password.store'), {
       onFinish: () => form.reset('password', 'password_confirmation'),
+      onError: (errors) => {
+        console.log('Validation errors:', errors);
+      }
     })
 }
 </script>
 
 <template>
   <LayoutGuest>
-    <Head title="Reset Password" />
+    <Head title="Redefinir Senha" />
 
     <SectionFullScreen
       v-slot="{ cardClass }"
@@ -54,7 +57,6 @@ const submit = () => {
         <FormField
           label="E-mail"
           label-for="email"
-          help="Por favor, informe seu email"
         >
           <FormControl
             v-model="form.email"
@@ -63,11 +65,12 @@ const submit = () => {
             type="email"
             id="email"
             required
+            readonly
           />
         </FormField>
 
         <FormField
-          label="Password"
+          label="Nova Senha"
           label-for="password"
           help="Por favor, informe uma nova senha"
         >
@@ -82,7 +85,7 @@ const submit = () => {
         </FormField>
 
         <FormField
-          label="Confirm Password"
+          label="Confirmar Nova Senha"
           label-for="password_confirmation"
           help="Por favor, confirme a nova senha"
         >
@@ -101,7 +104,7 @@ const submit = () => {
         <BaseButton
           type="submit"
           color="info"
-          label="Resetar senha"
+          label="Redefinir Senha"
           :class="{ 'opacity-25': form.processing }"
           :disabled="form.processing"
         />
