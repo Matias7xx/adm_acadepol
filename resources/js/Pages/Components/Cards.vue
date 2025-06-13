@@ -5,7 +5,7 @@ import { Link } from '@inertiajs/vue3'
 const capacitacao = ref([
   { id: 1, titulo: 'Cursos', link: '/cursos' },
   { id: 2, titulo: 'Certificados', link: '/certificados' },
-  { id: 3, titulo: 'Banco de Currículos', link: '/banco-de-curriculos' },
+  /* { id: 3, titulo: 'Banco de Currículos', link: '/banco-de-curriculos' }, */
 ])
 
 const formacao = ref([

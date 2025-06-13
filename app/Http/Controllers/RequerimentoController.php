@@ -83,7 +83,7 @@ class RequerimentoController extends Controller
             'orgao' => 'nullable|string|max:255',
             'conteudo' => 'required|string',
             'dados_adicionais' => 'nullable|array',
-            'documento' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'documento' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
         // Criar o requerimento no banco de dados

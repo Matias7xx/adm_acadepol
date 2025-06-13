@@ -350,12 +350,12 @@ const validarCPF = (cpf) => {
                     id="documento_anexo" 
                     type="file" 
                     @change="handleDocumentoChange"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    accept=".pdf"
                     class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   >
                 </div>
                 <p class="mt-1 text-xs text-gray-500">
-                  Formatos aceitos: PDF, DOC, DOCX, JPG, JPEG, PNG. Tamanho máximo: 10MB
+                  Formato aceito: PDF. Tamanho máximo: 10MB
                 </p>
               </div>
             </div>

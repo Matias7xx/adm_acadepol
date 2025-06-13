@@ -12,7 +12,7 @@ import {
   } from '@mdi/js'
   
   export default [
-    {
+    /* {
       icon: mdiMenu,
       label: 'Menu',
       menu: [
@@ -32,7 +32,7 @@ import {
           label: 'Item Três'
         }
       ]
-    },
+    }, */
     {
       isCurrentUser: true,
       menu: [
@@ -41,14 +41,14 @@ import {
           label: 'Meu Perfil',
           to: '/admin/edit-account-info'
         },
-        {
+        /* {
           icon: mdiCogOutline,
           label: 'Configurações'
         },
         {
           icon: mdiEmail,
           label: 'Mensagens'
-        },
+        }, */
         {
           isDivider: true
         },

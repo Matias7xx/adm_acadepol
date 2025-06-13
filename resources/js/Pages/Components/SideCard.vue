@@ -14,7 +14,7 @@ import { Link } from '@inertiajs/vue3'
     </h3>
     
     <!-- Card Agendamentos -->
-    <div class="bg-white hover:bg-gray-50 shadow rounded-lg transition-all duration-300 
+    <!-- <div class="bg-white hover:bg-gray-50 shadow rounded-lg transition-all duration-300 
                 overflow-hidden group">
       <div class="p-4 flex items-center gap-4">
         <div class="w-12 h-12 flex-shrink-0 rounded-full bg-gray-300 flex items-center justify-center">
@@ -37,7 +37,7 @@ import { Link } from '@inertiajs/vue3'
           </a>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Card Requerimentos -->
     <div class="bg-white hover:bg-gray-50 shadow rounded-lg transition-all duration-300 

@@ -18,6 +18,7 @@ use App\Http\Controllers\ContatoController;
 use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use App\Http\Middleware\HasAccessAdmin;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController;
 use Inertia\Inertia;
 
 /*
@@ -32,9 +33,7 @@ Route::group([
     'as' => 'admin.',
 ], function () {
     // Dashboard
-    Route::get('/', function () {
-        return Inertia::render('Admin/Dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------

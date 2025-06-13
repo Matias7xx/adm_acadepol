@@ -151,20 +151,7 @@ const passwordForm = useForm({
               <InputMask
                 v-model="profileForm.cpf"
                 mask="###.###.###-##"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  block 
-                  w-full 
-                  pl-9 
-                  pr-12
-                  py-2
-                "
+                class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
                 placeholder="000.000.000-00"
                 name="cpf"
               />
@@ -237,20 +224,7 @@ const passwordForm = useForm({
               <InputMask
                 v-model="profileForm.telefone"
                 mask="(##) #####-####"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  block 
-                  w-full 
-                  pl-9 
-                  pr-12
-                  py-2
-                "
+                class="px-3 py-2 h-12 bg-white dark:bg-slate-800 border border-gray-700 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 block w-full pl-10"
                 placeholder="(00) 00000-0000"
                 name="telefone"
               />

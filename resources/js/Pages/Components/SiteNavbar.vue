@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
               <DropdownInstitucional />
               <DropdownServiços />
               <Link href="/cursos" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Cursos</Link>
-              <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Banco de Currículos</Link>
+              <!-- <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Banco de Currículos</Link> -->
               <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Concursos e Seleções</Link>
               <Link href="/fale-conosco" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Fale Conosco</Link>
             </div>
@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
             <DropdownInstitucional />
             <DropdownServiços />
             <Link href="/cursos" class="text-black hover:text-[#a38e4d] px-3 py-2">Cursos</Link>
-            <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Banco de Currículos</Link>
+            <!-- <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Banco de Currículos</Link> -->
             <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Concursos e Seleções</Link>
             <Link href="/fale-conosco" class="text-black hover:text-[#a38e4d] px-3 py-2">Fale Conosco</Link>
             

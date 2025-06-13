@@ -143,19 +143,19 @@ class AdminCoreSeeder extends Seeder
                 'weight' => 0,
                 'icon' => 'M13 9V3H21V9H13M13 21H21V11H13M3 21H11V15H3M3 13H11V3H3V13Z', // Dashboard grid icon
             ],
-            [
+            /* [
                 'name' => 'Permissões',
                 'uri' => '/<admin>/permission',
                 'enabled' => 1,
                 'weight' => 1,
                 'icon' => 'M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z', // Shield with check
-            ],
+            ], */
             [
                 'name' => 'Funções',
                 'uri' => '/<admin>/role',
                 'enabled' => 1,
                 'weight' => 2,
-                'icon' => 'M18 10.5V6L11 1L4 6V18H2V20H22V18H20V12.5L18 10.5M16 10.5C16 11.05 15.55 11.5 15 11.5H9C8.45 11.5 8 11.05 8 10.5V6L11 3.5L14 6V10.5H16Z', // Briefcase
+                'icon' => 'M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7A2,2 0 0,1 14,9A2,2 0 0,1 12,11A2,2 0 0,1 10,9A2,2 0 0,1 12,7M12,14C13.25,14 15.42,14.57 16,15.56V18.18L12,21L8,18.18V15.56C8.58,14.57 10.75,14 12,14Z',
             ],
             [
                 'name' => 'Usuários',
@@ -164,27 +164,27 @@ class AdminCoreSeeder extends Seeder
                 'weight' => 3,
                 'icon' => 'M16 17V19H2V17S2 13 9 13 16 17 16 17M12.5 7.5A3.5 3.5 0 1 0 9 11A3.5 3.5 0 0 0 12.5 7.5M15.94 13A5.32 5.32 0 0 1 18 17V19H22V17S22 13.37 15.94 13M15 4A3.39 3.39 0 0 0 13.07 4.59A5 5 0 0 1 13.07 10.41A3.39 3.39 0 0 0 15 11A3.5 3.5 0 0 0 15 4Z', // Multiple users
             ],
-            [
+            /* [
                 'name' => 'Menus',
                 'uri' => '/<admin>/menu',
                 'enabled' => 1,
                 'weight' => 4,
                 'icon' => 'M3 6H21V8H3V6M3 11H21V13H3V11M3 16H21V18H3V16Z', // Hamburger menu lines
-            ],
-            [
+            ], */
+            /* [
                 'name' => 'Categorias',
                 'uri' => '/<admin>/category/type',
                 'enabled' => 1,
                 'weight' => 5,
                 'icon' => 'M22 11V3H11V5H5V3H2V11H5V9H8V19H22V11M8 9V5H11V9H8M20 19H10V11H20V19Z', // Layers/stack
-            ],
-            [
+            ], */
+            /* [
                 'name' => 'Mídia',
                 'uri' => '/<admin>/media',
                 'enabled' => 1,
                 'weight' => 6,
                 'icon' => 'M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M19 19H5V5H19V19M13.96 12.29L11.21 15.83L9.25 13.47L6.5 17H17.5L13.96 12.29Z', // Image with photo icon
-            ],
+            ], */
             [
                 'name' => 'Cursos',
                 'uri' => '/<admin>/cursos',
@@ -204,28 +204,28 @@ class AdminCoreSeeder extends Seeder
                 'uri' => '/<admin>/alojamento',
                 'enabled' => 1,
                 'weight' => 9,
-                'icon' => 'M19 9H17V7H19M19 13H17V11H19M19 17H17V15H19M7 7H5V9H7M7 11H5V13H7M7 15H5V17H7M11 7H9V9H11M11 11H9V13H11M11 15H9V17H11M15 7V17H3V5H21V15H15V7H15M13 5H3V3H21V5H13Z', // Document with margins
+                'icon' => 'M19,7H11V14H3V5H1V20H3V17H21V20H23V11A4,4 0 0,0 19,7M7,13A3,3 0 0,0 4,10A3,3 0 0,0 1,13A3,3 0 0,0 4,16A3,3 0 0,0 7,13Z'
             ],
             [
                 'name' => 'Requerimentos',
                 'uri' => '/<admin>/requerimentos',
                 'enabled' => 1,
                 'weight' => 10,
-                'icon' => 'M19 9H17V7H19M19 13H17V11H19M19 17H17V15H19M7 7H5V9H7M7 11H5V13H7M7 15H5V17H7M11 7H9V9H11M11 11H9V13H11M11 15H9V17H11M15 7V17H3V5H21V15H15V7H15M13 5H3V3H21V5H13Z', // Document with margins
+                'icon' => 'M22,8V16A2,2 0 0,1 20,18H4A2,2 0 0,1 2,16V8C2,7.27 2.39,6.64 2.97,6.24L12,12.64L21,6.24C21.61,6.64 22,7.27 22,8M2,6V6L12,12L22,6V6A2,2 0 0,0 20,4H4A2,2 0 0,0 2,6Z',
             ],
             [
                 'name' => 'Notícias',
                 'uri' => '/<admin>/noticias',
                 'enabled' => 1,
                 'weight' => 11,
-                'icon' => 'M20 11V8H16V5H12V8H8V5H4V8H2V18H22V11H20M20 16H4V8H6V11H10V8H14V11H18V8H20V16Z', // Newspaper
+                'icon' => 'M4,6H2V20A2,2 0 0,0 4,22H18A2,2 0 0,0 20,20V18H4V6M20,2H8A2,2 0 0,0 6,4V16H18V4H20A2,2 0 0,0 22,2V14A2,2 0 0,0 20,12V2M16,5H10V11H16V5M9,5H8V8H9V5M9,9H8V11H9V9M8,12H16V13H8V12Z'
             ],
             [
                 'name' => 'Fale Conosco',
                 'uri' => '/<admin>/contato',
                 'enabled' => 1,
                 'weight' => 12,
-                'icon' => 'M22 11V3H11V5H5V3H2V11H5V9H8V19H22V11M8 9V5H11V9H8M20 19H10V11H20V19Z', // Layers/stack
+                'icon' => 'M4,2A2,2 0 0,0 2,4V16A2,2 0 0,0 4,18H8L12,22L16,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2H4M12,6A2,2 0 0,1 14,8A2,2 0 0,1 12,10A2,2 0 0,1 10,8A2,2 0 0,1 12,6M12,11C13.11,11 15,11.66 15,12.5V14H9V12.5C9,11.66 10.89,11 12,11Z'
             ],
         ];
 

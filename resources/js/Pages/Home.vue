@@ -21,9 +21,9 @@ import FlashMessage from './Components/FlashMessage.vue';
      <!--  <Header class="shadow-xl" /> -->
        <Header />
        <!-- Barra de Pesquisa -->
-      <div class="search-bar bg-white shadow-md px-4 py-2">
+      <!-- <div class="search-bar bg-white shadow-md px-4 py-2">
         <Search />
-      </div>
+      </div> -->
       <SiteNavbar />
       <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->   
       </header>
