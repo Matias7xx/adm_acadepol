@@ -82,6 +82,10 @@ Route::get('/manual-aluno', function () {
     return Inertia::render('ManualAluno');
 })->name('manual.aluno');
 
+Route::get('/concursos', function () {
+    return Inertia::render('Concursos');
+})->name('concursos');
+
 /*
 |--------------------------------------------------------------------------
 | Cursos - Acesso Público

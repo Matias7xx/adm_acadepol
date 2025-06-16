@@ -36,7 +36,7 @@ const darkModeStore = useDarkModeStore(pinia);
 
 if (
    (!localStorage['darkMode'] && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-   localStorage['darkMode'] === '1'
+   localStorage['darkMode'] === '0'
 ) {
    darkModeStore.set(true);
 }
