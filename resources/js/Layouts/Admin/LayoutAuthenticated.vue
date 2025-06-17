@@ -13,7 +13,7 @@ import AsideMenu from '@/Components/AsideMenu.vue'
 import FooterBar from '@/Components/FooterBar.vue'
 import Toast from '@/Pages/Components/Toast.vue'
 
-const layoutAsidePadding = 'xl:pl-60'
+const layoutAsidePadding = 'xl:pl-64'
 
 const darkModeStore = useDarkModeStore()
 
@@ -36,18 +36,19 @@ const menuClick = (event, item) => {
 
 <template>
   <div
+    class="style-pcpb-dark"
     :class="{
       'overflow-hidden lg:overflow-visible': isAsideMobileExpanded
     }"
   >
     <div
-      :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
+      :class="[layoutAsidePadding, { 'ml-64 lg:ml-0': isAsideMobileExpanded }]"
       class="pt-14 min-h-screen w-screen transition-position lg:w-auto bg-gray-50 dark:bg-slate-800 dark:text-slate-100"
     >
     <Toast />
       <NavBar
         :menu="menuNavBar"
-        :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
+        :class="[layoutAsidePadding, { 'ml-64 lg:ml-0': isAsideMobileExpanded }]"
         @menu-click="menuClick"
       >
         <NavBarItemPlain

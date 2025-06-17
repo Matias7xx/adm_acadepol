@@ -36,19 +36,26 @@ const appName = import.meta.env.VITE_APP_NAME || 'ACADEPOL ADMIN';
 <template>
   <aside
     id="aside"
-    class="lg:py-2 lg:pl-2 w-60 fixed flex z-40 top-0 h-screen transition-position overflow-hidden"
+    class="w-64 fixed flex z-40 top-0 h-screen transition-position overflow-hidden"
   >
-    <div class="aside lg:rounded-2xl flex-1 flex flex-col overflow-hidden dark:bg-slate-900">
-      <div class="aside-brand flex flex-row h-14 items-center justify-between dark:bg-slate-900">
-        <div class="text-center flex-1 lg:text-left lg:pl-6 xl:text-center xl:pl-0">
-          <b class="font-black">{{appName}}</b>
+    <div 
+      class="flex-1 flex flex-col overflow-hidden"
+      style="background: #000000;"
+    >
+      <div 
+        class="flex flex-row h-14 items-center justify-between text-white"
+        style="background: #000000; border-bottom: 1px solid #bea55a;"
+      >
+        <div class="flex items-center justify-center flex-1">
+          <img src="/images/logo-acadepol.png" alt="Logo" class="w-13 h-12 object-contain" />
         </div>
-        <button class="hidden lg:inline-block xl:hidden p-3" @click.prevent="asideLgCloseClick">
+        <button class="hidden lg:inline-block xl:hidden p-3 text-gray-300 hover:text-[#bea55a]" @click.prevent="asideLgCloseClick">
           <BaseIcon :path="mdiClose" />
         </button>
       </div>
       <div
-        class="flex-1 overflow-y-auto overflow-x-hidden aside-scrollbars dark:aside-scrollbars-[slate]"
+        class="flex-1 overflow-y-auto overflow-x-hidden"
+        style="scrollbar-width: thin; scrollbar-color: #bea55a #000000;"
       >
         <AsideMenuList :menu="menu" @menu-click="menuClick" />
       </div>
@@ -59,3 +66,23 @@ const appName = import.meta.env.VITE_APP_NAME || 'ACADEPOL ADMIN';
     </div>
   </aside>
 </template>
+
+<style scoped>
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bea55a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4c166;
+}
+</style>

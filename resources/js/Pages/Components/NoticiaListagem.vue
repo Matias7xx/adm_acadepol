@@ -18,7 +18,7 @@ const retryCount = ref(0);
 const mounted = ref(false);
 
 // Configurações
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2;
 const RETRY_DELAY = 2000;
 
 // Debounce controller para evitar múltiplas requisições
@@ -139,19 +139,8 @@ const updateUrlParams = () => {
 };
 
 // Tratamento de erro de imagem com fallback
-const handleImageError = (event, noticia) => {
-  const img = event.target;
-  
-  // Evitar loop infinito de erro
-  if (img.dataset.fallbackAttempted) {
-    img.style.display = 'none';
-    return;
-  }
-  
-  img.dataset.fallbackAttempted = 'true';
-  img.src = '/images/placeholder-news.png';
-  img.alt = `Imagem não disponível para: ${noticia.titulo}`;
-  img.classList.add('placeholder-image');
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
 };
 
 // Função para formatar datas com fallback
@@ -492,33 +481,24 @@ onUnmounted(() => {
           >
             <div class="flex h-32 sm:h-36">
               <!-- Imagem compacta -->
-              <div class="w-32 sm:w-48 relative overflow-hidden flex-shrink-0">
-                <img 
-                  v-if="noticia.imagem"
-                  :src="noticia.imagem" 
-                  :alt="`Imagem ilustrativa da notícia: ${noticia.titulo}`" 
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                  @error="(e) => handleImageError(e, noticia)"
-                />
-                <div 
-                  v-else 
-                  class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
-                >
-                  <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                
-                <!-- Badge de destaque -->
-                <div 
-                  v-if="noticia.destaque" 
-                  class="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-[#bea55a] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm"
-                  aria-label="Notícia em destaque"
-                >
-                  Destaque
-                </div>
+              <div class="w-32 sm:w-48 relative overflow-hidden flex-shrink-0" v-if="noticia.imagem">
+                  <img 
+                :src="noticia.imagem" 
+                :alt="`Imagem ilustrativa da notícia: ${noticia.titulo}`" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+                @error="handleImageError"
+              />
+              
+              <!-- Badge de destaque na imagem -->
+              <div 
+                v-if="noticia.destaque" 
+                class="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-[#bea55a] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm"
+                aria-label="Notícia em destaque"
+              >
+                Destaque
               </div>
+            </div>
               
               <!-- Conteúdo compacto -->
               <div class="flex-1 p-4 flex flex-col justify-between min-w-0">

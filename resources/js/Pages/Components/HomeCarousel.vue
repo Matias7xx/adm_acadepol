@@ -26,7 +26,7 @@ const isPlaying = ref(true);
 const touchStartX = ref(0);
 const touchEndX = ref(0);
 const retryCount = ref(0);
-const maxRetries = 3;
+const maxRetries = 1; //Tentativas de carregar a notícia
 
 // Computed para verificar se há itens suficientes para mostrar
 const hasMultipleItems = computed(() => newsItems.value.length > 1);
@@ -316,6 +316,19 @@ const retry = () => {
         <span v-if="retryCount > 0">(tentativa {{ retryCount + 1 }})</span>
       </p>
     </div>
+
+    <!-- Estado sem notícias -->
+    <div v-else-if="newsItems.length === 0" class="carousel-empty">
+      <div class="empty-content">
+        <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        <h3 class="empty-title">Nenhuma notícia em destaque</h3>
+        <p class="empty-message">Não há notícias em destaque no momento.</p>
+        <a href="/noticias" class="empty-link">Ver todas as notícias</a>
+      </div>
+    </div>
     
     <!-- Estado de erro -->
     <div v-else-if="error" class="carousel-error">
@@ -333,19 +346,6 @@ const retry = () => {
           </svg>
           Tentar novamente
         </button>
-      </div>
-    </div>
-
-    <!-- Estado sem notícias -->
-    <div v-else-if="newsItems.length === 0" class="carousel-empty">
-      <div class="empty-content">
-        <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-        <h3 class="empty-title">Nenhuma notícia em destaque</h3>
-        <p class="empty-message">Não há notícias em destaque no momento.</p>
-        <a href="/noticias" class="empty-link">Ver todas as notícias</a>
       </div>
     </div>
     

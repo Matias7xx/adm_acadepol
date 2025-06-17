@@ -10,10 +10,10 @@ const year = computed(() => new Date().getFullYear())
   <footer class="py-2 px-6">
     <BaseLevel :class="containerMaxW">
       <div class="text-center md:text-left">
-        <b>&copy;{{ year }}, <a
+        <!-- <b>&copy;{{ year }}, <a
           href="https://acadepol.pb.gov.br/"
           target="_blank"
-        >Academia de Ensino da Polícia Civil</a></b>
+        >Academia de Ensino da Polícia Civil</a></b> -->
         <!--Get more with <a
           href="https://tailwind-vue.justboil.me/"
           target="_blank"
