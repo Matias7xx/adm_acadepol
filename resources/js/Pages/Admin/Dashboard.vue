@@ -15,7 +15,8 @@ import {
   mdiTrendingDown,
   mdiCalendar,
   mdiAccountGroup,
-  mdiFileDocumentOutline
+  mdiFileDocumentOutline,
+  mdiAccountKey
 } from '@mdi/js'
 import LineChart from '@/Components/Charts/LineChart.vue'
 import SectionMain from '@/Components/SectionMain.vue'
@@ -46,6 +47,7 @@ const metricas = computed(() => {
     reservasPendentes: data.alojamento.pendentes,
     requerimentosPendentes: data.requerimentos.pendentes,
     contatosPendentes: data.contatos.pendentes,
+    matriculasPendentes: data.matriculas?.pendentes || 0,
   }
 })
 
@@ -75,6 +77,7 @@ const resumoMesAtual = computed(() => {
     reservasAlojamento: data.alojamento.reservas_mes,
     requerimentosRecebidos: data.requerimentos.total_mes,
     contatosRecebidos: data.contatos.total_mes,
+    matriculasRecebidas: data.matriculas?.total_mes || 0,
   }
 })
 </script>
@@ -94,7 +97,7 @@ const resumoMesAtual = computed(() => {
       </SectionTitleLineWithButton>
 
       <!-- Widgets Principais -->
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-4 mb-6">
         <!-- Usuários Cadastrados -->
         <CardBoxWidget
           :trend="`+${props.dashboardData.usuarios.percentage}%`"
@@ -117,13 +120,24 @@ const resumoMesAtual = computed(() => {
           suffix=" cursos ativos"
         />
 
+        <!-- Matrículas Pendentes -->
+        <CardBoxWidget
+          :trend="`${metricas.matriculasPendentes}`"
+          trend-type="alert"
+          color="text-purple-500"
+          :icon="mdiAccountKey"
+          :number="metricas.matriculasPendentes"
+          label="Matrículas Pendentes"
+          suffix=" aguardando análise"
+        />
+
         <!-- Pendências Gerais -->
         <CardBoxWidget
-          :trend="`${metricas.requerimentosPendentes + metricas.contatosPendentes + metricas.reservasPendentes}`"
+          :trend="`${metricas.requerimentosPendentes + metricas.contatosPendentes + metricas.reservasPendentes + metricas.matriculasPendentes}`"
           trend-type="alert"
           color="text-amber-500"
           :icon="mdiClipboardList"
-          :number="metricas.requerimentosPendentes + metricas.contatosPendentes + metricas.reservasPendentes"
+          :number="metricas.requerimentosPendentes + metricas.contatosPendentes + metricas.reservasPendentes + metricas.matriculasPendentes"
           label="Pendências Totais"
           suffix=" itens aguardando"
         />
@@ -151,11 +165,33 @@ const resumoMesAtual = computed(() => {
             </div>
           </CardBox>
 
-          <!-- Alojamento -->
-          <CardBox title="Reservas de Alojamento" :icon="mdiHome" class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+          <!-- Matrículas -->
+          <CardBox title="Matrículas em Cursos" :icon="mdiAccountKey" class="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20">
             <div class="grid grid-cols-4 gap-2 text-center">
               <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <div class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ props.dashboardData.alojamento.reservas_mes }}</div>
+                <div class="text-xl font-bold text-purple-600 dark:text-purple-400">{{ props.dashboardData.matriculas?.total_mes || 0 }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">Este Mês</div>
+              </div>
+              <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ metricas.matriculasPendentes }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">Pendentes</div>
+              </div>
+              <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="text-xl font-bold text-green-600 dark:text-green-400">{{ props.dashboardData.matriculas?.aprovadas || 0 }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">Aprovadas</div>
+              </div>
+              <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="text-xl font-bold text-red-600 dark:text-red-400">{{ props.dashboardData.matriculas?.rejeitadas || 0 }}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">Rejeitadas</div>
+              </div>
+            </div>
+          </CardBox>
+
+          <!-- Alojamento -->
+          <CardBox title="Reservas de Alojamento" :icon="mdiHome" class="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20">
+            <div class="grid grid-cols-4 gap-2 text-center">
+              <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="text-xl font-bold text-cyan-600 dark:text-cyan-400">{{ props.dashboardData.alojamento.reservas_mes }}</div>
                 <div class="text-xs text-gray-600 dark:text-gray-400">Este Mês</div>
               </div>
               <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
@@ -199,7 +235,7 @@ const resumoMesAtual = computed(() => {
           </CardBox>
 
           <!-- Fale Conosco -->
-          <CardBox title="Fale Conosco" :icon="mdiEmailOutline" class="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20">
+          <CardBox title="Fale Conosco" :icon="mdiEmailOutline" class="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20">
             <div class="grid grid-cols-4 gap-2 text-center">
               <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                 <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ metricas.contatosPendentes }}</div>
@@ -232,8 +268,12 @@ const resumoMesAtual = computed(() => {
                 <span class="font-semibold text-green-600 dark:text-green-400">{{ resumoMesAtual.cursosFinalizados }}</span>
               </div>
               <div class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-lg">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Novas Matrículas</span>
+                <span class="font-semibold text-purple-600 dark:text-purple-400">{{ resumoMesAtual.matriculasRecebidas }}</span>
+              </div>
+              <div class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-lg">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Reservas Alojamento</span>
-                <span class="font-semibold text-purple-600 dark:text-purple-400">{{ resumoMesAtual.reservasAlojamento }}</span>
+                <span class="font-semibold text-cyan-600 dark:text-cyan-400">{{ resumoMesAtual.reservasAlojamento }}</span>
               </div>
               <div class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-lg">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Requerimentos</span>
@@ -261,7 +301,7 @@ const resumoMesAtual = computed(() => {
       </CardBox>
 
       <!-- Ações Rápidas -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
           <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Ações Rápidas</h3>
           <div class="space-y-2">

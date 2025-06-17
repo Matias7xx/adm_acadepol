@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Curso;
+use App\Models\Matricula;
 use App\Models\Alojamento;
 use App\Models\Visitante;
 use App\Models\Requerimento;
@@ -43,6 +44,7 @@ class DashboardController extends Controller
         return [
             'usuarios' => $this->obterMetricasUsuarios($mesAtual, $mesPassado),
             'cursos' => $this->obterMetricasCursos(),
+            'matriculas' => $this->obterMetricasMatriculas($mesAtual, $mesPassado),
             'alojamento' => $this->obterMetricasAlojamento($mesAtual, $mesPassado),
             'requerimentos' => $this->obterMetricasRequerimentos($mesAtual, $mesPassado),
             'contatos' => $this->obterMetricasContatos($mesAtual, $mesPassado)
@@ -92,6 +94,32 @@ class DashboardController extends Controller
             'fechados' => $cursosFechados,
             'trend' => 'up',
             'percentage' => 8.3
+        ];
+    }
+    
+    /**
+     * Métricas de matrículas
+     */
+    private function obterMetricasMatriculas($mesAtual, $mesPassado)
+    {
+        $totalMatriculas = Matricula::count();
+        $matriculasPendentes = Matricula::where('status', 'pendente')->count();
+        $matriculasAprovadas = Matricula::where('status', 'aprovada')->count();
+        $matriculasRejeitadas = Matricula::where('status', 'rejeitada')->count();
+        
+        $matriculasMesAtual = Matricula::where('created_at', '>=', $mesAtual)->count();
+        $matriculasMesPassado = Matricula::whereBetween('created_at', [$mesPassado, $mesAtual])->count();
+        
+        $percentual = $this->calcularPercentual($matriculasMesAtual, $matriculasMesPassado);
+        
+        return [
+            'total' => $totalMatriculas,
+            'pendentes' => $matriculasPendentes,
+            'aprovadas' => $matriculasAprovadas,
+            'rejeitadas' => $matriculasRejeitadas,
+            'total_mes' => $matriculasMesAtual,
+            'trend' => $percentual >= 0 ? 'up' : 'down',
+            'percentage' => abs($percentual)
         ];
     }
     
@@ -187,6 +215,7 @@ class DashboardController extends Controller
         $meses = [];
         $usuariosPorMes = [];
         $cursosPorMes = [];
+        $matriculasPorMes = [];
         $alojamentoPorMes = [];
         
         // Excluir usuários administrativos
@@ -207,6 +236,9 @@ class DashboardController extends Controller
             $cursosPorMes[] = Curso::where('status', 'concluído')
                 ->whereBetween('updated_at', [$inicioMes, $fimMes])
                 ->count();
+            
+            // Matrículas no mês
+            $matriculasPorMes[] = Matricula::whereBetween('created_at', [$inicioMes, $fimMes])->count();
             
             // Reservas de alojamento no mês (usuários + visitantes)
             $reservasUsuarios = Alojamento::whereBetween('created_at', [$inicioMes, $fimMes])->count();
@@ -229,6 +261,13 @@ class DashboardController extends Controller
                     'data' => $cursosPorMes,
                     'borderColor' => '#10B981',
                     'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                    'tension' => 0.4
+                ],
+                [
+                    'label' => 'Matrículas',
+                    'data' => $matriculasPorMes,
+                    'borderColor' => '#8B5CF6',
+                    'backgroundColor' => 'rgba(139, 92, 246, 0.1)',
                     'tension' => 0.4
                 ],
                 [
@@ -259,7 +298,7 @@ class DashboardController extends Controller
      */
     public function obterEstatisticasAdicionais()
     {
-        // Taxa de aprovação geral (requerimentos + alojamento)
+        // Taxa de aprovação geral (requerimentos + alojamento + matrículas)
         $totalRequerimentos = Requerimento::whereIn('status', ['deferido', 'indeferido'])->count();
         $requerimentosDeferidos = Requerimento::where('status', 'deferido')->count();
         
@@ -268,12 +307,15 @@ class DashboardController extends Controller
         $reservasAprovadas = (Alojamento::where('status', 'aprovada')->count() + 
                              Visitante::where('status', 'aprovada')->count());
         
-        $totalItens = $totalRequerimentos + $totalReservas;
-        $itensAprovados = $requerimentosDeferidos + $reservasAprovadas;
+        $totalMatriculas = Matricula::whereIn('status', ['aprovada', 'rejeitada'])->count();
+        $matriculasAprovadas = Matricula::where('status', 'aprovada')->count();
+        
+        $totalItens = $totalRequerimentos + $totalReservas + $totalMatriculas;
+        $itensAprovados = $requerimentosDeferidos + $reservasAprovadas + $matriculasAprovadas;
         
         $taxaAprovacao = $totalItens > 0 ? round(($itensAprovados / $totalItens) * 100) : 0;
         
-        // Tempo médio de resposta (baseado em requerimentos e contatos respondidos)
+        // Tempo médio de resposta (baseado em requerimentos, contatos e matrículas)
         $tempoMedioResposta = $this->calcularTempoMedioResposta();
         
         // Ocupação do alojamento (baseado em reservas aprovadas dos últimos 30 dias)
@@ -299,6 +341,13 @@ class DashboardController extends Controller
             ->whereNotNull('data_resposta')
             ->get();
         
+        $matriculasRespondidas = Matricula::whereIn('status', ['aprovada', 'rejeitada'])
+            ->where(function($query) {
+                $query->whereNotNull('data_aprovacao')
+                      ->orWhereNotNull('data_rejeicao');
+            })
+            ->get();
+        
         $totalTempos = 0;
         $totalItens = 0;
         
@@ -310,6 +359,14 @@ class DashboardController extends Controller
         foreach ($contatosRespondidos as $contato) {
             $totalTempos += $contato->created_at->diffInDays($contato->data_resposta);
             $totalItens++;
+        }
+        
+        foreach ($matriculasRespondidas as $matricula) {
+            $dataResposta = $matricula->data_aprovacao ?? $matricula->data_rejeicao;
+            if ($dataResposta) {
+                $totalTempos += $matricula->created_at->diffInDays($dataResposta);
+                $totalItens++;
+            }
         }
         
         return $totalItens > 0 ? round($totalTempos / $totalItens) : 0;
