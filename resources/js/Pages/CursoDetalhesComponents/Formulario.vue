@@ -176,6 +176,7 @@ const submeterInscricao = () => {
               <div class="space-y-2 text-amber-700">
                 <p><span class="font-medium">Nome:</span> {{ user.name }}</p>
                 <p><span class="font-medium">Matrícula:</span> {{ user.matricula }}</p>
+                <p><span class="font-medium">Lotação:</span> {{ user.lotacao }}</p>
                 <p><span class="font-medium">Email:</span> {{ user.email }}</p>
               </div>
             </div>

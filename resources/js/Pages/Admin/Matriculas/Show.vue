@@ -257,6 +257,22 @@ const handleConfirm = () => {
             </tr>
             <tr>
               <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
+                Lotação
+              </td>
+              <td data-label="Matrícula">
+                {{ matricula.aluno.lotacao }}
+              </td>
+            </tr>
+            <tr>
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
+                Cargo
+              </td>
+              <td data-label="Matrícula">
+                {{ matricula.aluno.cargo }}
+              </td>
+            </tr>
+            <tr>
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">
                 Email
               </td>
               <td data-label="Email">

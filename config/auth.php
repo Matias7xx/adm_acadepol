@@ -38,7 +38,7 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'api_users',
         ],
     ],
 
@@ -63,6 +63,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'api_users' => [
+            'driver' => 'api_provider', // driver registrado no AuthServiceProvider
+            'model' => App\Models\User::class,
         ],
 
         // 'users' => [

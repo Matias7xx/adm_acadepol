@@ -63,10 +63,11 @@ const resetForm = () => {
                     <TextInput
                         id="name"
                         type="text"
-                        class="mt-1 block w-full"
+                        class="mt-1 block w-full bg-slate-100"
                         v-model="form.name"
                         required
                         autofocus
+                        readonly
                         autocomplete="name"
                     />
                     <InputError class="mt-2" :message="form.errors.name" />
@@ -127,7 +128,8 @@ const resetForm = () => {
                     <TextInput
                         id="lotacao"
                         type="text"
-                        class="mt-1 block w-full"
+                        readonly
+                        class="mt-1 block w-full bg-slate-100"
                         v-model="form.lotacao"
                     />
                     <InputError class="mt-2" :message="form.errors.lotacao" />
