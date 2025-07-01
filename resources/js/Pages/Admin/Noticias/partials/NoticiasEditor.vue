@@ -32,9 +32,12 @@ const editorHeight = ref(props.height);
 const wordCount = ref(0);
 const lastSaved = ref('Agora');
 const editorContainer = ref(null);
+const showDocumentUpload = ref(false);
+const documentUploadProgress = ref(0);
+const isUploadingDocument = ref(false);
 let autoSaveTimer = null;
 
-// Classe adaptadora para upload usando servidor Laravel
+// Classe adaptadora para upload de imagens usando servidor Laravel
 class LaravelUploadAdapter {
   constructor(loader) {
     this.loader = loader;
@@ -82,7 +85,7 @@ class LaravelUploadAdapter {
         })
         .then(data => {
           if (data.uploaded && data.url) {
-            console.log('✅ Upload realizado com sucesso:', data.url);
+            console.log('✅ Upload de imagem realizado com sucesso:', data.url);
             resolve({
               default: data.url
             });
@@ -91,7 +94,7 @@ class LaravelUploadAdapter {
           }
         })
         .catch(error => {
-          console.error('❌ Erro no upload:', error);
+          console.error('❌ Erro no upload de imagem:', error);
           reject(error);
         });
       });
@@ -103,12 +106,242 @@ class LaravelUploadAdapter {
   }
 }
 
-// Função para criar o adaptador de upload
+// Função para criar o adaptador de upload de imagens
 function LaravelUploadAdapterPlugin(editor) {
   editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
     return new LaravelUploadAdapter(loader);
   };
 }
+
+// Função para upload de documentos
+const uploadDocument = async (file) => {
+  return new Promise((resolve, reject) => {
+    // Validar tamanho (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      reject(new Error('O documento deve ter no máximo 10MB'));
+      return;
+    }
+
+    // Validar tipo
+    const validTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'application/zip',
+      'application/x-rar-compressed'
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      reject(new Error('Formato de arquivo não suportado. Use PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP ou RAR'));
+      return;
+    }
+
+    // Criar FormData
+    const formData = new FormData();
+    formData.append('upload', file);
+
+    // Obter token CSRF
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    // Simular progresso
+    isUploadingDocument.value = true;
+    documentUploadProgress.value = 0;
+    
+    const progressInterval = setInterval(() => {
+      if (documentUploadProgress.value < 90) {
+        documentUploadProgress.value += 10;
+      }
+    }, 100);
+
+    // Fazer upload via fetch
+    fetch('/api/upload-ckeditor-files', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      clearInterval(progressInterval);
+      documentUploadProgress.value = 100;
+      
+      if (!response.ok) {
+        return response.json().then(data => {
+          throw new Error(data.error?.message || `HTTP ${response.status}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.uploaded && data.url) {
+        console.log('✅ Upload de documento realizado com sucesso:', data.url);
+        setTimeout(() => {
+          isUploadingDocument.value = false;
+          documentUploadProgress.value = 0;
+          resolve(data);
+        }, 500);
+      } else {
+        throw new Error(data.error?.message || 'Upload falhou');
+      }
+    })
+    .catch(error => {
+      clearInterval(progressInterval);
+      isUploadingDocument.value = false;
+      documentUploadProgress.value = 0;
+      console.error('❌ Erro no upload de documento:', error);
+      reject(error);
+    });
+  });
+};
+
+// Função para inserir documento no editor
+const insertDocumentInEditor = (documentData) => {
+  if (!editorInstance.value) return;
+
+  const { url, fileName, fileSize } = documentData;
+  
+  // Debug: log da URL original
+  console.log('URL original do documento:', url);
+  
+  // Extrair o caminho relativo corretamente
+  let relativePath;
+  if (url.includes('/storage/')) {
+    // Remove /storage/ do início
+    relativePath = url.substring(url.indexOf('/storage/') + 9);
+  } else if (url.startsWith('http')) {
+    // Se for URL completa, extrair apenas a parte após /storage/
+    const urlObj = new URL(url);
+    relativePath = urlObj.pathname.replace('/storage/', '');
+  } else {
+    // Se já for um path relativo, usar como está
+    relativePath = url;
+  }
+  
+  console.log('Path relativo extraído:', relativePath);
+  
+  // Gerar URLs para download e visualização usando route() do Laravel
+  const downloadUrl = route('file.download', { 
+    path: relativePath, 
+    filename: fileName 
+  });
+  const viewUrl = route('file.view', { 
+    path: relativePath 
+  });
+  
+  console.log('URL de download:', downloadUrl);
+  console.log('URL de visualização:', viewUrl);
+  
+  // HTML do documento com dois botões: visualizar e baixar
+  const documentHtml = `
+    <div class="document-attachment" style="
+      border: 1px solid #e2e8f0; 
+      border-radius: 6px; 
+      padding: 8px 12px; 
+      margin: 8px 0; 
+      background: #fafbfc;
+      display: flex !important;
+      align-items: center !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    ">
+      <span style="
+        color: #64748b;
+        font-size: 16px;
+        margin-right: 10px;
+        flex-shrink: 0 !important;
+      ">📎</span>
+      
+      <span style="
+        color: #334155; 
+        font-weight: 500;
+        font-size: 14px;
+        margin-right: 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+      ">${fileName} - </span>
+      
+      <a href="${viewUrl}" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         style="
+           color: #475569;
+           background: #f1f5f9;
+           padding: 4px 8px;
+           border-radius: 4px;
+           font-size: 12px;
+           font-weight: 500;
+           text-decoration: none !important;
+           display: inline-block;
+           cursor: pointer;
+           border: none;
+           user-select: none;
+           margin-right: 6px;
+           flex-shrink: 0 !important;
+         "
+         onmouseover="this.style.background='#e2e8f0'; this.style.color='#334155'"
+         onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'"
+         title="Visualizar documento">Visualizar |</a>
+         
+      <a href="${downloadUrl}" 
+         download
+         style="
+           color: #475569;
+           background: #f1f5f9;
+           padding: 4px 8px;
+           border-radius: 4px;
+           font-size: 12px;
+           font-weight: 500;
+           text-decoration: none !important;
+           display: inline-block;
+           cursor: pointer;
+           border: none;
+           user-select: none;
+           flex-shrink: 0 !important;
+         "
+         onmouseover="this.style.background='#e2e8f0'; this.style.color='#334155'"
+         onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'"
+         title="Baixar documento">Download</a>
+    </div>
+  `;
+
+  // Inserir no editor
+  editorInstance.value.model.change(writer => {
+    const viewFragment = editorInstance.value.data.processor.toView(documentHtml);
+    const modelFragment = editorInstance.value.data.toModel(viewFragment);
+    editorInstance.value.model.insertContent(modelFragment);
+  });
+};
+
+// Handler para seleção de documento
+const handleDocumentSelect = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const documentData = await uploadDocument(file);
+    insertDocumentInEditor(documentData);
+    showDocumentUpload.value = false;
+    
+    // Limpar input
+    event.target.value = '';
+  } catch (error) {
+    alert(`Erro no upload: ${error.message}`);
+    event.target.value = '';
+  }
+};
+
+// Função para mostrar modal de upload de documentos
+const showDocumentUploadModal = () => {
+  showDocumentUpload.value = true;
+};
 
 // Configuração do editor
 const editorConfig = {
@@ -204,12 +437,19 @@ const base64ImageCount = computed(() => {
   return matches ? matches.length : 0;
 });
 
+// Computed para contar documentos
+const documentCount = computed(() => {
+  if (!content.value) return 0;
+  const matches = content.value.match(/class="document-download"/g);
+  return matches ? matches.length : 0;
+});
+
 // Métodos
 const onEditorReady = (editor) => {
   editorInstance.value = editor;
   calculateWordCount(editor.getData());
   
-  // Log para verificar se o plugin foi carregado
+  // Log para verificar se os plugins foram carregados
   try {
     const fileRepository = editor.plugins.get('FileRepository');
     console.log('✅ Plugin FileRepository carregado - upload direto para Laravel');
@@ -308,9 +548,14 @@ const setupAutoSave = () => {
 
 // Handler para ESC key
 const handleEscKey = (event) => {
-  if (event.key === 'Escape' && isFullScreen.value) {
-    event.preventDefault();
-    toggleFullScreen();
+  if (event.key === 'Escape') {
+    if (showDocumentUpload.value) {
+      showDocumentUpload.value = false;
+      event.preventDefault();
+    } else if (isFullScreen.value) {
+      event.preventDefault();
+      toggleFullScreen();
+    }
   }
 };
 
@@ -329,6 +574,7 @@ onUnmounted(() => {
   
   // Resetar estado
   isFullScreen.value = false;
+  showDocumentUpload.value = false;
 });
 
 // Inicialização
@@ -345,6 +591,58 @@ onMounted(() => {
 
 <template>
   <div class="content-editor-container" ref="editorContainer">
+    <!-- Modal para upload de documentos -->
+    <div v-if="showDocumentUpload" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+          </svg>
+          Inserir Documento
+        </h3>
+        
+        <div class="mb-4">
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+            @change="handleDocumentSelect"
+            class="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100"
+          />
+          <p class="text-sm text-gray-500 mt-2">
+            Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP, RAR (máx. 10MB)
+          </p>
+        </div>
+        
+        <!-- Progresso de upload -->
+        <div v-if="isUploadingDocument" class="mb-4">
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                 :style="{ width: `${documentUploadProgress}%` }">
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 text-center">
+            Fazendo upload... {{ documentUploadProgress }}%
+          </p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button
+            type="button"
+            @click="showDocumentUpload = false"
+            :disabled="isUploadingDocument"
+            class="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Container do editor -->
     <div 
       class="editor-wrapper border border-gray-300 overflow-hidden shadow-lg"
@@ -367,6 +665,18 @@ onMounted(() => {
         </h3>
         
         <div class="flex items-center space-x-3">
+          <!-- Botão para inserir documentos -->
+          <button
+            type="button"
+            @click="showDocumentUploadModal"
+            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center text-sm shadow transition"
+          >
+            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            Inserir Documento
+          </button>
+          
           <!-- Badge informativo sobre imagens -->
           <div v-if="hasBase64Images" class="text-xs bg-amber-600 px-2 py-1 rounded-md flex items-center">
             <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
@@ -375,11 +685,19 @@ onMounted(() => {
             {{ base64ImageCount }} imagem(s) temporária(s)
           </div>
           
-          <div v-else class="text-xs bg-green-600 px-2 py-1 rounded-md flex items-center">
+          <!-- Badge para documentos -->
+          <div v-if="documentCount > 0" class="text-xs bg-blue-600 px-2 py-1 rounded-md flex items-center">
+            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            {{ documentCount }} documento(s)
+          </div>
+          
+          <div v-if="!hasBase64Images && documentCount === 0" class="text-xs bg-green-600 px-2 py-1 rounded-md flex items-center">
             <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
               <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
             </svg>
-            Imagens processadas
+            Arquivos processados
           </div>
           
           <button 
@@ -436,6 +754,13 @@ onMounted(() => {
               </svg>
               Tempo de leitura: {{ Math.max(1, Math.ceil(wordCount / 230)) }} min
             </span>
+            
+            <span v-if="documentCount > 0" class="flex items-center font-medium">
+              <svg class="w-4 h-4 mr-1.5 text-gray-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+              </svg>
+              {{ documentCount }} documento(s)
+            </span>
           </div>
           
           <div class="flex items-center space-x-4">
@@ -480,6 +805,44 @@ onMounted(() => {
               <strong>{{ base64ImageCount }} imagem(s) serão processadas ao salvar a notícia.</strong> 
               As imagens são temporariamente armazenadas no editor e serão organizadas adequadamente quando você salvar.
             </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dica sobre documentos -->
+      <div v-if="documentCount > 0" class="bg-blue-50 border-l-4 border-blue-400 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>{{ documentCount }} documento(s) inserido(s) na notícia.</strong> 
+              Os leitores poderão fazer download dos arquivos clicando nos links.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instruções para usar o editor -->
+      <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-gray-700">
+              <strong>Dicas do Editor:</strong>
+            </p>
+            <ul class="mt-2 text-sm text-gray-600 space-y-1">
+              <li>• Use o botão "Inserir Documento" para adicionar arquivos (PDF, DOC, XLS, etc.)</li>
+              <li>• Arraste e solte imagens diretamente no editor</li>
+              <li>• Use Ctrl+K para inserir links rapidamente</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -580,6 +943,23 @@ onMounted(() => {
   border-radius: 4px;
   margin: 1.5em 0;
 }
+
+/* Estilos para documentos no preview */
+.preview-container .document-download {
+  border: 2px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 16px 0 !important;
+  background: #f9fafb !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.preview-container .document-download:hover {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+}
 </style>
 
 <style>
@@ -676,5 +1056,32 @@ onMounted(() => {
   font-size: 10px;
   border-radius: 3px;
   font-family: sans-serif;
+}
+
+/* Estilos para documentos inseridos no editor */
+.ck.ck-editor__editable .document-download {
+  border: 2px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 16px 0 !important;
+  background: #f9fafb !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.ck.ck-editor__editable .document-download:hover {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+}
+
+.ck.ck-editor__editable .document-download a {
+  color: #1f2937 !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+}
+
+.ck.ck-editor__editable .document-download a:hover {
+  color: #3b82f6 !important;
 }
 </style>

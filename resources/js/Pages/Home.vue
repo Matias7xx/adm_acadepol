@@ -10,7 +10,10 @@ import Search from './Components/Search.vue';
 import Breadcrumb from '@/Components/Admin/Breadcrumb.vue';
 import Toast from './Components/Toast.vue';
 import FlashMessage from './Components/FlashMessage.vue';
+import PowerBIComponent from './Components/PowerBIComponent.vue';
 
+// URL do relatório Power BI
+const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00NDhkLTllNDktZWQ1ZjMwN2ZiMjM5IiwidCI6IjgxYzUyNzVkLTIxMjMtNDU0Yi1iMjEwLTI4MWI0NjVmZGI4YSJ9";
 </script>
 
 <template>
@@ -41,8 +44,17 @@ import FlashMessage from './Components/FlashMessage.vue';
           <Cards />
         </section>
 
+        <!-- Seção do Power BI  -->
+        <section class="mb-19">
+          <PowerBIComponent 
+            :src="powerBIUrl"
+            title="Dados e estatísticas dos cursos oferecidos pela ACADEPOL"
+            height="650px"
+          />
+        </section>
+
         <!-- Eventos Grid -->
-        <section class="mb-12">
+        <section class="mb-10">
           <Noticias />
         </section>
       </div>

@@ -76,11 +76,13 @@ import { Link } from '@inertiajs/vue3';
         <div class="flex flex-col items-center sm:items-start text-center sm:text-left space-y-3 lg:col-span-1">
           <h2 class="text-lg font-bold text-white tracking-wide">Redes Sociais</h2>
 
-          <!-- SocialMedia -->
+          <!-- Container das redes sociais - só mobile -->
           <div class="w-full flex justify-center sm:justify-start">
-            <SocialMedia class="!py-0 !justify-start"
-            colorSetup="fill-gray-400 relative z-10 transition-all duration-500 group-hover:fill-white"
-            xConfig="absolute top-full left-0 w-full h-full rounded-full bg-gray-700 z-0 transition-all duration-500 group-hover:top-0" />
+            <SocialMedia 
+              class="social-media-footer !py-0 !justify-start"
+              colorSetup="fill-gray-400 relative z-10 transition-all duration-500 group-hover:fill-white"
+              xConfig="absolute top-full left-0 w-full h-full rounded-full bg-gray-700 z-0 transition-all duration-500 group-hover:top-0" 
+            />
           </div>
         </div>
 
@@ -111,3 +113,51 @@ import { Link } from '@inertiajs/vue3';
     </div>
   </footer>
 </template>
+
+<style scoped>
+/* APENAS MOBILE: Estilos específicos no footer */
+.social-media-footer {
+  /* Desktop mantém comportamento original */
+  display: flex !important;
+  padding: 0 !important;
+}
+
+/* ✨ MOBILE: Garantir alinhamento centralizado */
+@media (max-width: 640px) {
+  .social-media-footer {
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 1rem !important;
+  }
+  
+  /* Forçar centralização dos ícones individuais no mobile */
+  .social-media-footer > * {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* Garantir que os ícones tenham tamanho consistente */
+.social-media-footer svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+/* Hover effects */
+.social-media-footer a {
+  transition: all 0.3s ease-in-out;
+}
+
+.social-media-footer a:hover {
+  transform: translateY(-2px);
+}
+
+/* Mobile: espaçamento */
+@media (max-width: 480px) {
+  .social-media-footer {
+    gap: 0.75rem !important;
+  }
+}
+</style>

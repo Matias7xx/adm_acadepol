@@ -1,6 +1,5 @@
-<!-- HomeCarousel.vue - Versão Melhorada -->
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
 
 const props = defineProps({
   autoPlayDuration: {
@@ -26,20 +25,75 @@ const isPlaying = ref(true);
 const touchStartX = ref(0);
 const touchEndX = ref(0);
 const retryCount = ref(0);
-const maxRetries = 1; //Tentativas de carregar a notícia
+const maxRetries = 1;
+const mounted = ref(false);
 
-// Computed para verificar se há itens suficientes para mostrar
+const imageStates = ref(new Map()); // Controla estado de cada imagem
+const preloadedImages = ref(new Set()); // Cache de imagens carregadas
+
+const PLACEHOLDER_LOCAL = '/images/placeholder-news2.png';
+const PLACEHOLDER_CDN = 'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=800&h=600&fit=crop&crop=center&auto=format&q=80&cs=tinysrgb';
+
+const showSkeleton = computed(() => loading.value && mounted.value);
+const showCarousel = computed(() => !loading.value && !error.value && newsItems.value.length > 0);
+const showEmpty = computed(() => !loading.value && !error.value && newsItems.value.length === 0);
 const hasMultipleItems = computed(() => newsItems.value.length > 1);
 const showControls = computed(() => hasMultipleItems.value && !loading.value);
 
-// Buscar notícias destacadas do backend com retry
+// verificar se imagem já foi carregada
+const isImageReady = (imageUrl, itemId) => {
+  if (!imageUrl || imageUrl === PLACEHOLDER_LOCAL || imageUrl === PLACEHOLDER_CDN) return true;
+  
+  const cacheKey = `${itemId}-${imageUrl}`;
+  return preloadedImages.value.has(cacheKey) || imageStates.value.get(cacheKey)?.loaded;
+};
+
+// Preload de imagens
+const preloadImage = (imageUrl, itemId) => {
+  return new Promise((resolve, reject) => {
+    if (!imageUrl || imageUrl === PLACEHOLDER_LOCAL || imageUrl === PLACEHOLDER_CDN) {
+      resolve();
+      return;
+    }
+
+    const cacheKey = `${itemId}-${imageUrl}`;
+    
+    // Se já foi carregada, resolve
+    if (preloadedImages.value.has(cacheKey)) {
+      resolve();
+      return;
+    }
+
+    const img = new Image();
+    
+    img.onload = () => {
+      preloadedImages.value.add(cacheKey);
+      imageStates.value.set(cacheKey, { loaded: true, error: false });
+      resolve();
+    };
+    
+    img.onerror = () => {
+      imageStates.value.set(cacheKey, { loaded: false, error: true });
+      reject();
+    };
+    
+    img.src = imageUrl;
+  });
+};
+
+// Buscar notícias com preload
 const fetchDestacadas = async (attempt = 1) => {
   try {
-    loading.value = true;
+    if (attempt === 1 && !mounted.value) {
+      loading.value = true;
+    } else if (attempt > 1) {
+      loading.value = true;
+    }
+    
     error.value = null;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     const response = await fetch('/api/ultimas-noticias', {
       signal: controller.signal,
@@ -61,32 +115,65 @@ const fetchDestacadas = async (attempt = 1) => {
       throw new Error('Formato de dados inválido recebido do servidor');
     }
     
-    // Filtrar notícias destacadas primeiro, se não houver, pegar as primeiras
     const destacadas = data.filter(item => item?.destaque && item?.id);
     const finalItems = destacadas.length > 0 ? destacadas : data.filter(item => item?.id);
     
-    // Validar e formatar os dados
-    newsItems.value = finalItems
+    // Formatar dados com hierarquia: Original > Local > CDN
+    const formattedItems = finalItems
       .slice(0, props.maxItems)
       .map((noticia, index) => ({
         id: noticia.id || `item-${index}`,
         title: noticia.titulo || 'Título não disponível',
         excerpt: noticia.descricao_curta || '',
-        image: noticia.imagem || '/images/placeholder-news2.png',
-        link: `/noticias/${noticia.id}`,
-        loading: props.lazy // Para lazy loading
+        image: noticia.imagem || PLACEHOLDER_LOCAL,
+        originalImage: noticia.imagem, // Guardar URL original
+        link: `/noticias/${noticia.id}`
       }))
       .filter(item => item.title && item.id);
     
-    if (newsItems.value.length === 0) {
+    if (formattedItems.length === 0) {
       throw new Error('Nenhuma notícia válida encontrada');
     }
+
+    // Preload das imagens principais antes de mostrar o carrossel
+    if (formattedItems.length > 0) {
+      // Preload da primeira imagem (slide atual)
+      const firstItem = formattedItems[0];
+      if (firstItem.originalImage && firstItem.originalImage !== PLACEHOLDER_LOCAL) {
+        try {
+          await preloadImage(firstItem.originalImage, firstItem.id);
+          firstItem.image = firstItem.originalImage;
+        } catch (e) {
+          console.warn('Falha ao carregar primeira imagem, usando placeholder local');
+          // Se falhar, verifica se o local existe, senão usa CDN
+          firstItem.image = PLACEHOLDER_LOCAL;
+        }
+      }
+
+      // Preload das demais imagens em background
+      formattedItems.slice(1).forEach(async (item) => {
+        if (item.originalImage && item.originalImage !== PLACEHOLDER_LOCAL) {
+          try {
+            await preloadImage(item.originalImage, item.id);
+            // Atualizar a imagem quando carregada
+            const itemIndex = newsItems.value.findIndex(newsItem => newsItem.id === item.id);
+            if (itemIndex !== -1) {
+              newsItems.value[itemIndex].image = item.originalImage;
+            }
+          } catch (e) {
+            console.warn(`Falha ao carregar imagem do item ${item.id}, mantendo placeholder local`);
+          }
+        }
+      });
+    }
     
-    // Reset do índice se necessário
+    newsItems.value = formattedItems;
+    
     if (currentIndex.value >= newsItems.value.length) {
       currentIndex.value = 0;
     }
     
+    await nextTick();
     loading.value = false;
     retryCount.value = 0;
     
@@ -122,7 +209,7 @@ const goToSlide = (index) => {
   }
 };
 
-// Auto-play melhorado
+// Auto-play
 const startAutoPlay = () => {
   if (!hasMultipleItems.value || !isPlaying.value) return;
   
@@ -179,6 +266,8 @@ const handleSwipe = () => {
 
 // Keyboard navigation
 const handleKeyDown = (e) => {
+  if (!mounted.value) return;
+  
   switch (e.key) {
     case 'ArrowLeft':
       e.preventDefault();
@@ -203,39 +292,60 @@ const handleKeyDown = (e) => {
   }
 };
 
-// Lazy loading de imagens
+// imagens com hierarquia correta
 const handleImageLoad = (index) => {
-  if (newsItems.value[index]) {
-    newsItems.value[index].loading = false;
+  const item = newsItems.value[index];
+  if (item) {
+    const cacheKey = `${item.id}-${item.image}`;
+    imageStates.value.set(cacheKey, { loaded: true, error: false });
+    preloadedImages.value.add(cacheKey);
   }
 };
 
 const handleImageError = (event, index) => {
   console.warn(`Erro ao carregar imagem do slide ${index}`);
-  event.target.src = '/images/placeholder-news2.png';
-  if (newsItems.value[index]) {
-    newsItems.value[index].loading = false;
+  const item = newsItems.value[index];
+  
+  if (item) {
+    const currentSrc = event.target.src;
+    
+    // Hierarquia: Original > Placeholder Local > Placeholder CDN
+    if (currentSrc === item.originalImage) {
+      // Se falhou a original, tenta o placeholder local
+      console.log('Tentando placeholder local...');
+      event.target.src = PLACEHOLDER_LOCAL;
+    } else if (currentSrc === PLACEHOLDER_LOCAL) {
+      // Se falhou o local, usa o CDN
+      console.log('Tentando placeholder CDN...');
+      event.target.src = PLACEHOLDER_CDN;
+    }
+    // Se chegou aqui e ainda falhou, mantém o CDN
+    
+    const cacheKey = `${item.id}-${item.image}`;
+    imageStates.value.set(cacheKey, { loaded: true, error: true });
   }
 };
 
-// Preload da próxima imagem
-const preloadNextImage = () => {
+// Preload inteligente da próxima imagem
+const preloadNextImage = async () => {
+  if (!props.lazy) return;
+  
   const nextIndex = (currentIndex.value + 1) % newsItems.value.length;
   const nextItem = newsItems.value[nextIndex];
   
-  if (nextItem && nextItem.loading && nextItem.image) {
-    const img = new Image();
-    img.onload = () => handleImageLoad(nextIndex);
-    img.onerror = (e) => handleImageError(e, nextIndex);
-    img.src = nextItem.image;
+  if (nextItem?.originalImage && nextItem.image === PLACEHOLDER_LOCAL) {
+    try {
+      await preloadImage(nextItem.originalImage, nextItem.id);
+      nextItem.image = nextItem.originalImage;
+    } catch (e) {
+      console.warn(`Falha ao preload da próxima imagem: ${nextItem.id}, mantendo placeholder local`);
+    }
   }
 };
 
 // Watchers
 watch(currentIndex, () => {
-  if (props.lazy) {
-    preloadNextImage();
-  }
+  preloadNextImage();
 });
 
 watch(() => newsItems.value.length, (newLength) => {
@@ -244,7 +354,7 @@ watch(() => newsItems.value.length, (newLength) => {
   }
 });
 
-// Intersection Observer para pausar quando não visível
+// Observer
 let intersectionObserver = null;
 
 const setupIntersectionObserver = () => {
@@ -262,14 +372,16 @@ const setupIntersectionObserver = () => {
 };
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
+  mounted.value = true;
+  await nextTick();
+  
   fetchDestacadas();
   setupIntersectionObserver();
   
-  // Adicionar event listeners para teclado
   window.addEventListener('keydown', handleKeyDown);
   
-  // Observer para pausar quando não visível
+  await nextTick();
   if (intersectionObserver) {
     const carousel = document.querySelector('.carousel-container');
     if (carousel) {
@@ -279,25 +391,32 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  mounted.value = false;
   stopAutoPlay();
   window.removeEventListener('keydown', handleKeyDown);
   
   if (intersectionObserver) {
     intersectionObserver.disconnect();
   }
+  
+  // Limpar caches
+  imageStates.value.clear();
+  preloadedImages.value.clear();
 });
 
-// Retry function
 const retry = () => {
   retryCount.value = 0;
+  imageStates.value.clear();
+  preloadedImages.value.clear();
   fetchDestacadas();
 };
 </script>
 
 <template> 
-  <div class="max-w-screen-xl mx-auto px-4 mt-1">
+  <div class="carousel-wrapper max-w-screen-xl mx-auto px-4 mt-1">
+    
     <!-- Estado de carregamento -->
-    <div v-if="loading" class="carousel-skeleton">
+    <div v-if="showSkeleton" class="carousel-skeleton">
       <div class="skeleton-image">
         <div class="skeleton-spinner">
           <svg class="animate-spin h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24">
@@ -318,7 +437,7 @@ const retry = () => {
     </div>
 
     <!-- Estado sem notícias -->
-    <div v-else-if="newsItems.length === 0" class="carousel-empty">
+    <div v-else-if="showEmpty" class="carousel-empty">
       <div class="empty-content">
         <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -351,7 +470,7 @@ const retry = () => {
     
     <!-- Carrossel -->
     <div 
-      v-else
+      v-if="showCarousel"
       class="carousel-container"
       @mouseenter="stopAutoPlay"
       @mouseleave="isPlaying && startAutoPlay()"
@@ -378,20 +497,14 @@ const retry = () => {
           :class="{ 'slide-active': index === currentIndex }"
           :aria-hidden="index !== currentIndex"
         >
-          <!-- Imagem com lazy loading melhorado -->
+          <!-- Container de imagem -->
           <div class="slide-image-container">
-            <div v-if="news.loading && lazy" class="image-placeholder">
-              <svg class="placeholder-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
             <img 
-              v-show="!news.loading || !lazy"
               :src="news.image" 
               :alt="news.title" 
               class="slide-image"
-              :loading="lazy && index !== currentIndex ? 'lazy' : 'eager'"
+              :class="{ 'image-loading': news.image === PLACEHOLDER_LOCAL && news.originalImage }"
+              :loading="index === currentIndex ? 'eager' : 'lazy'"
               @load="handleImageLoad(index)"
               @error="(e) => handleImageError(e, index)"
             >
@@ -456,7 +569,7 @@ const retry = () => {
         </button>
       </template>
 
-      <!-- Indicadores melhorados -->
+      <!-- Indicadores -->
       <div v-if="showControls" class="indicators-container" role="tablist">
         <button 
           v-for="(_, index) in newsItems" 
@@ -485,9 +598,33 @@ const retry = () => {
 </template>
 
 <style scoped>
+/* Wrapper para garantir espaço reservado */
+.carousel-wrapper {
+  min-height: 12rem;
+}
+
+@media (min-width: 640px) {
+  .carousel-wrapper {
+    min-height: 16rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .carousel-wrapper {
+    min-height: 20rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-wrapper {
+    min-height: 24rem;
+  }
+}
+
 /* Container principal */
 .carousel-container {
   @apply relative shadow-xl overflow-hidden w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 /* Estados de loading/error/empty */
@@ -569,16 +706,15 @@ const retry = () => {
   @apply relative w-full;
 }
 
+/* ✨ MELHORADO: Imagem sem flicker */
 .slide-image {
   @apply w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover transition-opacity duration-300;
+  opacity: 1;
 }
 
-.image-placeholder {
-  @apply absolute inset-0 bg-gray-200 flex items-center justify-center;
-}
-
-.placeholder-icon {
-  @apply h-12 w-12 text-gray-400;
+.image-loading {
+  filter: brightness(0.98) contrast(1.02);
+  transition: filter 0.5s ease-in-out;
 }
 
 .slide-overlay {
@@ -602,7 +738,7 @@ const retry = () => {
 }
 
 .link-arrow {
-  @apply w-4 h-4 ml-1 transition-transform group-hover:translate-x-1;
+  @apply w-4 h-4 ml-1 transition-transform;
 }
 
 /* Controles de navegação */
@@ -668,6 +804,17 @@ const retry = () => {
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .transition-transform {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -676,6 +823,14 @@ const retry = () => {
 .sr-only {
   @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
   clip: rect(0, 0, 0, 0);
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Responsividade */
@@ -722,12 +877,84 @@ const retry = () => {
   .nav-button,
   .indicator,
   .slide-image,
-  .link-arrow {
+  .link-arrow,
+  .carousel-container {
     @apply transition-none;
+    animation: none !important;
   }
   
   .progress-fill {
     animation: none;
+  }
+}
+
+/* controle de altura mínima */
+.carousel-skeleton,
+.carousel-error,
+.carousel-empty,
+.carousel-container {
+  min-height: 12rem;
+}
+
+@media (min-width: 640px) {
+  .carousel-skeleton,
+  .carousel-error,
+  .carousel-empty,
+  .carousel-container {
+    min-height: 16rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .carousel-skeleton,
+  .carousel-error,
+  .carousel-empty,
+  .carousel-container {
+    min-height: 20rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-skeleton,
+  .carousel-error,
+  .carousel-empty,
+  .carousel-container {
+    min-height: 24rem;
+  }
+}
+
+/* Smooth loading transitions */
+.carousel-wrapper {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Performance otimizada para imagens */
+.slide-image {
+  will-change: opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Preload hint visual para placeholders locais */
+.image-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 </style>

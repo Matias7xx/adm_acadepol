@@ -184,7 +184,7 @@ onUnmounted(() => {
         >
           Últimas Notícias
           <span 
-            class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-[#bea55a] to-yellow-600 rounded-full" 
+            class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-[#bea55a] rounded-full" 
             aria-hidden="true"
           ></span>
         </h2>

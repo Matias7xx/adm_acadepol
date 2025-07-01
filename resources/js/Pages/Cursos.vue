@@ -88,7 +88,7 @@
             class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col relative h-[420px]"
             :class="{
               'ring-1 ring-[#bea55a] ring-offset-2 hover:shadow-lg': curso.status === 'aberto',
-              'bg-gray-100 opacity-80': curso.status === 'concluido' || curso.status === 'fechado'
+              'bg-gray-100 opacity-80': curso.status === 'concluído' || curso.status === 'em andamento'
             }"
           >
             <!-- Faixa de status -->
@@ -101,18 +101,26 @@
             
             <!-- Badge de curso concluído -->
             <div 
-              v-if="curso.status === 'concluido' || curso.status === 'fechado'" 
+              v-if="curso.status === 'concluído'" 
               class="absolute top-3 left-3 bg-gray-600 text-white px-3 py-1 rounded-full z-10"
             >
               <span class="text-xs font-medium">Concluído</span>
             </div>
 
-            <!-- Badge de curso fechado -->
+            <!-- Badge de curso em andamento -->
             <div 
-              v-if="curso.status === 'suspenso'" 
+              v-if="curso.status === 'em andamento'" 
+              class="absolute top-3 left-3 bg-green-600 text-white px-3 py-1 rounded-full z-10"
+            >
+              <span class="text-xs font-medium">Em andamento</span>
+            </div>
+
+            <!-- Badge de curso cancelado -->
+            <div 
+              v-if="curso.status === 'cancelado'" 
               class="absolute top-3 left-3 bg-yellow-600 text-white px-3 py-1 rounded-full z-10"
             >
-              <span class="text-xs font-medium">Suspenso</span>
+              <span class="text-xs font-medium">Cancelado</span>
             </div>
             
             <!-- Imagem do curso -->
@@ -122,24 +130,24 @@
                 :alt="`Curso de ${curso.nome}`" 
                 class="w-full h-full object-cover" 
                 :class="{
-                  'filter grayscale': curso.status === 'concluido' || curso.status === 'fechado',
-                  'filter grayscale opacity-75': curso.status === 'suspenso'
+                  'filter grayscale': curso.status === 'concluído' || curso.status === 'em andamento',
+                  'filter grayscale opacity-75': curso.status === 'cancelado'
                 }"
                 @error="handleImageError"
               />
               <div 
                 class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"
                 :class="{
-                  'opacity-40': curso.status === 'concluido' || curso.status === 'fechado',
-                  'opacity-50': curso.status === 'suspenso'
+                  'opacity-40': curso.status === 'concluído' || curso.status === 'em andamento',
+                  'opacity-50': curso.status === 'cancelado'
                 }"
               ></div>
               <div class="absolute bottom-0 left-0 right-0 p-3">
                 <span 
                   class="bg-[#bea55a] text-white text-xs px-2 py-1 rounded uppercase font-bold"
                   :class="{
-                    'bg-gray-500': curso.status === 'concluido' || curso.status === 'fechado',
-                    'bg-yellow-600': curso.status === 'suspenso'
+                    'bg-gray-500': curso.status === 'concluído' || curso.status === 'em andamento',
+                    'bg-yellow-600': curso.status === 'cancelado'
                   }"
                 >
                   Acadepol
@@ -152,7 +160,7 @@
               <h3 
                 class="text-lg font-bold mb-3 line-clamp-2"
                 :class="{
-                  'text-gray-600': curso.status === 'concluido' || curso.status === 'fechado' || curso.status === 'suspenso',
+                  'text-gray-600': curso.status === 'concluído' || curso.status === 'em andamento' || curso.status === 'cancelado',
                   'text-gray-800': curso.status === 'aberto'
                 }"
               >
@@ -162,7 +170,7 @@
               <p 
                 class="text-sm mb-4 line-clamp-3 flex-grow"
                 :class="{
-                  'text-gray-500': curso.status === 'concluido' || curso.status === 'fechado' || curso.status === 'suspenso',
+                  'text-gray-500': curso.status === 'concluído' || curso.status === 'em andamento' || curso.status === 'cancelado',
                   'text-gray-600': curso.status === 'aberto'
                 }"
               >
@@ -209,7 +217,7 @@
                 </Link>
                 
                 <Link 
-                  v-else-if="curso.status === 'fechado'"
+                  v-else-if="curso.status === 'em andamento'"
                   :href="`/cursos/${curso.id}`" 
                   class="w-full bg-gray-500 text-white py-2 rounded font-medium hover:bg-gray-600 transition-colors flex items-center justify-center text-sm"
                 >
@@ -220,7 +228,7 @@
                 </Link>
                 
                 <div 
-                  v-else-if="curso.status === 'concluido'"
+                  v-else-if="curso.status === 'concluído'"
                   class="w-full bg-gray-400 text-white py-2 rounded font-medium flex items-center justify-center text-sm cursor-default"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,13 +238,13 @@
                 </div>
 
                 <div 
-                  v-else-if="curso.status === 'suspenso'"
+                  v-else-if="curso.status === 'cancelado'"
                   class="w-full bg-yellow-500 text-white py-2 rounded font-medium flex items-center justify-center text-sm cursor-default"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.888-.833-2.558 0L3.348 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
-                  Suspenso
+                  Cancelado
                 </div>
 
                 <Link 

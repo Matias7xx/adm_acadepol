@@ -14,7 +14,7 @@ class NoticiaController extends Controller
     /**
      * Lista todas as notícias publicadas no site PÚBLICO
      */
-        public function index(Request $request)
+    public function index(Request $request)
     {
         $noticias = Noticia::publicado()
             ->when($request->search, function($query, $search) {
@@ -105,7 +105,7 @@ class NoticiaController extends Controller
      * Retorna as últimas notícias em formato JSON para componentes
      * Usado na HOME para exibir as 3 últimas notícias
      */
-        public function ultimasNoticias()
+    public function ultimasNoticias()
     {
         $cacheKey = 'noticias_destaque_banner';
         
@@ -164,50 +164,45 @@ class NoticiaController extends Controller
         return response()->json($noticias);
     }
 
-        public function apiNoticias(Request $request)
+    /**
+     * notícias com paginação
+     */
+    public function apiNoticias(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 6); // 6 como padrão
         $search = $request->input('search', '');
         $page = $request->input('page', 1);
         
         // Validar e limitar os itens por página
-        $perPage = min(max($perPage, 5), 10);
+        $perPage = min(max($perPage, 3), 10);
         
-        // Criar chave de cache única baseada nos parâmetros
-        $cacheKey = 'noticias_api_' . md5($perPage . '_' . $search . '_' . $page);
-        
-        $result = \Cache::remember($cacheKey, now()->addMinutes(15), function() use ($request, $perPage) {
-            $noticias = Noticia::where('status', 'publicado')
-                ->where('data_publicacao', '<=', now())
-                ->whereNull('deleted_at')
-                ->when($request->search, function($query, $search) {
-                    $query->where(function($q) use ($search) {
-                        $q->where('titulo', 'like', "%{$search}%")
-                        ->orWhere('descricao_curta', 'like', "%{$search}%");
-                    });
-                })
-                ->orderBy('data_publicacao', 'desc')
-                ->orderBy('created_at', 'desc')
-                ->orderBy('id', 'desc')
-                ->paginate($perPage);
+        $noticias = Noticia::where('status', 'publicado')
+            ->where('data_publicacao', '<=', now())
+            ->whereNull('deleted_at')
+            ->when($search, function($query, $search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('titulo', 'like', "%{$search}%")
+                    ->orWhere('descricao_curta', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('data_publicacao', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
 
-            // Transformar os dados para o formato esperado pelo frontend
-            $noticias->getCollection()->transform(function($noticia) {
-                return [
-                    'id' => $noticia->id,
-                    'titulo' => $noticia->titulo,
-                    'descricao_curta' => $noticia->descricao_curta,
-                    'imagem' => $noticia->imagem ? UploadHelper::getPublicUrl($noticia->imagem) : null,
-                    'data_publicacao' => $noticia->data_formatada,
-                    'destaque' => $noticia->destaque,
-                    'visualizacoes' => $noticia->visualizacoes
-                ];
-            });
-            
-            return $noticias;
+        $noticias->getCollection()->transform(function($noticia) {
+            return [
+                'id' => $noticia->id,
+                'titulo' => $noticia->titulo,
+                'descricao_curta' => $noticia->descricao_curta,
+                'imagem' => $noticia->imagem ? UploadHelper::getPublicUrl($noticia->imagem) : null,
+                'data_publicacao' => $noticia->data_formatada,
+                'destaque' => $noticia->destaque,
+                'visualizacoes' => $noticia->visualizacoes
+            ];
         });
         
-        return response()->json($result);
+        return response()->json($noticias);
     }
 
     /**
@@ -237,6 +232,9 @@ class NoticiaController extends Controller
         }
     }
 
+    /**
+     * Método para invalidar caches
+     */
     public static function invalidarTodosOsCaches()
     {
         try {
@@ -244,10 +242,29 @@ class NoticiaController extends Controller
             \Cache::forget('noticias_home_lista');       // Lista da home
             
             // Invalidar caches da API paginada
-            for ($page = 1; $page <= 10; $page++) {
-                for ($perPage = 3; $perPage <= 6; $perPage++) {
-                    $cacheKey = 'noticias_api_' . md5($perPage . '__' . $page);
-                    \Cache::forget($cacheKey);
+            for ($page = 1; $page <= 20; $page++) {
+                for ($perPage = 3; $perPage <= 10; $perPage++) {
+                    // Diferentes combinações de chave de cache
+                    $patterns = [
+                        'noticias_api_' . md5($perPage . '__' . $page),
+                        'noticias_api_' . md5($perPage . '_' . '' . '_' . $page),
+                        'noticias_api_' . md5($perPage . '_' . $page),
+                    ];
+                    
+                    foreach ($patterns as $pattern) {
+                        \Cache::forget($pattern);
+                    }
+                }
+            }
+            
+            // Invalidar caches com termos de busca comuns
+            $searchTerms = ['', 'noticia', 'novo', 'curso', 'treinamento', 'edital'];
+            foreach ($searchTerms as $term) {
+                for ($page = 1; $page <= 10; $page++) {
+                    for ($perPage = 3; $perPage <= 10; $perPage++) {
+                        $cacheKey = 'noticias_api_' . md5($perPage . '_' . $term . '_' . $page);
+                        \Cache::forget($cacheKey);
+                    }
                 }
             }
             

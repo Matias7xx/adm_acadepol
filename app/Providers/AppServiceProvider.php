@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Http\Request;
+use App\Models\Noticia;
+use App\Observers\NoticiaObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -61,6 +63,9 @@ class AppServiceProvider extends ServiceProvider
             // Valida se a matrícula tem pelo menos 7 caracteres e contém apenas números
             return preg_match('/^[0-9]{7,}$/', $value);
         }, 'A :attribute deve ter pelo menos 7 caracteres e conter apenas números.');
+
+        // Registrar o Observer para Notícia
+        Noticia::observe(NoticiaObserver::class);
     }
     
     /**

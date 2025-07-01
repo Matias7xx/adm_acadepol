@@ -60,7 +60,7 @@ function toggleDestaque() {
   formDestaque.patch(route("admin.noticias.toggle-destaque", props.noticia.id), {
     preserveScroll: true,
     onSuccess: () => {
-      destaqueMessage.value = { type: 'success', text: `Notícia ${props.noticia.destaque ? 'removida do' : 'marcada como'} destaque!` };
+      destaqueMessage.value = { type: 'success', text: `Notícia ${props.noticia.destaque ? 'marcada como' : 'removida do'} destaque!` };
       isTogglingDestaque.value = false;
     },
     onError: () => {

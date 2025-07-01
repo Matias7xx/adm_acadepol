@@ -6,7 +6,7 @@
         v-model="searchQuery"
         @keyup.enter="searchOnPage"
         placeholder="Pesquisar na página..."
-        class="pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 w-full transition-all bg-white text-gray-800 border-gray-300 shadow-sm"
+        class="pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-[#bea55a] focus:border-[#bea55a] w-full transition-all bg-white text-gray-800 border-gray-300 shadow-sm"
       />
       <div 
         class="absolute left-3 top-2.5 text-gray-500 cursor-pointer hover:text-yellow-500"

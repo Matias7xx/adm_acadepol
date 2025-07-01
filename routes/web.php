@@ -13,6 +13,10 @@ use App\Http\Controllers\UploadController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\URL;
+
+URL::forceScheme(env('HTTP_SCHEMA'));
+URL::forceRootUrl(env('APP_URL'));
 
 /*
 |--------------------------------------------------------------------------
@@ -30,9 +34,18 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Rotas para upload do CKEditor
 Route::post('/api/upload-ckeditor-images', [UploadController::class, 'uploadCKEditorImage'])
     ->middleware(['web']); // Apenas middleware web para CSRF
 
+Route::post('/api/upload-ckeditor-files', [UploadController::class, 'uploadCKEditorFile'])
+    ->middleware(['web']); // Apenas middleware web para CSRF
+
+Route::get('/download', [App\Http\Controllers\DownloadController::class, 'downloadFile'])
+    ->name('file.download'); //Download do file na notícia
+    
+Route::get('/view-file', [App\Http\Controllers\DownloadController::class, 'viewFile'])
+    ->name('file.view'); //Visualizar o file da notícia
 /*
 |--------------------------------------------------------------------------
 | API Públicas

@@ -81,18 +81,21 @@ class NoticiaController extends Controller
             'status' => 'required|in:rascunho,publicado,arquivado',
         ]);
 
-        // Processar imagens do conteúdo primeiro
-        $validated['conteudo'] = $this->processContentImages($validated['conteudo'], $validated['titulo']);
+        // Processar imagens e documentos do conteúdo primeiro
+        $validated['conteudo'] = $this->processContentMedia($validated['conteudo'], $validated['titulo']);
 
-        // Sanitizar o HTML
+        // Sanitizar o HTML para suportar documentos
         $validated['conteudo'] = Purifier::clean($validated['conteudo'], [
-            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,h1,h2,h3,h4,h5,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div,span[class],video[src|controls|width|height],source[src|type]',
+            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target|download|rel],ul,ol,li,h1,h2,h3,h4,h5,h6,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div[class|style],span[class|style],video[src|controls|width|height],source[src|type],table,tr,td[colspan|rowspan],th[colspan|rowspan]',
             'HTML.SafeIframe' => true,
             'URI.SafeIframeRegexp' => '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%',
-            'AutoFormat.RemoveEmpty' => true,
-            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right',
+            'AutoFormat.RemoveEmpty' => false, // Mudou para false para preservar estrutura dos documentos
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right,border,border-radius,padding,display,flex-direction,align-items,justify-content,flex,gap,transition,box-sizing,transform',
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.Linkify' => true,
+            'Attr.AllowedClasses' => 'document-download', // Permitir classe específica dos documentos
+            'HTML.TidyLevel' => 'none',
+            'HTML.TargetBlank' => true, // Permite target="_blank"
         ]);
         
         // Processar upload de imagem de capa
@@ -188,18 +191,21 @@ class NoticiaController extends Controller
         $tituloNovo = $validated['titulo'];
         $tituloMudou = $tituloAntigo !== $tituloNovo;
 
-        //Processar apenas imagens base64 novas, não reprocessar URLs existentes
-        $validated['conteudo'] = $this->processOnlyNewContentImages($validated['conteudo'], $validated['titulo']);
+        // Processar apenas imagens base64 novas e documentos temporários, não reprocessar URLs existentes
+        $validated['conteudo'] = $this->processOnlyNewContentMedia($validated['conteudo'], $validated['titulo']);
 
-        // Sanitizar o HTML
+        // Sanitizar o HTML para suportar documentos
         $validated['conteudo'] = Purifier::clean($validated['conteudo'], [
-            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target],ul,ol,li,h1,h2,h3,h4,h5,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div,span[class],video[src|controls|width|height],source[src|type]',
+            'HTML.Allowed' => 'p,b,i,strong,em,u,a[href|title|target|download|rel],ul,ol,li,h1,h2,h3,h4,h5,h6,blockquote,img[src|alt|width|height|class],hr,br,iframe[src|width|height|frameborder|allowfullscreen],div[class|style],span[class|style],video[src|controls|width|height],source[src|type],table,tr,td[colspan|rowspan],th[colspan|rowspan]',
             'HTML.SafeIframe' => true,
             'URI.SafeIframeRegexp' => '%^(https?:)?//(www\.youtube\.com/embed/|player\.vimeo\.com/video/)%',
-            'AutoFormat.RemoveEmpty' => true,
-            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right',
+            'AutoFormat.RemoveEmpty' => false, // Mudou para false para preservar estrutura dos documentos
+            'CSS.AllowedProperties' => 'font,font-size,font-weight,font-style,font-family,text-decoration,padding-left,color,background-color,text-align,width,height,margin,margin-left,margin-right,border,border-radius,padding,display,flex-direction,align-items,justify-content,flex,gap,transition,box-sizing,transform',
             'AutoFormat.AutoParagraph' => true,
             'AutoFormat.Linkify' => true,
+            'Attr.AllowedClasses' => 'document-download', // Permitir classe específica dos documentos
+            'HTML.TidyLevel' => 'none',
+            'HTML.TargetBlank' => true, // Permite target="_blank"
         ]);
         
         // Remover imagem atual se solicitado
@@ -249,9 +255,9 @@ class NoticiaController extends Controller
         \Cache::forget('noticias_destaque_banner');
         $this->invalidateAllNoticiasCache();
 
-        // Se o título mudou, mover todas as imagens de conteúdo para nova pasta
+        // Se o título mudou, mover todas as imagens e documentos de conteúdo para nova pasta
         if ($tituloMudou) {
-            $this->moveContentImages($noticia->conteudo, $tituloAntigo, $tituloNovo);
+            $this->moveContentMedia($noticia->conteudo, $tituloAntigo, $tituloNovo);
             
             // Limpar pasta antiga
             $pastaAntiga = 'noticias/' . UploadHelper::sanitizeFolderName($tituloAntigo);
@@ -266,9 +272,25 @@ class NoticiaController extends Controller
     }
 
     /**
- * Processa APENAS imagens base64 novas, preservando URLs existentes
- */
-private function processOnlyNewContentImages($html, $tituloNoticia)
+     * Processa APENAS imagens base64 novas e documentos temporários, preservando URLs existentes
+     */
+    private function processOnlyNewContentMedia($html, $tituloNoticia)
+    {
+        if (!$html) return $html;
+        
+        // Processar imagens base64 (imagens realmente novas)
+        $html = $this->processOnlyNewContentImages($html, $tituloNoticia);
+        
+        // Processar documentos temporários (que estão na pasta temp)
+        $html = $this->processTemporaryDocuments($html, $tituloNoticia);
+        
+        return $html;
+    }
+
+    /**
+     * Processa APENAS imagens base64 novas, preservando URLs existentes
+     */
+    private function processOnlyNewContentImages($html, $tituloNoticia)
     {
         if (!$html) return $html;
         
@@ -304,6 +326,43 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
         return $html;
     }
 
+    /**
+     * Processa documentos temporários (que estão na pasta temp) movendo para pasta definitiva
+     */
+    private function processTemporaryDocuments($html, $tituloNoticia)
+    {
+        if (!$html) return $html;
+        
+        // Busca documentos que estão na pasta temp
+        preg_match_all('/<a[^>]+href="([^"]*\/storage\/noticias\/temp\/[^"]+)"[^>]*>/i', $html, $matches, PREG_SET_ORDER);
+        
+        foreach ($matches as $match) {
+            $tempUrl = $match[1];
+            
+            // Extrair o caminho relativo do storage
+            $relativePath = str_replace('/storage/', '', parse_url($tempUrl, PHP_URL_PATH));
+            
+            // Verificar se o arquivo realmente existe na pasta temp
+            if (Storage::exists($relativePath)) {
+                // Mover arquivo da pasta temp para pasta definitiva da notícia
+                $newPath = UploadHelper::moveImage(
+                    $relativePath,
+                    'noticias',
+                    $tituloNoticia,
+                    'files'
+                );
+                
+                if ($newPath) {
+                    // Substituir a URL temporária pela URL definitiva
+                    $newUrl = UploadHelper::getPublicUrl($newPath);
+                    $html = str_replace($tempUrl, $newUrl, $html);
+                }
+            }
+        }
+        
+        return $html;
+    }
+
     public function destroy(Noticia $noticia)
     {
         $this->authorize('adminDelete', $noticia);
@@ -313,8 +372,8 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
             UploadHelper::deleteImage($noticia->imagem);
         }
         
-        // Remover imagens do conteúdo
-        $this->removeContentImages($noticia->conteudo);
+        // Remover imagens e documentos do conteúdo
+        $this->removeContentMedia($noticia->conteudo);
         
         $tituloNoticia = $noticia->titulo;
         $noticia->delete();
@@ -347,6 +406,22 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
         
         return redirect()->back()
             ->with('message', $noticia->destaque ? 'Notícia destacada.' : 'Destaque removido.');
+    }
+
+    /**
+     * Processa imagens base64 e documentos temporários do conteúdo e os salva no storage
+     */
+    private function processContentMedia($html, $tituloNoticia)
+    {
+        if (!$html) return $html;
+        
+        // Processar imagens base64
+        $html = $this->processContentImages($html, $tituloNoticia);
+        
+        // Processar documentos temporários
+        $html = $this->processTemporaryDocuments($html, $tituloNoticia);
+        
+        return $html;
     }
 
     /**
@@ -384,6 +459,20 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
     }
 
     /**
+     * Move imagens e documentos do conteúdo quando o título da notícia muda
+     */
+    private function moveContentMedia($html, $tituloAntigo, $tituloNovo)
+    {
+        if (!$html) return;
+        
+        // Mover imagens
+        $this->moveContentImages($html, $tituloAntigo, $tituloNovo);
+        
+        // Mover documentos
+        $this->moveContentDocuments($html, $tituloAntigo, $tituloNovo);
+    }
+
+    /**
      * Move imagens do conteúdo quando o título da notícia muda
      */
     private function moveContentImages($html, $tituloAntigo, $tituloNovo)
@@ -410,6 +499,46 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
     }
 
     /**
+     * Move documentos do conteúdo quando o título da notícia muda
+     */
+    private function moveContentDocuments($html, $tituloAntigo, $tituloNovo)
+    {
+        if (!$html) return;
+        
+        // Buscar todos os documentos no conteúdo que são do nosso storage
+        preg_match_all('/<a[^>]+href="([^"]*\/storage\/noticias\/[^"]+)"[^>]*>/i', $html, $matches);
+        
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $docSrc) {
+                // Extrair o caminho relativo do storage
+                $relativePath = str_replace('/storage/', '', parse_url($docSrc, PHP_URL_PATH));
+                
+                // Mover documento para nova pasta
+                UploadHelper::moveImage(
+                    $relativePath,
+                    'noticias',
+                    $tituloNovo,
+                    'files'
+                );
+            }
+        }
+    }
+
+    /**
+     * Remove imagens e documentos do conteúdo de uma notícia
+     */
+    private function removeContentMedia($content)
+    {
+        if (!$content) return;
+        
+        // Remover imagens
+        $this->removeContentImages($content);
+        
+        // Remover documentos
+        $this->removeContentDocuments($content);
+    }
+
+    /**
      * Remove imagens do conteúdo de uma notícia
      */
     private function removeContentImages($content)
@@ -425,6 +554,27 @@ private function processOnlyNewContentImages($html, $tituloNoticia)
                 $relativePath = str_replace('/storage/', '', parse_url($imageSrc, PHP_URL_PATH));
                 
                 // Remover imagem
+                UploadHelper::deleteImage($relativePath);
+            }
+        }
+    }
+
+    /**
+     * Remove documentos do conteúdo de uma notícia
+     */
+    private function removeContentDocuments($content)
+    {
+        if (!$content) return;
+        
+        // Buscar todos os documentos no conteúdo que são do nosso storage
+        preg_match_all('/<a[^>]+href="([^"]*\/storage\/noticias\/[^"]+)"[^>]*>/i', $content, $matches);
+        
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $docSrc) {
+                // Extrair o caminho relativo do storage
+                $relativePath = str_replace('/storage/', '', parse_url($docSrc, PHP_URL_PATH));
+                
+                // Remover documento
                 UploadHelper::deleteImage($relativePath);
             }
         }

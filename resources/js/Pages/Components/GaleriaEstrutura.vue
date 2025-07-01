@@ -139,7 +139,7 @@ export default {
   {
     id: 5,
     titulo: 'Auditório Principal',
-    descricao: 'Capacidade para 500 pessoas, equipado com sistema de som e projeção',
+    descricao: 'Capacidade para 300 pessoas, equipado com sistema de som e projeção',
     categoria: 'Auditório',
     url: 'https://www.policiacivil.pb.gov.br/noticias/acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestra-sobre-administracao-publica/22092023-acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestr-1.jpg/@@images/6e0e85f7-3f3e-4bf8-a70c-3f35c0ab93db.jpeg'
   },
