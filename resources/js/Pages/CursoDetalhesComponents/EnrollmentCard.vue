@@ -31,7 +31,6 @@ const handleEnrollment = (cursoId) => {
     preserveState: true,
     preserveScroll: true,
     onError: (errors) => {
-      console.log('Erros recebidos:', errors); // Para depuração
       
       if (errors.unauthenticated) {
         window.sessionStorage.setItem('intended_curso_id', cursoId);
@@ -44,7 +43,6 @@ const handleEnrollment = (cursoId) => {
       }
     },
     onSuccess: () => {
-      console.log('Redirecionamento bem-sucedido'); // Para depuração
     }
   });
 };
@@ -92,7 +90,7 @@ const formatDate = (date) => {
     <div v-if="status === 'aberto' && curso && curso.id">
       <button 
         @click="handleEnrollment(curso.id)"
-        class="block w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-4 rounded-md text-center transition-colors duration-200"
+        class="block w-full bg-[#bea55a] hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-md text-center transition-colors duration-200"
       >
         Inscrever-se
       </button>

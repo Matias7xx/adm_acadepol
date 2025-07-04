@@ -35,6 +35,7 @@ class AuthServiceProvider extends ServiceProvider
         'App\Models\Noticia' => 'App\Policies\NoticiaPolicy',
         'App\Models\Contato' => 'App\Policies\ContatoPolicy',
         'App\Models\Visitante' => 'App\Policies\VisitantePolicy',
+        'App\Models\Certificado' => 'App\Policies\CertificadoPolicy'
     ];
 
     /**

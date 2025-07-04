@@ -25,4 +25,17 @@ class Matricula extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function certificado()
+    {
+        return $this->hasOne(Certificado::class);
+    }
+
+    /**
+     * Verificar se a matrícula tem certificado
+     */
+    public function temCertificado()
+    {
+        return $this->certificado()->exists();
+    }
+
 }

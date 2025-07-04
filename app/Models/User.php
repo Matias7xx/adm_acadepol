@@ -128,4 +128,9 @@ public function sendPasswordResetNotification($token)
 {
     $this->notify(new CustomResetPassword($token));
 }
+
+public function certificados()
+{
+    return $this->hasMany(Certificado::class, 'user_id');
+}
 }

@@ -131,11 +131,10 @@ const fetchDestacadas = async (attempt = 1) => {
       }))
       .filter(item => item.title && item.id);
     
-    if (formattedItems.length === 0) {
-      throw new Error('Nenhuma notícia válida encontrada');
-    }
+    // Se não há notícias válidas, define array vazio e exibe estado "sem notícias"
+    newsItems.value = formattedItems;
 
-    // Preload das imagens principais antes de mostrar o carrossel
+    // Preload das imagens apenas se houver notícias
     if (formattedItems.length > 0) {
       // Preload da primeira imagem (slide atual)
       const firstItem = formattedItems[0];
@@ -166,8 +165,6 @@ const fetchDestacadas = async (attempt = 1) => {
         }
       });
     }
-    
-    newsItems.value = formattedItems;
     
     if (currentIndex.value >= newsItems.value.length) {
       currentIndex.value = 0;

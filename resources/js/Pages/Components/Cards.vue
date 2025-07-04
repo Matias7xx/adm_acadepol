@@ -1,29 +1,3 @@
-<script setup>
-import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
-
-const capacitacao = ref([
-  { id: 1, titulo: 'Cursos', link: '/cursos' },
-  { id: 2, titulo: 'Certificados', link: '/certificados' },
-  /* { id: 3, titulo: 'Banco de Currículos', link: '/banco-de-curriculos' }, */
-])
-
-const formacao = ref([
-  { id: 1, titulo: 'Concursos', link: '/concursos' },
-  { id: 2, titulo: 'Manual do Aluno', link: '/manual-aluno' },
-])
-
-const utilidade = ref([
-  { id: 1, titulo: 'Boletim Interno', link: 'https://policiacivil.pb.gov.br/boletim-interno-1' },
-  { id: 2, titulo: 'Delegacia Online', link: 'https://delegaciaonline.pb.gov.br/' },
-  { id: 3, titulo: 'Disque Denúncia', link: 'https://policiacivil.pb.gov.br/servicos/disque-denuncia-197' },
-  { id: 4, titulo: 'Portal do Servidor', link: 'https://portaldoservidor.pb.gov.br/' },
-  { id: 5, titulo: 'Certidão de Antecedentes Criminais', link: 'https://www.policiacivil.pb.gov.br/servicos/certidao-de-antecedentes-criminais' },
-  { id: 6, titulo: 'Emissão de RG', link: 'https://www.policiacivil.pb.gov.br/servicos/emissao-de-rg' },
-  { id: 7, titulo: 'Fale Conosco', link: '/fale-conosco', novo: true },
-])
-</script>
-
 <template>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto px-4">
     <!-- Card Capacitação e Formação -->
@@ -36,7 +10,9 @@ const utilidade = ref([
         <div class="divide-y divide-gray-100">
           <div v-for="item in capacitacao" :key="item.id" 
                class="hover:bg-gray-50 transition-colors duration-150">
-            <Link :href="item.link" 
+            <!-- Link para Certificados: <a> se não autenticado, <Link> se autenticado -->
+            <Link v-if="item.titulo !== 'Certificados' || isAuthenticated"
+               :href="item.link" 
                class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors">
               <span class="mr-3 text-[#bea55a]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -45,6 +21,18 @@ const utilidade = ref([
               </span> 
               {{ item.titulo }}
             </Link>
+            
+            <!-- <a> tag para Certificados quando não autenticado -->
+            <a v-else
+               :href="item.link" 
+               class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors">
+              <span class="mr-3 text-[#bea55a]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </span> 
+              {{ item.titulo }}
+            </a>
           </div>
         </div>
       </div>
@@ -99,6 +87,33 @@ const utilidade = ref([
   </div>
 </template>
 
-<style scoped>
-/* Estilos personalizados */
-</style>
+<script setup>
+import { ref, computed } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
+
+const page = usePage()
+
+// Verificar se o usuário está autenticado
+const isAuthenticated = computed(() => page.props.auth?.user)
+
+const capacitacao = ref([
+  { id: 1, titulo: 'Cursos', link: '/cursos' },
+  { id: 2, titulo: 'Certificados', link: '/certificados/meus', requireAuth: true },
+  /* { id: 3, titulo: 'Banco de Currículos', link: '/banco-de-curriculos' }, */
+])
+
+const formacao = ref([
+  { id: 1, titulo: 'Concursos', link: '/concursos' },
+  { id: 2, titulo: 'Manual do Aluno', link: '/manual-aluno' },
+])
+
+const utilidade = ref([
+  { id: 1, titulo: 'Boletim Interno', link: 'https://policiacivil.pb.gov.br/boletim-interno-1' },
+  { id: 2, titulo: 'Delegacia Online', link: 'https://delegaciaonline.pb.gov.br/' },
+  { id: 3, titulo: 'Disque Denúncia', link: 'https://policiacivil.pb.gov.br/servicos/disque-denuncia-197' },
+  { id: 4, titulo: 'Portal do Servidor', link: 'https://portaldoservidor.pb.gov.br/' },
+  { id: 5, titulo: 'Certidão de Antecedentes Criminais', link: 'https://www.policiacivil.pb.gov.br/servicos/certidao-de-antecedentes-criminais' },
+  { id: 6, titulo: 'Emissão de RG', link: 'https://www.policiacivil.pb.gov.br/servicos/emissao-de-rg' },
+  { id: 7, titulo: 'Fale Conosco', link: '/fale-conosco', novo: true },
+])
+</script>

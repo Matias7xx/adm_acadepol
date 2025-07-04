@@ -19,6 +19,7 @@ use App\Http\Middleware\Admin\HandleInertiaAdminRequests;
 use App\Http\Middleware\HasAccessAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\CertificadoController;
 use Inertia\Inertia;
 
 /*
@@ -47,6 +48,10 @@ Route::group([
         Route::get('edit-account-info', 'accountInfo')->name('account.info');
         Route::post('edit-account-info', 'accountInfoStore')->name('account.info.store');
         Route::post('change-password', 'changePasswordStore')->name('account.password.store');
+
+        // Rotas para gerenciar certificados do usuário
+        Route::post('user/{user}/certificados', 'adicionarCertificado')->name('certificados.adicionar.usuario');
+        Route::delete('user/{user}/certificados/{certificado}', 'removerCertificado')->name('certificados.remover.usuario');
     });
     
     // Funções e Permissões
@@ -62,8 +67,6 @@ Route::group([
     // Menus
     Route::resource('menu', MenuController::class)->except(['show']);
     Route::resource('menu.item', MenuItemController::class)->except(['show']);
-    
-    
     
     // Mídia
     Route::resource('media', MediaController::class);
@@ -82,8 +85,8 @@ Route::group([
 
     // Matrículas
     Route::prefix('matriculas')->group(function () {
-        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index'); //Não será usada
-        Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso'); //Será usada, recupera curso específico (ID)
+        Route::get('/', [MatriculaController::class, 'index'])->name('matriculas.index');
+        Route::get('/curso/{curso}', [MatriculaController::class, 'index'])->name('matriculas.curso');
         Route::get('/{id}', [MatriculaController::class, 'show'])->name('matriculas.show');
         Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
         Route::patch('/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
@@ -91,6 +94,13 @@ Route::group([
         
         Route::get('/relatorio/{curso}/pdf', [MatriculaRelatorioController::class, 'gerarRelatorioPDF'])->name('matriculas.relatorio.pdf');
         Route::get('/relatorio/{curso}/excel', [MatriculaRelatorioController::class, 'gerarRelatorioExcel'])->name('matriculas.relatorio.excel');
+    });
+
+    // Certificados - Administrador
+    Route::prefix('certificados')->name('certificados.')->group(function () {
+        Route::post('/gerar/{matricula}', [CertificadoController::class, 'gerar'])->name('gerar');
+        Route::delete('/{certificado}', [CertificadoController::class, 'excluir'])->name('excluir');
+        Route::get('/estrutura', [CertificadoController::class, 'listarEstrutura'])->name('estrutura');
     });
     
     /*

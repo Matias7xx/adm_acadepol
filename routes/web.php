@@ -10,6 +10,7 @@ use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\ContatoController;
 use App\Http\Controllers\RequerimentoController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\CertificadoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -46,6 +47,7 @@ Route::get('/download', [App\Http\Controllers\DownloadController::class, 'downlo
     
 Route::get('/view-file', [App\Http\Controllers\DownloadController::class, 'viewFile'])
     ->name('file.view'); //Visualizar o file da notícia
+
 /*
 |--------------------------------------------------------------------------
 | API Públicas
@@ -164,9 +166,9 @@ Route::controller(VisitanteController::class)->prefix('visitante')->name('visita
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
+    /* Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
-    })->name('dashboard');
+    })->name('dashboard'); */
 
     // Perfil do usuário
     Route::controller(ProfileController::class)->group(function () {
@@ -199,6 +201,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/novo', 'create')->name('create');
         Route::post('/', 'store')->name('store');
         Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
+    });
+
+    // Certificados - Acesso autenticado
+    Route::controller(CertificadoController::class)->prefix('certificados')->name('certificados.')->group(function () {
+        Route::get('/meus', 'meusCertificados')->name('meus');
+        Route::get('/{certificado}/download', 'download')->name('download');
     });
 });
 

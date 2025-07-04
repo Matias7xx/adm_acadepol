@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
+use App\Models\Certificado;
+use App\Models\Curso;
+use App\Helpers\CertificadoHelper;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 class UserController extends Controller
 {
     /**
@@ -97,14 +104,25 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $this->authorize('adminView', $user);
-        $roles = Role::all()->pluck('name', 'id');
-        $userHasRoles = array_column(json_decode($user->roles, true), 'name');
+        // Carregar certificados e cursos
+        $certificados = Certificado::where('user_id', $user->id)
+            ->orderBy('data_emissao', 'desc')
+            ->get();
+        
+        $cursos = Curso::where('certificacao', true)
+            ->where('status', 'concluído')
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'carga_horaria']);
+        
+        $roles = Role::all();
+        $userHasRoles = array_column(json_decode($user->roles, true) ?: [], 'name');
 
         return Inertia::render('Admin/User/Show', [
             'user' => $user,
             'roles' => $roles,
             'userHasRoles' => $userHasRoles,
+            'certificados' => $certificados,
+            'cursos' => $cursos
         ]);
     }
 
@@ -235,5 +253,202 @@ class UserController extends Controller
         }
 
         return redirect()->route('admin.account.info')->with('message', __($message));
+    }
+
+    public function adicionarCertificado(Request $request, User $user)
+    {
+        try {
+            // Verificar permissão
+            $this->authorize('update', $user);
+            
+            // Validar dados incluindo campos para certificados livres
+            $validator = Validator::make($request->all(), [
+                'tipo_certificado' => 'required|in:curso_sistema,curso_externo',
+                'curso_id' => 'required_if:tipo_certificado,curso_sistema|nullable|exists:cursos,id',
+                'nome_curso_externo' => 'required_if:tipo_certificado,curso_externo|nullable|string|max:255',
+                'carga_horaria' => 'required|integer|min:1|max:2000',
+                'data_conclusao' => 'required|date|before_or_equal:today',
+                'certificado_pdf' => [
+                    'required',
+                    'file',
+                    'mimes:pdf',
+                    'max:10240' // 10MB máximo
+                ]
+            ], [
+                'tipo_certificado.required' => 'Selecione o tipo de certificado.',
+                'curso_id.required_if' => 'Selecione um curso do sistema.',
+                'curso_id.exists' => 'Curso selecionado não é válido.',
+                'nome_curso_externo.required_if' => 'Digite o nome do curso externo.',
+                'carga_horaria.required' => 'Informe a carga horária.',
+                'carga_horaria.integer' => 'A carga horária deve ser um número.',
+                'carga_horaria.min' => 'A carga horária deve ser no mínimo 1 hora.',
+                'carga_horaria.max' => 'A carga horária não pode ser maior que 2000 horas.',
+                'data_conclusao.required' => 'Informe a data de conclusão.',
+                'data_conclusao.date' => 'Data de conclusão inválida.',
+                'data_conclusao.before_or_equal' => 'A data de conclusão não pode ser no futuro.',
+                'certificado_pdf.required' => 'O arquivo PDF do certificado é obrigatório.',
+                'certificado_pdf.mimes' => 'O arquivo deve ser um PDF.',
+                'certificado_pdf.max' => 'O arquivo não pode ser maior que 10MB.'
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->with('error', 'Erro na validação: ' . implode(', ', $validator->errors()->all()));
+            }
+            
+            $validated = $validator->validated();
+            
+            // Validação específica por tipo de certificado
+            if ($validated['tipo_certificado'] === 'curso_sistema') {
+                if (empty($validated['curso_id'])) {
+                    return redirect()->back()->with('error', 'Selecione um curso do sistema.');
+                }
+                
+                $curso = Curso::findOrFail($validated['curso_id']);
+                $nomeCurso = $curso->nome;
+                $tipoOrigem = Certificado::TIPO_CURSO_SISTEMA;
+                
+                // Verificar se já existe certificado para este usuário e curso
+                $certificadoExistente = Certificado::where('user_id', $user->id)
+                    ->where('curso_id', $curso->id)
+                    ->first();
+                    
+                if ($certificadoExistente) {
+                    return redirect()->back()->with('error', 'Este usuário já possui certificado para este curso');
+                }
+            } else { // curso_externo
+                if (empty($validated['nome_curso_externo'])) {
+                    return redirect()->back()->with('error', 'Digite o nome do curso externo.');
+                }
+                
+                $nomeCurso = $validated['nome_curso_externo'];
+                $tipoOrigem = Certificado::TIPO_CURSO_EXTERNO;
+                $curso = null; // Para cursos externos não há registro na tabela cursos
+                
+                // Para cursos externos, verificar duplicação pelo nome
+                $certificadoExistente = Certificado::where('user_id', $user->id)
+                    ->where('nome_curso', $nomeCurso)
+                    ->where('tipo_origem', $tipoOrigem)
+                    ->first();
+                    
+                if ($certificadoExistente) {
+                    return redirect()->back()->with('error', 'Este usuário já possui certificado para este curso externo');
+                }
+            }
+            
+            // Gerar número único do certificado
+            $numeroCertificado = Certificado::gerarNumeroCertificado();
+            
+            // Usar helper para gerar caminho estruturado
+            $caminhoCompleto = CertificadoHelper::gerarCaminhoParaUsuario($user, $nomeCurso, $numeroCertificado);
+            
+            // Garantir que o diretório existe
+            if (!CertificadoHelper::criarEstruturaDiretorios($caminhoCompleto)) {
+                throw new \Exception('Não foi possível criar a estrutura de diretórios');
+            }
+            
+            // Extrair diretório e nome do arquivo
+            $diretorio = dirname($caminhoCompleto);
+            $nomeArquivo = basename($caminhoCompleto);
+            
+            // Salvar arquivo no storage
+            $arquivoSalvo = $request->file('certificado_pdf')->storeAs($diretorio, $nomeArquivo, 'local');
+            
+            if (!$arquivoSalvo) {
+                throw new \Exception('Falha ao salvar o arquivo do certificado');
+            }
+            
+            // Salvar registro no banco
+            $certificado = Certificado::create([
+                'matricula_id' => null,
+                'user_id' => $user->id,
+                'curso_id' => $curso ? $curso->id : null,
+                'numero_certificado' => $numeroCertificado,
+                'arquivo_path' => $caminhoCompleto,
+                'data_emissao' => now(),
+                'data_conclusao_curso' => $validated['data_conclusao'],
+                'carga_horaria' => $validated['carga_horaria'],
+                'nome_aluno' => $user->name,
+                'cpf_aluno' => $user->cpf,
+                'nome_curso' => $nomeCurso,
+                'tipo_origem' => $tipoOrigem,
+                'ativo' => true
+            ]);
+            
+            Log::info('Certificado adicionado manualmente pelo admin', [
+                'certificado_id' => $certificado->id,
+                'user_id' => $user->id,
+                'curso_id' => $curso ? $curso->id : null,
+                'tipo_origem' => $tipoOrigem,
+                'admin_id' => Auth::id(),
+                'arquivo_original' => $request->file('certificado_pdf')->getClientOriginalName(),
+                'caminho_final' => $caminhoCompleto
+            ]);
+            
+            return redirect()->back()->with('success', 'Certificado adicionado com sucesso!');
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao adicionar certificado para usuário', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id,
+                'admin_id' => Auth::id()
+            ]);
+            
+            return redirect()->back()->with('error', 'Erro ao processar certificado: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remover certificado de um usuário
+     */
+    public function removerCertificado(User $user, Certificado $certificado)
+    {
+        try {
+            // Verificar permissão
+            $this->authorize('update', $user);
+            
+            // Verificar se o certificado pertence ao usuário
+            if ($certificado->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Este certificado não pertence ao usuário selecionado');
+            }
+            
+            // Remover arquivo do storage
+            if ($certificado->arquivoExiste()) {
+                Storage::disk('local')->delete($certificado->arquivo_path);
+                
+                // Limpar diretórios vazios com helper
+                CertificadoHelper::limparDiretoriosVazios($certificado->arquivo_path);
+            }
+            
+            // Remover registro do banco
+            $certificadoInfo = [
+                'id' => $certificado->id,
+                'numero' => $certificado->numero_certificado,
+                'curso' => $certificado->nome_curso,
+                'arquivo_path' => $certificado->arquivo_path
+            ];
+            
+            $certificado->delete();
+            
+            Log::info('Certificado removido pelo admin', [
+                'certificado_info' => $certificadoInfo,
+                'user_id' => $user->id,
+                'admin_id' => Auth::id()
+            ]);
+            
+            return redirect()->back()->with('success', 'Certificado removido com sucesso!');
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao remover certificado do usuário', [
+                'error' => $e->getMessage(),
+                'certificado_id' => $certificado->id ?? null,
+                'user_id' => $user->id,
+                'admin_id' => Auth::id()
+            ]);
+            
+            return redirect()->back()->with('error', 'Erro ao remover certificado: ' . $e->getMessage());
+        }
     }
 }

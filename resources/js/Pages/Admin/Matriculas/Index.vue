@@ -15,13 +15,16 @@ import {
   mdiSwapHorizontal,
   mdiDownload,
   mdiFileDocument,
-  mdiChartLine
+  mdiChartLine,
+  mdiCertificate,
+  mdiUpload,
 } from "@mdi/js"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import FormField from "@/Components/FormField.vue"
 import BaseButtons from "@/Components/BaseButtons.vue"
 import RejeicaoMatriculaModal from '@/Pages/Components/RejeicaoMatriculaModal.vue';
+import UploadCertificadoModal from '@/Pages/Components/UploadCertificadoModal.vue';
 
 // Props
 const props = defineProps({
@@ -56,11 +59,13 @@ const relatorioForm = useForm({
   curso_id: ''
 });
 
+// Modal de upload de certificado
+const showUploadCertificadoModal = ref(false);
+const matriculaParaCertificado = ref(null);
+
 const getCursoAtual = () => {
   return props.cursoAtual?.id || null;
 };
-
-
 
 // Status de matrículas
 const statusLabels = {
@@ -315,6 +320,59 @@ const gerarRelatorioExcel = (cursoId) => {
     fecharModalRelatorio();
   }
 };
+
+// Função para verificar se pode gerar certificado
+const podeGerarCertificado = (matricula) => {
+  
+  if (!matricula.curso) {
+    return false;
+  }
+  
+  // Se já tem certificado, não pode gerar novamente
+  if (matricula.tem_certificado) {
+    return false;
+  }
+  
+  // Se o backend já calculou, usar o resultado dele
+  if (matricula.pode_gerar_certificado !== undefined) {
+    return matricula.pode_gerar_certificado;
+  }
+  
+  // Fallback: calcular no frontend
+  const statusAprovada = matricula.status === 'aprovada';
+  const temCertificacao = matricula.curso.certificacao === true || matricula.curso.certificacao === 1;
+  const cursoFinalizado = matricula.curso.status === 'concluído' ||
+                         matricula.curso_concluido ||
+                         (matricula.curso.data_fim && new Date(matricula.curso.data_fim) <= new Date());
+  
+  const podeGerar = statusAprovada && temCertificacao && cursoFinalizado;
+  
+  return podeGerar;
+};
+
+// Funções para upload de certificado
+const abrirModalUploadCertificado = (matricula) => {
+  matriculaParaCertificado.value = matricula;
+  showUploadCertificadoModal.value = true;
+};
+
+const fecharModalUploadCertificado = () => {
+  showUploadCertificadoModal.value = false;
+  matriculaParaCertificado.value = null;
+};
+
+const handleCertificadoSuccess = () => {
+  toast.success('Certificado inserido com sucesso!');
+  
+  // Atualizar o status local da matrícula
+  if (matriculaParaCertificado.value) {
+    const index = props.matriculas.data.findIndex(m => m.id === matriculaParaCertificado.value.id);
+    if (index !== -1) {
+      props.matriculas.data[index].tem_certificado = true;
+      props.matriculas.data[index].pode_gerar_certificado = false;
+    }
+  }
+}
 </script>
 
 <template>
@@ -459,6 +517,28 @@ const gerarRelatorioExcel = (cursoId) => {
                       outline
                       title="Mudar para Rejeitado"
                     />
+
+                    <!-- Botão para upload de certificado -->
+                    <BaseButton
+                      v-if="podeGerarCertificado(matricula)"
+                      @click="abrirModalUploadCertificado(matricula)"
+                      :icon="mdiUpload"
+                      small
+                      color="warning"
+                      outline
+                      title="Enviar Certificado"
+                    />
+                    
+                    <!-- Indicador de certificado já enviado -->
+                    <BaseButton
+                      v-else-if="matricula.tem_certificado"
+                      :icon="mdiCertificate"
+                      small
+                      color="success"
+                      disabled
+                      title="Certificado já foi inserido"
+                      label="Certificado Inserido"
+                    />
                   </template>
                   
                   <!-- Ações para status rejeitado -->
@@ -544,85 +624,93 @@ const gerarRelatorioExcel = (cursoId) => {
         @confirm="handleRejeicaoConfirmada"
       />
 
+      <!-- Modal de Upload de Certificado -->
+      <UploadCertificadoModal
+        :is-open="showUploadCertificadoModal"
+        :matricula="matriculaParaCertificado"
+        @close="fecharModalUploadCertificado"
+        @success="handleCertificadoSuccess"
+      />
+
       <!-- Modal de Relatórios -->
       <div 
-  v-if="showRelatorioModal" 
-  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
->
-  <div class="relative mx-auto p-6 border w-[400px] shadow-lg rounded-md bg-white dark:bg-gray-800">
-    <div class="mt-3">
-      <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-        <svg class="inline w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        Gerar Relatório de Servidores Inscritos
-      </h3>
-      
-      <div class="space-y-4">
-        <!-- Informação sobre o curso -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+      v-if="showRelatorioModal" 
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+      >
+        <div class="relative mx-auto p-6 border w-[400px] shadow-lg rounded-md bg-white dark:bg-gray-800">
+          <div class="mt-3">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+              <svg class="inline w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
+              Gerar Relatório de Servidores Inscritos
+            </h3>
+            
+            <div class="space-y-4">
+              <!-- Informação sobre o curso -->
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                      Curso: <strong>{{ cursoAtual?.nome || 'Curso Selecionado' }}</strong><br>
+                      Total de inscritos: <strong>{{ matriculasAprovadasCount }}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Formato do relatório -->
+              <FormField label="Formato do Relatório">
+                <div class="flex space-x-4">
+                  <label class="flex items-center">
+                    <input 
+                      type="radio" 
+                      v-model="relatorioForm.formato" 
+                      value="pdf"
+                      class="mr-2 text-blue-600"
+                    />
+                    <svg class="w-5 h-5 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"></path>
+                    </svg>
+                    PDF
+                  </label>
+                  <label class="flex items-center">
+                    <input 
+                      type="radio" 
+                      v-model="relatorioForm.formato" 
+                      value="excel"
+                      class="mr-2 text-blue-600"
+                    />
+                    <svg class="w-5 h-5 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Excel
+                  </label>
+                </div>
+              </FormField>
             </div>
-            <div class="ml-3">
-              <p class="text-sm text-blue-800 dark:text-blue-200">
-                Curso: <strong>{{ cursoAtual?.nome || 'Curso Selecionado' }}</strong><br>
-                Total de inscritos: <strong>{{ matriculasAprovadasCount }}</strong>
-              </p>
+            
+            <div class="flex justify-end gap-4 mt-6">
+              <BaseButton 
+                @click="gerarRelatorio" 
+                :label="`Gerar ${relatorioForm.formato.toUpperCase()}`"
+                :icon="mdiFileDocument"
+                color="success"
+              />
+              <BaseButton 
+                @click="fecharModalRelatorio" 
+                label="Cancelar"
+                color="white"
+              />
             </div>
           </div>
         </div>
-
-        <!-- Formato do relatório -->
-        <FormField label="Formato do Relatório">
-          <div class="flex space-x-4">
-            <label class="flex items-center">
-              <input 
-                type="radio" 
-                v-model="relatorioForm.formato" 
-                value="pdf"
-                class="mr-2 text-blue-600"
-              />
-              <svg class="w-5 h-5 mr-1 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"></path>
-              </svg>
-              PDF
-            </label>
-            <label class="flex items-center">
-              <input 
-                type="radio" 
-                v-model="relatorioForm.formato" 
-                value="excel"
-                class="mr-2 text-blue-600"
-              />
-              <svg class="w-5 h-5 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"></path>
-              </svg>
-              Excel
-            </label>
-          </div>
-        </FormField>
       </div>
-      
-      <div class="flex justify-end gap-4 mt-6">
-        <BaseButton 
-          @click="gerarRelatorio" 
-          :label="`Gerar ${relatorioForm.formato.toUpperCase()}`"
-          :icon="mdiFileDocument"
-          color="success"
-        />
-        <BaseButton 
-          @click="fecharModalRelatorio" 
-          label="Cancelar"
-          color="white"
-        />
-      </div>
-    </div>
-  </div>
-</div>
     </SectionMain>
   </LayoutAuthenticated>
 </template>

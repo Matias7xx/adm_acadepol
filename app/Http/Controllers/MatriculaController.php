@@ -55,6 +55,36 @@ class MatriculaController extends Controller
         ->paginate(10)
         ->appends($request->only(['search', 'status', 'curso_id']));
     
+    // dados para verificação de certificado
+    $matriculas->getCollection()->transform(function ($matricula) {
+        // Garantir que o curso está carregado
+        if (!$matricula->relationLoaded('curso')) {
+            $matricula->load('curso');
+        }
+        
+        // Verificar se já existe certificado para esta matrícula
+        $certificadoExistente = \App\Models\Certificado::where('matricula_id', $matricula->id)->exists();
+        
+        // Verificar se o curso está concluído
+        $cursoEstaConcluido = false;
+        if ($matricula->curso) {
+            // Verificar se status é "concluído" OU se a data fim já passou
+            $cursoEstaConcluido = $matricula->curso->status === 'concluído' || 
+                                 ($matricula->curso->data_fim && $matricula->curso->data_fim->isPast());
+        }
+        
+        // dados para o frontend
+        $matricula->curso_concluido = $cursoEstaConcluido;
+        $matricula->tem_certificado = $certificadoExistente;
+        $matricula->pode_gerar_certificado = $matricula->status === 'aprovada' && 
+                                           $matricula->curso && 
+                                           $matricula->curso->certificacao && 
+                                           $cursoEstaConcluido &&
+                                           !$certificadoExistente; // Só pode gerar se não existir
+        
+        return $matricula;
+    });
+    
     $cursos = Curso::select('id', 'nome')->get();
     
     return Inertia::render('Admin/Matriculas/Index', [
