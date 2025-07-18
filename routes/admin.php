@@ -20,6 +20,7 @@ use App\Http\Middleware\HasAccessAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CertificadoController;
+use App\Http\Controllers\OcupacaoController;
 use Inertia\Inertia;
 
 /*
@@ -130,6 +131,10 @@ Route::group([
     Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
         ->name('alojamento.ficha')
         ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+
+    // Adicionar rotas de check-in/check-out para reservas individuais
+    Route::post('/{alojamento}/checkin', [AlojamentoController::class, 'checkin'])->name('alojamento.checkin');
+    Route::post('/{alojamento}/checkout', [AlojamentoController::class, 'checkout'])->name('alojamento.checkout');
 });
 
 Route::prefix('visitante')->group(function () {
@@ -147,6 +152,10 @@ Route::prefix('visitante')->group(function () {
     Route::get('/{visitante}/ficha/visualizar', [VisitanteController::class, 'visualizarFichaHospedagem'])
         ->name('visitante.ficha.visualizar')
         ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+
+        // Adicionar rotas de check-in/check-out para visitantes
+    Route::post('/{visitante}/checkin', [VisitanteController::class, 'checkin'])->name('visitante.checkin');
+    Route::post('/{visitante}/checkout', [VisitanteController::class, 'checkout'])->name('visitante.checkout');
 });
 
     /*
@@ -206,5 +215,31 @@ Route::prefix('visitante')->group(function () {
         Route::patch('/{contato}/alterar-status', [ContatoController::class, 'alterarStatus'])->name('alterar-status');
         Route::delete('/{contato}', [ContatoController::class, 'destroy'])->name('destroy');
     });
+
+    /*
+|--------------------------------------------------------------------------
+| Gerenciamento de Ocupação de Dormitórios
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('ocupacao')->name('ocupacao.')->group(function () {
+    // Dashboard principal de ocupação
+    Route::get('/', [OcupacaoController::class, 'index'])->name('index');
+    
+    // Buscar reservas para check-in rápido
+    Route::get('/buscar-reservas', [OcupacaoController::class, 'buscarReservas'])->name('buscar-reservas');
+    
+    // Funcionalidades de check-in e check-out
+    Route::get('/modal-checkin', [OcupacaoController::class, 'modalCheckin'])->name('modal-checkin');
+    Route::post('/checkin', [OcupacaoController::class, 'checkin'])->name('checkin');
+    Route::post('/{ocupacao}/checkout', [OcupacaoController::class, 'checkout'])->name('checkout');
+    
+    // Informações
+    Route::get('/dormitorios-disponiveis', [OcupacaoController::class, 'dormitoriosDisponiveis'])->name('dormitorios-disponiveis');
+    Route::get('/dormitorio/{dormitorio}/detalhes', [OcupacaoController::class, 'dormitorioDetalhes'])->name('dormitorio-detalhes');
+    
+    // API para atualização em tempo real
+    Route::get('/api', [OcupacaoController::class, 'apiIndex'])->name('api.index');
+});
 
 });

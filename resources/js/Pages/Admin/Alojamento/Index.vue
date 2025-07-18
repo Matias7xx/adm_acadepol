@@ -5,6 +5,7 @@ import { useToast } from '@/Composables/useToast';
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import BaseButton from "@/Components/BaseButton.vue"
 import CardBox from "@/Components/CardBox.vue"
+import ModalControleOcupacao from '@/Pages/Components/ModalControleOcupacao.vue';
 import {
   mdiArrowLeftBoldOutline,
   mdiBedEmpty,
@@ -14,7 +15,14 @@ import {
   mdiCloseCircle,
   mdiSwapHorizontal,
   mdiAccount,
-  mdiAccountGroup
+  mdiAccountGroup,
+  mdiHomeCity,
+  mdiLogout,
+  mdiLogin,
+  mdiBed,
+  mdiCheck,
+  mdiViewGrid,
+  mdiRefresh
 } from "@mdi/js"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
@@ -28,17 +36,6 @@ const props = defineProps({
   estatisticas: Object
 });
 
-console.log('=== DADOS BRUTOS RECEBIDOS DO BACKEND ===');
-props.reservas.data.forEach((reserva, index) => {
-  console.log(`Reserva ${index + 1}:`, {
-    id: reserva.id,
-    nome: reserva.nome,
-    tipo: reserva.tipo,
-    tipo_original: reserva.tipo,
-    todosOsCampos: Object.keys(reserva)
-  });
-});
-
 const getShowRoute = (reserva) => {
   if (reserva.tipo === 'visitante') {
     return route('admin.visitante.show', reserva.id)
@@ -47,22 +44,19 @@ const getShowRoute = (reserva) => {
   }
 }
 
-// Função para obter a rota baseada no tipo
-const getRouteForStatus = (reserva) => {
-  console.log('=== DEBUG getRouteForStatus ===');
-  console.log('Reserva:', {
-    id: reserva.id,
-    nome: reserva.nome,
-    tipo: reserva.tipo
-  });
-};
-
 // Toast
 const { toast } = useToast();
 
 // Estado local
 const search = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || '');
+const ocupacaoFilter = ref(props.filters?.ocupacao || '');
+
+//Estados para o modal de controle de ocupação
+const showModalOcupacao = ref(false);
+const loadingOcupacao = ref(false);
+const dormitoriosData = ref([]);
+const estatisticasOcupacao = ref({});
 
 // Modal de confirmação padrão
 const showConfirmModal = ref(false);
@@ -83,6 +77,21 @@ const statusColors = {
   rejeitada: 'danger'
 };
 
+//Status de ocupação incluindo checkout
+const ocupacaoLabels = {
+  sem_checkin: 'Sem Check-in',
+  com_checkin: 'Com Check-in',
+  checkout_realizado: 'Check-out Realizado',
+  disponivel: 'Disponível'
+};
+
+const ocupacaoColors = {
+  sem_checkin: 'info',
+  com_checkin: 'success',
+  checkout_realizado: 'white',
+  disponivel: 'white'
+};
+
 // Cores para tipos de reserva
 const tipoReservaColors = {
   usuario: {
@@ -97,6 +106,64 @@ const tipoReservaColors = {
     iconColor: 'text-green-600 dark:text-green-400',
     label: 'Visitante'
   }
+};
+
+// Função para determinar status de ocupação incluindo checkout
+const getOcupacaoStatus = (reserva) => {
+  if (reserva.status !== 'aprovada') {
+    return 'disponivel';
+  }
+  
+  // Verifica se tem ocupação ativa
+  if (reserva.ocupacao_info || reserva.tem_ocupacao_ativa) {
+    return 'com_checkin';
+  }
+  
+  // Verifica se já teve ocupação mas não tem mais (checkout realizado)
+  if (reserva.status === 'aprovada' && !reserva.tem_ocupacao_ativa) {
+    if (reserva.checkout_realizado || reserva.teve_ocupacao_anterior) {
+      return 'checkout_realizado';
+    }
+    
+    return 'sem_checkin';
+  }
+  
+  return 'disponivel';
+};
+
+//Função para obter ícone de ocupação incluindo checkout
+const getOcupacaoIcon = (reserva) => {
+  const status = getOcupacaoStatus(reserva);
+  
+  switch (status) {
+    case 'com_checkin':
+      return mdiBed;
+    case 'sem_checkin':
+      return mdiLogin;
+    case 'checkout_realizado':
+      return mdiCheck;
+    default:
+      return null;
+  }
+};
+
+// Função para formatação de CPF
+const formatCPF = (cpf) => {
+  if (!cpf) return '';
+  const cleaned = cpf.replace(/\D/g, '');
+  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+};
+
+// Função para obter informações de ocupação
+const getOcupacaoInfo = (reserva) => {
+  if (reserva.ocupacao_info) {
+    return {
+      dormitorio: reserva.ocupacao_info.dormitorio_numero,
+      vaga: reserva.ocupacao_info.numero_vaga,
+      checkin: reserva.ocupacao_info.checkin_at
+    };
+  }
+  return null;
 };
 
 // Formatação de data
@@ -128,7 +195,8 @@ const getTipoConfig = (reserva) => {
 const submitSearch = () => {
   useForm({
     search: search.value,
-    status: statusFilter.value
+    status: statusFilter.value,
+    ocupacao: ocupacaoFilter.value
   }).get(route('admin.alojamento.index'), {
     preserveState: true,
     replace: true
@@ -139,30 +207,66 @@ const submitSearch = () => {
 const clearFilters = () => {
   search.value = '';
   statusFilter.value = '';
+  ocupacaoFilter.value = '';
   submitSearch();
-};
-
-// Confirmar rejeição
-const confirmarRejeicao = () => {
-  // Validar motivo
-  if (!motivoRejeicao.value || motivoRejeicao.value.trim().length < 5) {
-    rejeicaoError.value = 'Por favor, forneça um motivo válido com pelo menos 5 caracteres.';
-    return;
-  }
-  
-  isSubmittingRejeicao.value = true;
-  rejeicaoError.value = '';
-  
-  // Enviar requisição de rejeição
-  const form = useForm({
-    status: 'rejeitada',
-    motivo_rejeicao: motivoRejeicao.value.trim()
-  });
 };
 
 const closeConfirmModal = () => {
   showConfirmModal.value = false;
 };
+
+// Função para abrir o modal de ocupação
+const abrirControleDormitorios = async () => {
+  loadingOcupacao.value = true;
+  try {
+    // Buscar dados de ocupação
+    const response = await fetch('/admin/ocupacao', {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      dormitoriosData.value = data.props.dormitorios || [];
+      estatisticasOcupacao.value = data.props.estatisticas || {};
+      showModalOcupacao.value = true;
+    } else {
+      toast.error('Erro ao carregar dados de ocupação');
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    toast.error('Erro ao carregar dados de ocupação');
+  } finally {
+    loadingOcupacao.value = false;
+  }
+};
+
+// Função para fechar o modal de ocupação
+const fecharModalOcupacao = () => {
+  showModalOcupacao.value = false;
+  dormitoriosData.value = [];
+  estatisticasOcupacao.value = {};
+};
+
+// Função para atualizar dados do modal
+const atualizarDadosOcupacao = async () => {
+  await abrirControleDormitorios();
+};
+
+// Estatísticas calculadas incluindo checkout
+const estatisticasCalculadas = computed(() => {
+  const reservasData = props.reservas.data || [];
+  
+  return {
+    total: reservasData.length,
+    com_checkin: reservasData.filter(r => getOcupacaoStatus(r) === 'com_checkin').length,
+    sem_checkin: reservasData.filter(r => getOcupacaoStatus(r) === 'sem_checkin').length,
+    checkout_realizado: reservasData.filter(r => getOcupacaoStatus(r) === 'checkout_realizado').length,
+    pendentes: reservasData.filter(r => r.status === 'pendente').length
+  };
+});
 </script>
 
 <template>
@@ -174,15 +278,66 @@ const closeConfirmModal = () => {
         title="Reservas de Alojamento"
         main
       >
-        <BaseButton
-          :route-name="route('admin.dashboard')"
-          :icon="mdiArrowLeftBoldOutline"
-          label="Voltar"
-          color="white"
-          rounded-full
-          small
-        />
+        <div class="flex gap-3">
+          <!-- Botão para Controle de Dormitórios -->
+          <BaseButton
+            @click="abrirControleDormitorios"
+            :icon="mdiViewGrid"
+            label="Controle de Dormitórios"
+            color="success"
+            :disabled="loadingOcupacao"
+            title="Abrir painel de controle de ocupação dos dormitórios"
+          />
+          
+          <BaseButton
+            :route-name="route('admin.dashboard')"
+            :icon="mdiArrowLeftBoldOutline"
+            label="Voltar"
+            color="white"
+            rounded-full
+            small
+          />
+        </div>
       </SectionTitleLineWithButton>      
+      
+      <!-- Estatísticas rápidas incluindo checkout -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <CardBox>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ estatisticasCalculadas.total }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Total de Reservas</div>
+          </div>
+        </CardBox>
+        
+        <CardBox>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ estatisticasCalculadas.com_checkin }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Com Check-in</div>
+          </div>
+        </CardBox>
+        
+        <CardBox>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ estatisticasCalculadas.sem_checkin }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Sem Check-in</div>
+          </div>
+        </CardBox>
+        
+        <!-- Estatística de checkout -->
+        <CardBox>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ estatisticasCalculadas.checkout_realizado }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Check-out Realizado</div>
+          </div>
+        </CardBox>
+        
+        <CardBox>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ estatisticasCalculadas.pendentes }}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Pendentes</div>
+          </div>
+        </CardBox>
+      </div>
       
       <!-- Legenda de Cores -->
       <CardBox class="mb-6">
@@ -196,16 +351,25 @@ const closeConfirmModal = () => {
             <BaseButton :icon="mdiAccountGroup" small color="success" outline class="!p-1" />
             <span class="text-sm text-green-600 dark:text-green-400 font-medium">Visitante Externo</span>
           </div>
+          <div class="flex items-center gap-2 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+            <BaseButton :icon="mdiBed" small color="success" outline class="!p-1" />
+            <span class="text-sm text-red-600 dark:text-red-400 font-medium">Com Check-in Ativo</span>
+          </div>
+          <!-- Legenda de checkout -->
+          <div class="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+            <BaseButton :icon="mdiCheck" small color="white" outline class="!p-1" />
+            <span class="text-sm text-purple-600 dark:text-purple-400 font-medium">Check-out Realizado</span>
+          </div>
         </div>
       </CardBox>
 
-      <!-- Filtros -->
+      <!--Filtros -->
       <CardBox class="mb-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <FormField label="Buscar" :icon="mdiMagnify">
             <input
               v-model="search"
-              placeholder="Nome, matrícula ou email"
+              placeholder="Nome, CPF, matrícula ou email"
               type="text"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               @keyup.enter="submitSearch"
@@ -213,7 +377,7 @@ const closeConfirmModal = () => {
           </FormField>
           
           <!-- Filtro de status -->
-          <FormField label="Status">
+          <FormField label="Status da Reserva">
             <select
               v-model="statusFilter"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
@@ -223,6 +387,21 @@ const closeConfirmModal = () => {
               <option value="pendente">Pendente</option>
               <option value="aprovada">Aprovada</option>
               <option value="rejeitada">Rejeitada</option>
+            </select>
+          </FormField>
+          
+          <!--  Filtro de ocupação incluindo checkout -->
+          <FormField label="Status de Ocupação">
+            <select
+              v-model="ocupacaoFilter"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              @change="submitSearch"
+            >
+              <option value="">Todos</option>
+              <option value="com_checkin">Com Check-in</option>
+              <option value="sem_checkin">Sem Check-in</option>
+              <option value="checkout_realizado">Check-out Realizado</option>
+              <option value="disponivel">Apenas Disponíveis</option>
             </select>
           </FormField>
           
@@ -250,11 +429,12 @@ const closeConfirmModal = () => {
             <tr>
               <th>ID</th>
               <th>Tipo</th>
-              <th>Nome</th>
+              <th>Nome / CPF</th>
               <th>Órgão</th>
               <th>Período</th>
               <th>Status</th>
-              <th>Ver</th>
+              <th>Ocupação</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -279,9 +459,11 @@ const closeConfirmModal = () => {
                   </span>
                 </div>
               </td>
-              <td data-label="Nome">
+              <!-- Nome e CPF -->
+              <td data-label="Nome / CPF">
                 <div>{{ reserva.nome }}</div>
-                <small class="text-gray-500 dark:text-gray-400">{{ reserva.matricula }}</small>
+                <small class="text-gray-500 dark:text-gray-400">{{ formatCPF(reserva.cpf) }}</small>
+                <small class="text-gray-500 dark:text-gray-400 block">{{ reserva.matricula }}</small>
               </td>
               <td data-label="Órgão">
                 {{ reserva.orgao }}
@@ -296,6 +478,47 @@ const closeConfirmModal = () => {
                   small
                   :rounded="true"
                 />
+              </td>
+              <!-- Coluna de Ocupação incluindo checkout -->
+              <td data-label="Ocupação" class="lg:w-1">
+                <div class="flex items-center gap-2">
+                  <BaseButton
+                    v-if="getOcupacaoIcon(reserva)"
+                    :icon="getOcupacaoIcon(reserva)"
+                    :color="ocupacaoColors[getOcupacaoStatus(reserva)]"
+                    :title="ocupacaoLabels[getOcupacaoStatus(reserva)]"
+                    small
+                    outline
+                    class="!p-1"
+                  />
+                  
+                  <!-- Informações de ocupação se ativa -->
+                  <div v-if="getOcupacaoInfo(reserva)" class="text-xs">
+                    <div class="font-medium text-green-600 dark:text-green-400">
+                      {{ getOcupacaoInfo(reserva).dormitorio }}
+                    </div>
+                    <div class="text-gray-500 dark:text-gray-400">
+                      V: {{ getOcupacaoInfo(reserva).vaga }}
+                    </div>
+                  </div>
+                  
+                  <!-- Status de checkout realizado -->
+                  <span v-else-if="getOcupacaoStatus(reserva) === 'checkout_realizado'" 
+                        class="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                    Finalizado
+                  </span>
+                  
+                  <!-- Status sem ocupação -->
+                  <span v-else-if="getOcupacaoStatus(reserva) === 'sem_checkin'" 
+                        class="text-xs text-orange-600 dark:text-orange-400">
+                    Aguardando
+                  </span>
+                  
+                  <!-- Status disponível -->
+                  <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+                    -
+                  </span>
+                </div>
               </td>
               <td data-label="Ações" class="lg:w-1 whitespace-nowrap">
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
@@ -313,7 +536,7 @@ const closeConfirmModal = () => {
             
             <!-- Mensagem de "Sem resultados" -->
             <tr v-if="props.reservas.data.length === 0">
-              <td colspan="7" class="text-center py-4">
+              <td colspan="8" class="text-center py-4">
                 Nenhuma reserva encontrada com os filtros selecionados.
               </td>
             </tr>
@@ -369,6 +592,15 @@ const closeConfirmModal = () => {
           </div>
         </div>
       </div>
+
+      <!-- Modal de Controle de Ocupação -->
+      <ModalControleOcupacao
+        :show="showModalOcupacao"
+        :dormitorios="dormitoriosData"
+        :estatisticas="estatisticasOcupacao"
+        @close="fecharModalOcupacao"
+        @refresh="atualizarDadosOcupacao"
+      />
     </SectionMain>
   </LayoutAuthenticated>
 </template>

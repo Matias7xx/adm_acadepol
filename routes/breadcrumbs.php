@@ -164,3 +164,39 @@ Breadcrumbs::for('admin.matriculas.relatorio.excel', function (BreadcrumbTrail $
     $trail->parent('admin.matriculas.curso', $curso);
     $trail->push('Relatório Excel', route('admin.matriculas.relatorio.excel', $curso));
 });
+
+// Breadcrumbs para Ocupação de Dormitórios
+Breadcrumbs::for('admin.ocupacao.index', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.dashboard');
+    $trail->push('Controle de Ocupação', route('admin.ocupacao.index'));
+});
+
+Breadcrumbs::for('admin.ocupacao.buscar-reservas', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Buscar Reservas');
+});
+
+Breadcrumbs::for('admin.ocupacao.dormitorios-disponiveis', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Dormitórios Disponíveis');
+});
+
+Breadcrumbs::for('admin.ocupacao.checkin', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Check-in');
+});
+
+Breadcrumbs::for('admin.ocupacao.checkout', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Check-out');
+});
+
+Breadcrumbs::for('admin.ocupacao.modal-checkin', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Modal Check-in');
+});
+
+Breadcrumbs::for('admin.ocupacao.dormitorio-detalhes', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.ocupacao.index');
+    $trail->push('Detalhes do Dormitório');
+});

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Visitante;
+use App\Models\Dormitorio;
+use App\Models\Ocupacao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Dompdf\Dompdf;
@@ -270,14 +274,20 @@ class VisitanteController extends Controller
      */
     public function index(Request $request)
     {
-         $this->authorize('adminViewAny', Visitante::class);
+        $this->authorize('adminViewAny', Visitante::class);
 
-        $visitantes = Visitante::query()
+        $visitantes = Visitante::with(['ocupacaoAtual.dormitorio', 'ocupacoes']) // ATUALIZADO: incluir todas as ocupações
             ->when($request->search, function($query, $search) {
-                return $query->where('nome', 'like', "%{$search}%")
-                    ->orWhere('cpf', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('orgao_trabalho', 'like', "%{$search}%");
+                return $query->where(function($q) use ($search) {
+                    // Busca por nome, CPF, email ou órgão
+                    $q->where('nome', 'like', "%{$search}%")
+                      ->orWhere('cpf', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('orgao_trabalho', 'like', "%{$search}%")
+                      ->orWhere('matricula_funcional', 'like', "%{$search}%")
+                      // Busca por CPF sem formatação
+                      ->orWhere('cpf', 'like', "%" . preg_replace('/[^0-9]/', '', $search) . "%");
+                });
             })
             ->when($request->status, function($query, $status) {
                 return $query->where('status', $status);
@@ -285,13 +295,56 @@ class VisitanteController extends Controller
             ->when($request->tipo_orgao, function($query, $tipo) {
                 return $query->where('tipo_orgao', $tipo);
             })
+            ->when($request->ocupacao, function($query, $ocupacao) {
+                switch ($ocupacao) {
+                    case 'com_checkin':
+                        return $query->whereHas('ocupacaoAtual');
+                    case 'sem_checkin':
+                        return $query->where('status', 'aprovada')
+                                    ->whereDoesntHave('ocupacaoAtual')
+                                    ->whereDoesntHave('ocupacoes', function($q) {
+                                        $q->where('status', 'liberado');
+                                    });
+                    case 'checkout_realizado':
+                        return $query->where('status', 'aprovada')
+                                    ->whereDoesntHave('ocupacaoAtual')
+                                    ->whereHas('ocupacoes', function($q) {
+                                        $q->where('status', 'liberado');
+                                    });
+                    case 'disponivel':
+                        return $query->where('status', '!=', 'aprovada')
+                                    ->orWhereDoesntHave('ocupacaoAtual');
+                }
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10)
+            ->through(function($visitante) {
+                $ocupacaoAtual = $visitante->ocupacaoAtual;
+                
+                // Verificar se já teve checkout
+                $teveCheckout = $visitante->ocupacoes()
+                    ->where('status', 'liberado')
+                    ->exists();
+                
+                // Adicionar informações de ocupação
+                $visitante->tem_ocupacao_ativa = $ocupacaoAtual ? true : false;
+                $visitante->teve_ocupacao_anterior = $teveCheckout; // NOVO
+                $visitante->checkout_realizado = $teveCheckout && !$ocupacaoAtual; // NOVO
+                $visitante->ocupacao_info = $ocupacaoAtual ? [
+                    'dormitorio_numero' => $ocupacaoAtual->dormitorio->numero,
+                    'dormitorio_nome' => $ocupacaoAtual->dormitorio->nome,
+                    'numero_vaga' => $ocupacaoAtual->numero_vaga,
+                    'checkin_at' => $ocupacaoAtual->checkin_at->format('d/m/Y H:i'),
+                    'duracao_estadia' => $ocupacaoAtual->getDuracaoEstadia(),
+                ] : null;
+                
+                return $visitante;
+            })
             ->appends($request->all());
 
         return Inertia::render('Admin/Visitantes/Index', [
             'visitantes' => $visitantes,
-            'filters' => $request->only(['search', 'status', 'tipo_orgao'])
+            'filters' => $request->only(['search', 'status', 'tipo_orgao', 'ocupacao'])
         ]);
     }
 
@@ -300,7 +353,10 @@ class VisitanteController extends Controller
      */
     public function show(Visitante $visitante)
     {
-         $this->authorize('adminView', $visitante);
+        $this->authorize('adminView', $visitante);
+        
+        // Carregar ocupação atual se existir
+        $visitante->load('ocupacaoAtual.dormitorio');
         
         // Adicionar URLs dos documentos para o frontend
         $visitante->documento_url = $visitante->documento_identidade 
@@ -317,8 +373,48 @@ class VisitanteController extends Controller
         $visitante->orgao = $visitante->orgao_trabalho;
         $visitante->matricula = $visitante->matricula_funcional;
         
+        // Adicionar informações de ocupação
+        $ocupacao = $visitante->ocupacaoAtual;
+        if (!$ocupacao) {
+            $ocupacao = $visitante->ocupacoes()
+                ->with('dormitorio')
+                ->latest('created_at')
+                ->first();
+        }
+
+        $visitante->ocupacao_info = $ocupacao ? [
+            'dormitorio_numero' => $ocupacao->dormitorio->numero,
+            'dormitorio_nome' => $ocupacao->dormitorio->nome,
+            'numero_vaga' => $ocupacao->numero_vaga,
+            'checkin_at' => $ocupacao->checkin_at->format('d/m/Y H:i'),
+            'duracao_estadia' => $ocupacao->getDuracaoEstadia(),
+            'observacoes' => $ocupacao->observacoes,
+        ] : null;
+        
+        // Buscar APENAS dormitórios disponíveis para check-in (EXCLUINDO reservados)
+        $dormitoriosDisponiveis = [];
+        if ($visitante->podeCheckin()) {
+            $dormitoriosDisponiveis = Dormitorio::disponiveis()
+                ->orderBy('numero')
+                ->get()
+                ->map(function ($dormitorio) {
+                    return [
+                        'id' => $dormitorio->id,
+                        'numero' => $dormitorio->numero,
+                        'nome' => $dormitorio->nome,
+                        'capacidade_maxima' => $dormitorio->capacidade_maxima,
+                        'vagas_disponiveis' => $dormitorio->vagas_disponiveis,
+                        'vagas_livres' => $dormitorio->getVagasLivres(),
+                        'observacoes' => $dormitorio->observacoes,
+                    ];
+                });
+        }
+        
         return Inertia::render('Admin/Alojamento/Show', [
-            'reserva' => $visitante
+            'reserva' => $visitante,
+            'dormitorios_disponiveis' => $dormitoriosDisponiveis,
+            'pode_checkin' => $visitante->podeCheckin(),
+            'pode_checkout' => $visitante->podeCheckout()
         ]);
     }
 
@@ -327,10 +423,13 @@ class VisitanteController extends Controller
      */
     public function alterarStatus(Request $request, Visitante $visitante)
     {
-         $this->authorize('adminUpdate', $visitante);
+        $this->authorize('adminUpdate', $visitante);
         
         $request->validate([
             'status' => ['required', Rule::in(['pendente', 'aprovada', 'rejeitada'])],
+            'dormitorio_id' => 'nullable|exists:dormitorios,id',
+            'numero_vaga' => 'nullable|integer|min:1',
+            'motivo_rejeicao' => 'nullable|string|max:1000',
         ]);
         
         $novoStatus = $request->status;
@@ -340,46 +439,261 @@ class VisitanteController extends Controller
             return redirect()->back()->with('message', 'O status já está definido como ' . $novoStatus);
         }
         
-        // Motivo para rejeição
-        if ($novoStatus === 'rejeitada' && !$request->has('motivo_rejeicao')) {
-            return redirect()->back()->with('error', 'É necessário informar um motivo para rejeitar a reserva');
-        }
-        
-        // Atualizar campos
-        $dados = ['status' => $novoStatus];
-        
-        // Adicionar motivo de rejeição
-        if ($novoStatus === 'rejeitada' && $request->has('motivo_rejeicao')) {
-            $dados['motivo_rejeicao'] = $request->motivo_rejeicao;
-        }
-        
-        $visitante->update($dados);
-        
-        // Enviar notificação por email
         try {
-            if ($novoStatus === 'aprovada') {
-                 Mail::to($visitante->email)->send(new ReservaVisitanteAprovada($visitante));
-            } elseif ($novoStatus === 'rejeitada') {
-                 Mail::to($visitante->email)->send(new ReservaVisitanteRejeitada($visitante));
+            DB::beginTransaction();
+
+            // Para rejeição, validar motivo
+            if ($novoStatus === 'rejeitada') {
+                if (!$request->has('motivo_rejeicao') || empty(trim($request->motivo_rejeicao))) {
+                    return response()->json([
+                        'message' => 'É necessário informar um motivo para rejeitar a reserva',
+                        'errors' => ['motivo_rejeicao' => ['O motivo da rejeição é obrigatório']]
+                    ], 422);
+                }
             }
-        } catch (\Exception $e) {
-            // Log do erro mas não interrompe o processo
-            \Log::error('Erro ao enviar email para visitante: ' . $e->getMessage());
-        }
-        
-        if ($this->auditLogger) {
-            $this->auditLogger->registrarAcao(
-                "Status de reserva de visitante alterado para '{$novoStatus}'",
-                'visitante',
-                [
+            
+            // Preparar dados para atualização
+            $dados = ['status' => $novoStatus];
+            
+            // Adicionar motivo de rejeição se for o caso
+            if ($novoStatus === 'rejeitada' && $request->has('motivo_rejeicao')) {
+                $dados['motivo_rejeicao'] = trim($request->motivo_rejeicao);
+            }
+            
+            // Atualizar visitante
+            $visitante->update($dados);
+            
+            // Se estiver aprovando e foi fornecido dormitório, fazer check-in automático
+            if ($novoStatus === 'aprovada' && $request->dormitorio_id && $request->numero_vaga) {
+                $dormitorio = Dormitorio::findOrFail($request->dormitorio_id);
+                
+                // Verificar se o dormitório não é reservado para plantão
+                if ($dormitorio->isReservadoPlantao()) {
+                    throw new \Exception('Este dormitório está reservado para o plantão da ACADEPOL e não pode receber check-ins externos.');
+                }
+                
+                // Verificar se o dormitório está disponível
+                if (!$dormitorio->disponivelParaCheckin()) {
+                    throw new \Exception('Este dormitório não está disponível para check-ins.');
+                }
+                
+                // Validar número da vaga conforme capacidade do dormitório
+                if ($request->numero_vaga > $dormitorio->capacidade_maxima) {
+                    throw new \Exception("A vaga {$request->numero_vaga} não existe neste dormitório. Capacidade máxima: {$dormitorio->capacidade_maxima} vagas.");
+                }
+                
+                // Verificar se a vaga está disponível
+                $vagaOcupada = Ocupacao::where('dormitorio_id', $dormitorio->id)
+                    ->where('numero_vaga', $request->numero_vaga)
+                    ->where('status', 'ocupado')
+                    ->exists();
+
+                if (!$vagaOcupada) {
+                    // Criar ocupação
+                    $ocupacao = Ocupacao::create([
+                        'dormitorio_id' => $dormitorio->id,
+                        'reservavel_type' => Visitante::class,
+                        'reservavel_id' => $visitante->id,
+                        'numero_vaga' => $request->numero_vaga,
+                        'checkin_por' => Auth::id(),
+                        'observacoes' => $request->observacoes ?? 'Check-in automático na aprovação da reserva'
+                    ]);
+
+                    // Realizar check-in
+                    $ocupacao->realizarCheckin(Auth::id());
+                    
+                    \Log::info('Check-in automático realizado para visitante', [
+                        'visitante_id' => $visitante->id,
+                        'dormitorio_id' => $dormitorio->id,
+                        'dormitorio_numero' => $dormitorio->numero,
+                        'capacidade' => $dormitorio->capacidade_maxima,
+                        'vaga' => $request->numero_vaga
+                    ]);
+                }
+            }
+            
+            // Enviar notificação por email conforme o status
+            try {
+                if ($novoStatus === 'aprovada') {
+                    Mail::to($visitante->email)->send(new ReservaVisitanteAprovada($visitante));
+                } elseif ($novoStatus === 'rejeitada') {
+                    Mail::to($visitante->email)->send(new ReservaVisitanteRejeitada($visitante));
+                }
+            } catch (\Exception $mailException) {
+                // Log do erro de email, mas não falha a operação
+                \Log::warning('Erro ao enviar email de notificação', [
                     'visitante_id' => $visitante->id,
-                    'status_anterior' => $visitante->getOriginal('status'),
-                    'novo_status' => $novoStatus
-                ]
-            );
+                    'status' => $novoStatus,
+                    'error' => $mailException->getMessage()
+                ]);
+            }
+            
+            // Registrar auditoria se disponível
+            if ($this->auditLogger) {
+                $this->auditLogger->registrarAcao(
+                    "Status de reserva de visitante alterado para '{$novoStatus}'",
+                    'visitante',
+                    [
+                        'visitante_id' => $visitante->id,
+                        'status_anterior' => $visitante->getOriginal('status'),
+                        'novo_status' => $novoStatus,
+                        'dormitorio_id' => $request->dormitorio_id ?? null,
+                        'numero_vaga' => $request->numero_vaga ?? null
+                    ]
+                );
+            }
+            
+            DB::commit();
+            
+            // Resposta para requests AJAX vs navegador
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => "Status da reserva alterado com sucesso para {$novoStatus}",
+                    'status' => $novoStatus,
+                    'reserva' => $visitante->fresh() // Retornar dados atualizados
+                ]);
+            }
+            
+            return redirect()->back()->with('message', "Status da reserva alterado com sucesso para {$novoStatus}");
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Erro ao alterar status de visitante', [
+                'visitante_id' => $visitante->id,
+                'novo_status' => $novoStatus,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Erro ao alterar status: ' . $e->getMessage(),
+                    'errors' => ['status' => ['Erro interno do servidor']]
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Erro ao alterar status: ' . $e->getMessage());
         }
-        
-        return redirect()->back()->with('message', 'Status da reserva alterado com sucesso para ' . $novoStatus);
+    }
+
+    /**
+     * Fazer check-in manual (caso não tenha sido feito na aprovação)
+     */
+    public function checkin(Request $request, Visitante $visitante)
+    {
+        $this->authorize('adminUpdate', $visitante);
+
+        $request->validate([
+            'dormitorio_id' => 'required|exists:dormitorios,id',
+            'numero_vaga' => 'required|integer|min:1',
+            'observacoes' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Verificar se pode fazer check-in
+            if (!$visitante->podeCheckin()) {
+                throw new \Exception('Esta reserva não pode fazer check-in no momento.');
+            }
+
+            // Buscar dormitório
+            $dormitorio = Dormitorio::findOrFail($request->dormitorio_id);
+
+            // Verificar se o dormitório não é reservado para plantão
+            if ($dormitorio->isReservadoPlantao()) {
+                throw new \Exception('Este dormitório está reservado para o plantão da ACADEPOL e não pode receber check-ins externos.');
+            }
+
+            // Verificar se o dormitório está disponível
+            if (!$dormitorio->disponivelParaCheckin()) {
+                throw new \Exception('Este dormitório não está disponível para check-ins.');
+            }
+
+            // Validar número da vaga conforme capacidade do dormitório
+            if ($request->numero_vaga > $dormitorio->capacidade_maxima) {
+                throw new \Exception("A vaga {$request->numero_vaga} não existe neste dormitório. Capacidade máxima: {$dormitorio->capacidade_maxima} vagas.");
+            }
+
+            // Verificar se a vaga está disponível
+            $vagaOcupada = Ocupacao::where('dormitorio_id', $dormitorio->id)
+                ->where('numero_vaga', $request->numero_vaga)
+                ->where('status', 'ocupado')
+                ->exists();
+
+            if ($vagaOcupada) {
+                throw new \Exception('Esta vaga já está ocupada.');
+            }
+
+            // Criar ocupação
+            $ocupacao = Ocupacao::create([
+                'dormitorio_id' => $dormitorio->id,
+                'reservavel_type' => Visitante::class,
+                'reservavel_id' => $visitante->id,
+                'numero_vaga' => $request->numero_vaga,
+                'checkin_por' => Auth::id(),
+                'observacoes' => $request->observacoes
+            ]);
+
+            // Realizar check-in
+            $ocupacao->realizarCheckin(Auth::id());
+
+            DB::commit();
+
+            \Log::info('Check-in manual realizado para visitante', [
+                'visitante_id' => $visitante->id,
+                'dormitorio_id' => $dormitorio->id,
+                'dormitorio_numero' => $dormitorio->numero,
+                'capacidade' => $dormitorio->capacidade_maxima,
+                'vaga' => $request->numero_vaga
+            ]);
+
+            return redirect()->back()->with('message', 'Check-in realizado com sucesso!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Fazer check-out
+     */
+    public function checkout(Request $request, Visitante $visitante)
+    {
+        $this->authorize('adminUpdate', $visitante);
+
+        $request->validate([
+            'observacoes' => 'nullable|string|max:500'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $ocupacao = $visitante->ocupacaoAtual;
+            
+            if (!$ocupacao || !$ocupacao->isAtiva()) {
+                throw new \Exception('Esta reserva não possui ocupação ativa.');
+            }
+
+            // Adicionar observações se fornecidas
+            if ($request->observacoes) {
+                $ocupacao->observacoes = ($ocupacao->observacoes ? $ocupacao->observacoes . "\n\n" : '') . 
+                    "Check-out: " . $request->observacoes;
+            }
+
+            // Realizar check-out
+            $ocupacao->realizarCheckout(Auth::id());
+
+            DB::commit();
+
+            return redirect()->back()->with('message', 'Check-out realizado com sucesso!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**

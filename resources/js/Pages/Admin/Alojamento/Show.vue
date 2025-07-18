@@ -7,6 +7,7 @@ import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButton from "@/Components/BaseButton.vue"
+import ModalDormitorio from '@/Pages/Components/ModalDormitorio.vue';
 import axios from 'axios';
 import {
   mdiAccount,
@@ -20,12 +21,19 @@ import {
   mdiPrinter,
   mdiAccountGroup,
   mdiOfficeBuilding,
-  mdiBadgeAccount
+  mdiBadgeAccount,
+  mdiHomeCity,
+  mdiLogin,
+  mdiLogout,
+  mdiBed
 } from "@mdi/js"
 
 // Props
 const props = defineProps({
-  reserva: Object
+  reserva: Object,
+  dormitorios_disponiveis: Array,
+  pode_checkin: Boolean,
+  pode_checkout: Boolean
 });
 
 // Verificação de segurança
@@ -77,6 +85,16 @@ const showDocumentoModal = ref(false);
 const documentoUrl = ref('');
 const documentoTitulo = ref('');
 
+// Estados para sistema de ocupação
+const showModalDormitorio = ref(false);
+const showCheckinModal = ref(false);
+const showCheckoutModal = ref(false);
+const checkoutObservacoes = ref('');
+const loading = ref(false);
+
+//Estado para controlar se está aprovando ou só fazendo check-in
+const isApproving = ref(false);
+
 // Documentos disponíveis para visitantes
 const documentosVisitante = computed(() => {
   if (!isVisitante.value || !props.reserva) return [];
@@ -109,6 +127,20 @@ const documentosVisitante = computed(() => {
   
   return docs;
 });
+
+// Informações de ocupação
+const ocupacaoInfo = computed(() => {
+  return props.reserva?.ocupacao_info || null;
+});
+
+// Dados da reserva para modal
+const reservaParaModal = computed(() => ({
+  id: props.reserva.id,
+  nome: props.reserva.nome,
+  tipo: isVisitante.value ? 'visitante' : 'usuario',
+  data_inicial: formatDate(props.reserva.data_inicial),
+  data_final: formatDate(props.reserva.data_final)
+}));
 
 // Formatação de endereço
 const enderecoFormatado = computed(() => {
@@ -162,10 +194,15 @@ const tipoOrgaoFormatado = computed(() => {
   if (!isVisitante.value || !props.reserva.tipo_orgao) return null;
   
   const tipos = {
-    'federal': 'Órgão Federal',
-    'estadual': 'Órgão Estadual',
-    'municipal': 'Órgão Municipal',
-    'privado': 'Empresa Privada',
+    'policia_civil': 'Polícia Civil',
+    'policia_militar': 'Polícia Militar',
+    'bombeiros': 'Corpo de Bombeiros',
+    'policia_federal': 'Polícia Federal',
+    'policia_rodoviaria': 'Polícia Rodoviária Federal',
+    'guarda_municipal': 'Guarda Municipal',
+    'poder_judiciario': 'Poder Judiciário',
+    'ministerio_publico': 'Ministério Público',
+    'defensoria_publica': 'Defensoria Pública',
     'outro': 'Outro'
   };
   
@@ -215,7 +252,6 @@ const getRouteBasedOnType = (routeName) => {
 
 // Rota para voltar baseada no tipo
 const getBackRoute = () => {
-  // Sempre voltar para a página principal de alojamento
   return route('admin.alojamento.index');
 };
 
@@ -228,7 +264,6 @@ const showRejeicaoModalHandler = () => {
 
 // Confirmar rejeição
 const confirmarRejeicao = () => {
-  // Validar motivo
   if (!motivoRejeicao.value || motivoRejeicao.value.trim().length < 5) {
     rejeicaoError.value = 'Por favor, forneça um motivo válido com pelo menos 5 caracteres.';
     return;
@@ -237,7 +272,6 @@ const confirmarRejeicao = () => {
   isSubmittingRejeicao.value = true;
   rejeicaoError.value = '';
   
-  // Enviar requisição de rejeição
   const form = useForm({
     status: 'rejeitada',
     motivo_rejeicao: motivoRejeicao.value.trim()
@@ -249,7 +283,6 @@ const confirmarRejeicao = () => {
       isSubmittingRejeicao.value = false;
       toast.success('Reserva rejeitada com sucesso!');
       
-      // Atualizar o status localmente
       props.reserva.status = 'rejeitada';
       props.reserva.motivo_rejeicao = motivoRejeicao.value.trim();
       selectedStatus.value = 'rejeitada';
@@ -269,7 +302,6 @@ const confirmarRejeicao = () => {
 
 // Alterar Status
 const alterarStatus = (novoStatus) => {
-  // Se for rejeição, abre o modal específico
   if (novoStatus === 'rejeitada') {
     showRejeicaoModalHandler();
     return;
@@ -291,7 +323,6 @@ const alterarStatus = (novoStatus) => {
         isChangingStatus.value = false;
         toast.success(`Status alterado para ${novoStatus} com sucesso!`);
         
-        // Atualizar o status localmente
         props.reserva.status = novoStatus;
         selectedStatus.value = novoStatus;
       },
@@ -307,8 +338,156 @@ const alterarStatus = (novoStatus) => {
   showConfirmModal.value = true;
 };
 
-// Ações diretas
-const aprovarReserva = () => alterarStatus('aprovada');
+//Método para aprovar
+const abrirModalAprovacao = () => {
+  confirmModalTitle.value = 'Aprovar Reserva';
+  confirmModalMessage.value = 'Deseja aprovar esta reserva? Após a aprovação, você poderá fazer o check-in quando necessário.';
+  
+  confirmModalAction.value = () => {
+    aprovarSemCheckin();
+  };
+  
+  showConfirmModal.value = true;
+};
+
+// Método para check-in (abre modal de dormitório)
+const abrirModalCheckin = () => {
+  isApproving.value = false;
+  showModalDormitorio.value = true;
+};
+
+const aprovarComCheckin = async (dados) => {
+  console.log('🔄 Aprovando com check-in:', dados)
+  loading.value = true;
+  
+  try {
+    const form = useForm({
+      status: 'aprovada',
+      dormitorio_id: dados.dormitorio_id,
+      numero_vaga: dados.numero_vaga,
+      observacoes: dados.observacoes
+    });
+    
+    console.log('📡 Enviando request de aprovação para:', getRouteBasedOnType('alterar-status'))
+    
+    form.patch(getRouteBasedOnType('alterar-status'), {
+      onSuccess: () => {
+        console.log('✅ Aprovação com check-in realizada com sucesso!')
+        showModalDormitorio.value = false;
+        toast.success('Reserva aprovada e check-in realizado com sucesso!');
+      },
+      onError: (errors) => {
+        console.error('❌ Erro ao aprovar com check-in:', errors)
+        toast.error('Erro ao aprovar com check-in');
+      },
+      onFinish: () => {
+        loading.value = false;
+      }
+    });
+  } catch (error) {
+    loading.value = false;
+    console.error('💥 Erro ao aprovar com check-in:', error);
+    toast.error('Erro ao aprovar com check-in');
+  }
+};
+
+const aprovarSemCheckin = async () => {
+  loading.value = true;
+  
+  try {
+    const form = useForm({
+      status: 'aprovada'
+    });
+    
+    form.patch(getRouteBasedOnType('alterar-status'), {
+      onSuccess: () => {
+        showConfirmModal.value = false;
+        toast.success('Reserva aprovada com sucesso!');
+        props.reserva.status = 'aprovada';
+        selectedStatus.value = 'aprovada';
+      },
+      onError: (errors) => {
+        showConfirmModal.value = false;
+        toast.error('Erro ao aprovar reserva');
+        console.error('Erro:', errors);
+      },
+      onFinish: () => {
+        loading.value = false;
+      }
+    });
+  } catch (error) {
+    loading.value = false;
+    console.error('Erro ao aprovar:', error);
+    toast.error('Erro ao aprovar reserva');
+  }
+};
+
+// Método para fazer check-in de reserva já aprovada
+const realizarCheckin = async (dados) => {
+  console.log('🔄 Realizando check-in:', dados)
+  loading.value = true;
+  
+  try {
+    const form = useForm({
+      dormitorio_id: dados.dormitorio_id,
+      numero_vaga: dados.numero_vaga,
+      observacoes: dados.observacoes
+    });
+    
+    console.log('📡 Enviando request de check-in para:', getRouteBasedOnType('checkin'))
+    
+    form.post(getRouteBasedOnType('checkin'), {
+      onSuccess: () => {
+        console.log('✅ Check-in realizado com sucesso!')
+        showModalDormitorio.value = false;
+        toast.success('Check-in realizado com sucesso!');
+      },
+      onError: (errors) => {
+        console.error('❌ Erro ao realizar check-in:', errors)
+        toast.error('Erro ao realizar check-in');
+      },
+      onFinish: () => {
+        loading.value = false;
+      }
+    });
+  } catch (error) {
+    loading.value = false;
+    console.error('💥 Erro ao realizar check-in:', error);
+    toast.error('Erro ao realizar check-in');
+  }
+};
+
+const realizarCheckout = async () => {
+  loading.value = true;
+  
+  try {
+    const form = useForm({
+      observacoes: checkoutObservacoes.value
+    });
+    
+    form.post(getRouteBasedOnType('checkout'), {
+      onSuccess: () => {
+        showCheckoutModal.value = false;
+        checkoutObservacoes.value = '';
+        toast.success('Check-out realizado com sucesso!');
+      },
+      onError: (errors) => {
+        toast.error('Erro ao realizar check-out');
+        console.error('Erro:', errors);
+      },
+      onFinish: () => {
+        loading.value = false;
+      }
+    });
+  } catch (error) {
+    loading.value = false;
+    console.error('Erro ao realizar check-out:', error);
+    toast.error('Erro ao realizar check-out');
+  }
+};
+
+// Ações diretas (mantidas)
+const aprovarReserva = () => abrirModalAprovacao();
 const rejeitarReserva = () => alterarStatus('rejeitada');
 const retornarParaPendente = () => alterarStatus('pendente');
 
@@ -342,6 +521,16 @@ const closeRejeicaoModal = () => {
   showRejeicaoModal.value = false;
 };
 
+const closeModalDormitorio = () => {
+  showModalDormitorio.value = false;
+  isApproving.value = false;
+};
+
+const closeCheckoutModal = () => {
+  showCheckoutModal.value = false;
+  checkoutObservacoes.value = '';
+};
+
 // Gerar ficha de hospedagem
 const gerarFichaHospedagem = () => {
   if (props.reserva.status !== 'aprovada') {
@@ -349,7 +538,6 @@ const gerarFichaHospedagem = () => {
     return;
   }
 
-  // Usar rota específica para visitantes
   const url = isVisitante.value 
     ? route('admin.visitante.ficha', props.reserva.id)
     : route('admin.alojamento.ficha', props.reserva.id);
@@ -418,6 +606,51 @@ const gerarFichaHospedagem = () => {
         </div>
       </CardBox>
 
+      <!-- Informações de Ocupação (se ativa) -->
+      <CardBox v-if="ocupacaoInfo" class="mb-6">
+        <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center mb-3">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-300 mr-2" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M19,7H11V14H3V5H1V20H3V16H21V20H23V11A4,4 0 0,0 19,7M19,14H13V9H19A2,2 0 0,1 21,11V14H19Z" />
+                </svg>
+                <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100">Ocupação Ativa</h3>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span class="text-blue-700 dark:text-blue-300 font-medium">Dormitório:</span>
+                  <p class="text-blue-900 dark:text-blue-100 font-semibold">{{ ocupacaoInfo.dormitorio_numero }} - {{ ocupacaoInfo.dormitorio_nome }}</p>
+                </div>
+                <div>
+                  <span class="text-blue-700 dark:text-blue-300 font-medium">Vaga:</span>
+                  <p class="text-blue-900 dark:text-blue-100 font-semibold">Vaga {{ ocupacaoInfo.numero_vaga }}</p>
+                </div>
+                <div>
+                  <span class="text-blue-700 dark:text-blue-300 font-medium">Check-in:</span>
+                  <p class="text-blue-900 dark:text-blue-100">{{ ocupacaoInfo.checkin_at }}</p>
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <span class="text-blue-700 dark:text-blue-300 font-medium text-sm">Tempo decorrido:</span>
+                <span class="text-blue-900 dark:text-blue-100 text-sm ml-1 font-medium">{{ ocupacaoInfo.duracao_estadia }}</span>
+              </div>
+            </div>
+            
+            <!-- Botão de Check-out -->
+            <BaseButton
+              v-if="pode_checkout"
+              @click="showCheckoutModal = true"
+              :icon="mdiLogout"
+              label="Check-out"
+              color="danger"
+            />
+          </div>
+        </div>
+      </CardBox>
+
       <!-- Seção de Status e Ações -->
       <CardBox class="mb-6">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -432,7 +665,7 @@ const gerarFichaHospedagem = () => {
           </div>
           
           <div class="flex flex-col sm:flex-row gap-3">
-            <!-- Ações diretas baseadas no status atual -->
+            <!-- Ações baseadas no status atual -->
             <div v-if="reserva.status === 'pendente'" class="flex gap-2">
               <BaseButton
                 @click="aprovarReserva"
@@ -451,6 +684,15 @@ const gerarFichaHospedagem = () => {
             </div>
 
             <div v-if="reserva.status === 'aprovada'" class="flex gap-2">
+              <!-- Check-in se não tiver ocupação ativa -->
+              <BaseButton
+                v-if="pode_checkin"
+                @click="abrirModalCheckin"
+                :icon="mdiLogin"
+                label="Check-in"
+                color="info"
+              />
+              
               <BaseButton
                 @click="gerarFichaHospedagem"
                 :icon="mdiFileDownload"
@@ -718,6 +960,25 @@ const gerarFichaHospedagem = () => {
         </div>
       </CardBox>
       
+      <!-- Observações da Ocupação -->
+      <CardBox v-if="ocupacaoInfo && ocupacaoInfo.observacoes" class="mb-6">
+        <div class="flex items-center mb-4">
+          <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 mr-2" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M22,10V6C22,4.89 21.1,4 20,4H4A2,2 0 0,0 2,6V10A2,2 0 0,0 4,12H20A2,2 0 0,0 22,10M20,10H4V6H20V10M2,14V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V14H20V18H4V14H2Z" />
+          </svg>
+          <h3 class="text-lg font-medium">Observações da Ocupação</h3>
+        </div>
+        
+        <div class="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-lg border border-amber-200 dark:border-amber-700">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-amber-600 dark:text-amber-300 mr-3 mt-0.5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <p class="text-gray-800 dark:text-gray-200 leading-relaxed">{{ ocupacaoInfo.observacoes }}</p>
+          </div>
+        </div>
+      </CardBox>
+      
       <!-- Modal de Confirmação Padrão -->
       <div 
         v-if="showConfirmModal" 
@@ -735,13 +996,13 @@ const gerarFichaHospedagem = () => {
                 @click="confirmModalAction" 
                 label="Confirmar"
                 color="info"
-                :loading="isChangingStatus"
+                :loading="isChangingStatus || loading"
               />
               <BaseButton 
                 @click="closeModal" 
                 label="Cancelar"
                 color="white"
-                :disabled="isChangingStatus"
+                :disabled="isChangingStatus || loading"
               />
             </div>
           </div>
@@ -794,6 +1055,134 @@ const gerarFichaHospedagem = () => {
                 :disabled="isSubmittingRejeicao"
               />
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Seleção de Dormitório -->
+      <div v-if="showModalDormitorio" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ isApproving ? 'Aprovar Reserva e Selecionar Dormitório' : 'Selecionar Dormitório para Check-in' }}
+            </h3>
+            <button 
+              @click="closeModalDormitorio"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors duration-200"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Informações da Reserva -->
+          <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg mb-6">
+            <h4 class="font-medium text-blue-900 dark:text-blue-100 mb-2">Detalhes da Reserva</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span class="text-blue-700 dark:text-blue-300 font-medium">Hóspede:</span>
+                <p class="text-blue-900 dark:text-blue-100">{{ reserva.nome }}</p>
+              </div>
+              <div>
+                <span class="text-blue-700 dark:text-blue-300 font-medium">Tipo:</span>
+                <p class="text-blue-900 dark:text-blue-100">{{ isVisitante ? 'Visitante' : 'Usuário' }}</p>
+              </div>
+              <div>
+                <span class="text-blue-700 dark:text-blue-300 font-medium">Período:</span>
+                <p class="text-blue-900 dark:text-blue-100">{{ formatDate(reserva.data_inicial) }} a {{ formatDate(reserva.data_final) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de Dormitórios -->
+          <div v-if="dormitorios_disponiveis && dormitorios_disponiveis.length > 0">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Dormitórios Disponíveis ({{ dormitorios_disponiveis.length }})</h4>
+            
+            <ModalDormitorio
+              :dormitorios="dormitorios_disponiveis"
+              :loading="loading"
+              :is-approving="isApproving"
+              @approve-with-checkin="(dados) => {
+                console.log('🎯 Evento approve-with-checkin recebido:', dados, 'isApproving:', isApproving);
+                if (isApproving) {
+                  console.log('▶️ Chamando aprovarComCheckin');
+                  aprovarComCheckin(dados);
+                } else {
+                  console.log('▶️ Chamando realizarCheckin');
+                  realizarCheckin(dados);
+                }
+              }"
+              @approve-only="() => {
+                console.log('🎯 Evento approve-only recebido');
+                aprovarSemCheckin();
+              }"
+            />
+          </div>
+
+          <!-- Mensagem quando não há dormitórios disponíveis -->
+          <div v-else class="text-center py-8">
+            <div class="text-gray-400 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2m-14 0h2m-2 0h-2m16 0v-2a2 2 0 00-2-2V9a2 2 0 00-2-2M7 7h10"></path>
+              </svg>
+            </div>
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Nenhum dormitório disponível</h4>
+            <p class="text-gray-600 dark:text-gray-300">Todos os dormitórios estão com a capacidade máxima no momento.</p>
+            
+            <div class="flex justify-center gap-3 mt-6">
+              <BaseButton 
+                v-if="isApproving"
+                @click="aprovarSemCheckin"
+                label="Aprovar sem Check-in"
+                color="success"
+                :loading="loading"
+              />
+              <BaseButton 
+                @click="closeModalDormitorio"
+                label="Cancelar"
+                color="white"
+                :disabled="loading"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Check-out -->
+      <div v-if="showCheckoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirmar Check-out</h3>
+          
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              Tem certeza que deseja fazer o check-out de <strong>{{ reserva.nome }}</strong>?
+            </p>
+            
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Observações (opcional):
+            </label>
+            <textarea 
+              v-model="checkoutObservacoes"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              rows="3"
+              placeholder="Adicione observações sobre o check-out..."
+            ></textarea>
+          </div>
+          
+          <div class="flex justify-end space-x-3">
+            <BaseButton 
+              @click="closeCheckoutModal"
+              label="Cancelar"
+              color="white"
+              :disabled="loading"
+            />
+            <BaseButton 
+              @click="realizarCheckout"
+              label="Confirmar Check-out"
+              color="danger"
+              :loading="loading"
+            />
           </div>
         </div>
       </div>
