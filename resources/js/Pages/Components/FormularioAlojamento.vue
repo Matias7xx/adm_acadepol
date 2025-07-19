@@ -26,6 +26,27 @@ const estadosBrasileiros = ref([
   'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ]);
 
+//Formatar data para inicializar no formulário
+const formatarDataParaInput = (data) => {
+  if (!data) return '';
+  
+  if (typeof data === 'string') {
+
+    let dataObj;
+    
+    // Formato ISO (YYYY-MM-DD)
+    if (data.match(/^\d{4}-\d{2}-\d{2}/)) {
+      dataObj = new Date(data);
+    }
+        
+    if (!isNaN(dataObj.getTime())) {
+      return dataObj.toISOString().split('T')[0];
+    }
+  }
+  
+  return '';
+};
+
 // Dados para o formulário de pré-reserva
 const formData = ref({
   aceitaTermos: false,
@@ -34,20 +55,20 @@ const formData = ref({
   matricula: props.user?.matricula || '',
   orgao: props.user?.orgao || '',
   cpf: props.user?.cpf || '',
-  data_nascimento: '',
-  rg: '',
-  orgao_expedidor: '',
-  sexo: '',
-  uf: '',
+  data_nascimento: formatarDataParaInput(props.user?.data_nascimento),
+  rg: props.user?.rg || '',
+  orgao_expedidor: props.user?.orgao_expedidor || '',
+  sexo: props.user?.sexo || '',
+  uf: props.user?.uf || '',
   motivo: '',
   condicao: '',
   email: props.user?.email || '',
   telefone: props.user?.telefone || '',
-  endereco_rua: '',
-  endereco_bairro: '',
-  endereco_cidade: '',
-  endereco_numero: '',
-  endereco_cep: '',
+  endereco_rua: props.user?.endereco?.rua || '',
+  endereco_bairro: props.user?.endereco?.bairro || '',
+  endereco_cidade: props.user?.endereco?.cidade || '',
+  endereco_numero: props.user?.endereco?.numero || '',
+  endereco_cep: props.user?.endereco?.cep || '',
   data_inicial: '',
   data_final: ''
 });
@@ -97,7 +118,7 @@ const submeterReserva = () => {
   }
   
   // Validar campos obrigatórios
-  for (const campo of ['nome', 'cargo', 'matricula', 'orgao', 'cpf', 'motivo', 'condicao', 'email', 'telefone', 'endereco_rua', 'endereco_bairro', 'endereco_cidade', 'endereco_cep']) {
+  for (const campo of ['nome', 'cargo', 'matricula', 'orgao', 'cpf', 'motivo', 'condicao', 'email', 'telefone', 'endereco_rua', 'endereco_bairro', 'endereco_cidade']) {
     if (!formData.value[campo]) {
       toast.error(`Por favor, preencha o campo ${campo.replace('_', ' ')}`);
       return;
@@ -137,18 +158,40 @@ const submeterReserva = () => {
 
   form.post(route('alojamento.reserva.store'), {
     preserveScroll: false,
-    forceFormData: true, // Importante para enviar arquivos
+    forceFormData: true,
     onSuccess: () => {
       isSubmitting.value = false;
     },
     onError: (errors) => {
       isSubmitting.value = false;
-      console.error(errors);
+      console.error('Erro na validação:', errors);
+            
+      // Erro do servidor (reserva pendente, conflito, etc.)
       if (errors.message) {
         toast.error(errors.message);
-      } else {
-        toast.error('Ocorreu um erro ao enviar a solicitação. Por favor, tente novamente.');
+        return;
       }
+      
+      // Erros de validação específicos
+      if (errors.reserva_pendente) {
+        toast.error(errors.reserva_pendente);
+        return;
+      }
+      
+      // Primeiro erro de validação encontrado
+      const primeiroErro = Object.values(errors)[0];
+      if (typeof primeiroErro === 'string') {
+        toast.error(primeiroErro);
+        return;
+      }
+      
+      if (Array.isArray(primeiroErro) && primeiroErro.length > 0) {
+        toast.error(primeiroErro[0]);
+        return;
+      }
+      
+      // Fallback genérico
+      toast.error('Ocorreu um erro ao enviar a solicitação. Por favor, tente novamente.');
     }
   });
 };

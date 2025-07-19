@@ -1,6 +1,6 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { Link, router, useForm, Head } from '@inertiajs/vue3'
+import { ref, computed, onMounted } from 'vue'
+import { Link, useForm, Head, usePage } from '@inertiajs/vue3'
 import { useToast } from '@/Composables/useToast'
 import Header from '../Components/Header.vue'
 import SiteNavbar from '../Components/SiteNavbar.vue'
@@ -21,6 +21,8 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+const page = usePage()
 
 // Toast notification
 const { toast } = useToast()
@@ -271,18 +273,47 @@ const submeterFormulario = () => {
   
   form.post(route('visitante.store'), {
     preserveScroll: false,
-    forceFormData: true, //  enviar arquivos
+    forceFormData: true, // Para enviar arquivos
     onSuccess: () => {
       isSubmitting.value = false
     },
     onError: (errors) => {
       isSubmitting.value = false
       console.error('Erro na validação:', errors)
+            
+      //Erro do servidor (reserva pendente, conflito, etc.)
       if (errors.message) {
         toast.error(errors.message)
-      } else {
-        toast.error('Ocorreu um erro ao enviar a solicitação. Por favor, tente novamente.')
+        return
       }
+      
+      // Erros de validação
+      if (errors.reserva_pendente) {
+        toast.error(errors.reserva_pendente)
+        return
+      }
+      
+      // Erro de CPF duplicado
+      if (errors.cpf) {
+        const cpfError = Array.isArray(errors.cpf) ? errors.cpf[0] : errors.cpf
+        toast.error(cpfError)
+        return
+      }
+      
+      // Primeiro erro de validação encontrado
+      const primeiroErro = Object.values(errors)[0]
+      if (typeof primeiroErro === 'string') {
+        toast.error(primeiroErro)
+        return
+      }
+      
+      if (Array.isArray(primeiroErro) && primeiroErro.length > 0) {
+        toast.error(primeiroErro[0])
+        return
+      }
+      
+      //Fallback genérico
+      toast.error('Ocorreu um erro ao enviar a solicitação. Por favor, tente novamente.')
     }
   })
 }
@@ -294,6 +325,19 @@ const toggleTermos = () => {
 
 onMounted(() => {
   document.getElementById('cpf_busca')?.focus()
+  
+  // Verificar mensagens flash e exibir como toast
+  if (page.props.flash) {
+    if (page.props.flash.error) {
+      toast.error(page.props.flash.error)
+    }
+    if (page.props.flash.message) {
+      toast.success(page.props.flash.message)
+    }
+    if (page.props.flash.warning) {
+      toast.warning(page.props.flash.warning)
+    }
+  }
 })
 </script>
 

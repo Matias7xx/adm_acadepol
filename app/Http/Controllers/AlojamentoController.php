@@ -7,7 +7,7 @@ use App\Models\Alojamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use App\Mail\NovaReservaAlojamento;
 use App\Mail\ReservaAlojamentoAprovada;
 use App\Mail\ReservaAlojamentoRejeitada;
@@ -65,6 +65,12 @@ class AlojamentoController extends Controller
 
         // Validar os dados do formulário
         $validated = $request->validate([
+            'data_inicial' => 'required|date|after_or_equal:today',
+            'data_final' => 'required|date|after_or_equal:data_inicial',
+            'motivo' => 'required|string',
+            'condicao' => 'required|string|max:255',
+            'aceita_termos' => 'required|boolean|accepted',
+            'documento_comprobatorio' => 'nullable|file|mimes:pdf|max:10240',
             'nome' => 'required|string|max:255',
             'cargo' => 'required|string|max:255',
             'matricula' => 'required|string|max:255',
@@ -75,8 +81,6 @@ class AlojamentoController extends Controller
             'orgao_expedidor' => 'nullable|string|max:20',
             'sexo' => 'nullable|string|in:masculino,feminino',
             'uf' => 'nullable|string|max:2',
-            'motivo' => 'required|string',
-            'condicao' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'telefone' => 'required|string|max:20',
             'endereco' => 'required|array',
@@ -85,63 +89,150 @@ class AlojamentoController extends Controller
             'endereco.bairro' => 'required|string|max:100',
             'endereco.cidade' => 'required|string|max:100',
             'endereco.cep' => 'nullable|string|max:10',
-            'data_inicial' => 'required|date|after_or_equal:today',
-            'data_final' => 'required|date|after_or_equal:data_inicial',
-            'aceita_termos' => 'required|boolean|accepted',
-            'documento_comprobatorio' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
-        // Criar a pré-reserva no banco de dados
-        $alojamento = new Alojamento();
-        $alojamento->user_id = Auth::id();
-        $alojamento->nome = $request->nome;
-        $alojamento->cargo = $request->cargo;
-        $alojamento->matricula = $request->matricula;
-        $alojamento->orgao = $request->orgao;
-        $alojamento->cpf = $request->cpf;
-        $alojamento->data_nascimento = $request->data_nascimento;
-        $alojamento->rg = $request->rg;
-        $alojamento->orgao_expedidor = $request->orgao_expedidor;
-        $alojamento->sexo = $request->sexo;
-        $alojamento->uf = $request->uf;
-        $alojamento->motivo = $request->motivo;
-        $alojamento->condicao = $request->condicao;
-        $alojamento->email = $request->email;
-        $alojamento->telefone = $request->telefone;
-        $alojamento->endereco = json_encode($request->endereco);
-        $alojamento->data_inicial = $request->data_inicial;
-        $alojamento->data_final = $request->data_final;
-        $alojamento->status = 'pendente';
+        $user = Auth::user();
+        $userId = $user->id;
 
-        // Processar upload de documento se fornecido
-        if ($request->hasFile('documento_comprobatorio')) {
-            $path = $request->file('documento_comprobatorio')->store('documentos_alojamento', 'public');
-            $alojamento->documento_comprobatorio = $path;
-        }
-        
-        $alojamento->save();
+        //VERIFICAR RESERVAS APROVADAS NO PERÍODO
+        $reservaAprovadaExistente = Alojamento::where('user_id', $userId)
+            ->where('status', 'aprovada')
+            ->where(function($query) use ($request) {
+                $query->whereBetween('data_inicial', [$request->data_inicial, $request->data_final])
+                    ->orWhereBetween('data_final', [$request->data_inicial, $request->data_final])
+                    ->orWhere(function($query) use ($request) {
+                        $query->where('data_inicial', '<=', $request->data_inicial)
+                            ->where('data_final', '>=', $request->data_final);
+                    });
+            })
+            ->exists();
 
-        // Enviar email para o administrador
-        $administradorEmail = config('alojamento.admin_email', 'matiasnobrega7@gmail.com');
-        Mail::to($administradorEmail)->send(new NovaReservaAlojamento($alojamento));
-
-        // Enviar cópia para o email institucional
-        $emailInstitucional = config('alojamento.institutional_email', 'nobregamatias7@gmail.com');
-        if ($emailInstitucional !== $administradorEmail) {
-            Mail::to($emailInstitucional)->send(new NovaReservaAlojamento($alojamento));
+        if ($reservaAprovadaExistente) {
+            throw ValidationException::withMessages([
+                'message' => 'Você já possui uma reserva aprovada para este período.'
+            ]);
         }
 
-        // Armazene detalhes importantes da reserva na sessão
-        session(['detalhes_reserva' => [
-            'nome' => $alojamento->nome,
-            'data_inicial' => $alojamento->data_inicial->format('d/m/Y'),
-            'data_final' => $alojamento->data_final->format('d/m/Y'),
-            'id' => $alojamento->id,
-            'created_at' => $alojamento->created_at->format('d/m/Y H:i')
-        ]]);
+        //VERIFICAR RESERVAS PENDENTES
+        $reservaPendenteExistente = Alojamento::where('user_id', $userId)
+            ->where('status', 'pendente')
+            ->exists();
 
-        return redirect()->route('alojamento.confirmacao')
-            ->with('message', 'Sua solicitação de pré-reserva foi enviada com sucesso e será analisada em breve.');
+        if ($reservaPendenteExistente) {
+            $reservaPendente = Alojamento::where('user_id', $userId)
+                ->where('status', 'pendente')
+                ->latest('created_at')
+                ->first();
+            
+            $mensagemErro = 'Você já possui uma reserva pendente de análise criada em ' . 
+                $reservaPendente->created_at->format('d/m/Y H:i') . 
+                ' para o período de ' . 
+                $reservaPendente->data_inicial->format('d/m/Y') . 
+                ' a ' . 
+                $reservaPendente->data_final->format('d/m/Y') . 
+                '. Aguarde a análise ou entre em contato com a administração.';
+            
+            throw ValidationException::withMessages([
+                'message' => $mensagemErro
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            //ATUALIZAR PERFIL DO USUÁRIO com dados do formulário
+            $user->update([
+                'name' => $request->nome,
+                'cargo' => $request->cargo,
+                'matricula' => $request->matricula,
+                'orgao' => $request->orgao,
+                'cpf' => preg_replace('/[^0-9]/', '', $request->cpf),
+                'data_nascimento' => $request->data_nascimento,
+                'rg' => $request->rg,
+                'orgao_expedidor' => $request->orgao_expedidor,
+                'sexo' => $request->sexo,
+                'uf' => $request->uf,
+                'email' => $request->email,
+                'telefone' => $request->telefone,
+                'endereco' => $request->endereco,
+            ]);
+
+            //CRIAR RESERVA (sem duplicar dados pessoais)
+            $alojamento = new Alojamento();
+            $alojamento->user_id = $userId;
+            
+            // Dados básicos da reserva referenciando o usuário
+            $alojamento->nome = $user->name;
+            $alojamento->cargo = $user->cargo;
+            $alojamento->matricula = $user->matricula;
+            $alojamento->orgao = $user->orgao;
+            $alojamento->cpf = $user->cpf;
+            $alojamento->data_nascimento = $user->data_nascimento;
+            $alojamento->rg = $user->rg;
+            $alojamento->orgao_expedidor = $user->orgao_expedidor;
+            $alojamento->sexo = $user->sexo;
+            $alojamento->uf = $user->uf;
+            $alojamento->email = $user->email;
+            $alojamento->telefone = $user->telefone;
+            $alojamento->endereco = json_encode($user->endereco);
+            
+            // Dados específicos da reserva
+            $alojamento->motivo = $request->motivo;
+            $alojamento->condicao = $request->condicao;
+            $alojamento->data_inicial = $request->data_inicial;
+            $alojamento->data_final = $request->data_final;
+            $alojamento->status = 'pendente';
+
+            // Processar upload de documento se fornecido
+            if ($request->hasFile('documento_comprobatorio')) {
+                $path = $request->file('documento_comprobatorio')->store('documentos_alojamento', 'public');
+                $alojamento->documento_comprobatorio = $path;
+            }
+            
+            $alojamento->save();
+
+            // Logs
+            \Log::info('Nova reserva de alojamento criada e perfil atualizado', [
+                'reserva_id' => $alojamento->id,
+                'user_id' => $userId,
+                'nome' => $user->name
+            ]);
+
+            // Enviar emails
+            $administradorEmail = config('alojamento.admin_email', 'matiasnobrega7@gmail.com');
+            Mail::to($administradorEmail)->send(new NovaReservaAlojamento($alojamento));
+
+            $emailInstitucional = config('alojamento.institutional_email', 'nobregamatias7@gmail.com');
+            if ($emailInstitucional !== $administradorEmail) {
+                Mail::to($emailInstitucional)->send(new NovaReservaAlojamento($alojamento));
+            }
+
+            // Session
+            session(['detalhes_reserva' => [
+                'nome' => $alojamento->nome,
+                'data_inicial' => $alojamento->data_inicial->format('d/m/Y'),
+                'data_final' => $alojamento->data_final->format('d/m/Y'),
+                'id' => $alojamento->id,
+                'created_at' => $alojamento->created_at->format('d/m/Y H:i')
+            ]]);
+
+            DB::commit();
+
+            return redirect()->route('alojamento.confirmacao')
+                ->with('message', 'Sua solicitação de pré-reserva foi enviada com sucesso e será analisada em breve.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Erro ao criar reserva de alojamento: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw ValidationException::withMessages([
+                'message' => 'Ocorreu um erro ao processar sua solicitação. Tente novamente.'
+            ]);
+        }
     }
 
     /**

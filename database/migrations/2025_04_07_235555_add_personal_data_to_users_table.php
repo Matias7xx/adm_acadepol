@@ -13,11 +13,16 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('cpf')->nullable()->unique()->after('matricula');
+            $table->string('rg')->nullable()->after('cpf');
+            $table->string('orgao_expedidor')->nullable()->after('rg');
             $table->string('cargo')->nullable()->after('cpf');
             $table->string('orgao')->nullable()->after('cargo');
             $table->string('lotacao')->nullable()->after('orgao');
             $table->string('telefone')->nullable()->after('lotacao');
             $table->date('data_nascimento')->nullable()->after('telefone');
+            $table->enum('sexo', ['masculino', 'feminino'])->nullable()->after('data_nascimento');
+            $table->string('uf', 2)->nullable()->after('sexo');
+            $table->json('endereco')->nullable()->after('uf');
         });
     }
 

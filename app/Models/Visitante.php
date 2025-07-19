@@ -184,7 +184,15 @@ class Visitante extends Model
     public static function findByCpf($cpf)
     {
         $cpf = preg_replace('/[^0-9]/', '', $cpf);
-        return self::where('cpf', $cpf)->first();
+        return self::where('cpf', $cpf)
+                   ->latest('created_at')  // Busca o mais recente
+                   ->first();
+    }
+
+    public static function cpfJaTemReserva($cpf)
+    {
+        $cpf = preg_replace('/[^0-9]/', '', $cpf);
+        return self::where('cpf', $cpf)->exists();
     }
 
     /**

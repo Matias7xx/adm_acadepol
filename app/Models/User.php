@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'password',
         'matricula',
         'cpf',
         'cargo',
@@ -28,7 +29,11 @@ class User extends Authenticatable
         'lotacao',
         'telefone',
         'data_nascimento',
-        'password',
+        'rg',
+        'orgao_expedidor',
+        'sexo',
+        'uf',
+        'endereco',
     ];
 
     /**
@@ -49,6 +54,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'data_nascimento' => 'date',
+        'endereco' => 'array',
     ];
 
     /**
@@ -133,4 +139,37 @@ public function certificados()
 {
     return $this->hasMany(Certificado::class, 'user_id');
 }
+
+public function getEnderecoFormatadoAttribute()
+    {
+        $endereco = $this->endereco;
+        
+        if (!is_array($endereco)) {
+            return '';
+        }
+        
+        $partes = [];
+        
+        if (!empty($endereco['rua'])) {
+            $partes[] = $endereco['rua'];
+            
+            if (!empty($endereco['numero'])) {
+                $partes[0] .= ', ' . $endereco['numero'];
+            }
+        }
+        
+        if (!empty($endereco['bairro'])) {
+            $partes[] = $endereco['bairro'];
+        }
+        
+        if (!empty($endereco['cidade'])) {
+            $partes[] = $endereco['cidade'];
+        }
+        
+        if (!empty($endereco['uf'])) {
+            $partes[] = $endereco['uf'];
+        }
+        
+        return implode(' - ', $partes);
+    }
 }

@@ -15,7 +15,7 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use App\Mail\NovaReservaAlojamento;
+use Illuminate\Validation\ValidationException;
 use App\Mail\ReservaVisitanteAprovada;
 use App\Mail\ReservaVisitanteRejeitada;
 use App\Services\DataSanitizerService;
@@ -50,6 +50,7 @@ class VisitanteController extends Controller
             ], 400);
         }
 
+        // Buscar visitante mais recente
         $visitante = Visitante::findByCpf($cpf);
 
         if (!$visitante) {
@@ -114,147 +115,220 @@ class VisitanteController extends Controller
      * Processa o formulário de reserva de visitante
      */
     public function store(Request $request)
-    {
-        // Validar os dados
-        $validator = Validator::make($request->all(), [
-            'nome' => 'required|string|max:255',
-            'cpf' => 'required|string|max:20',
-            'rg' => 'required|string|max:20',
-            'orgao_expedidor_rg' => 'required|string|max:20',
-            'data_nascimento' => 'required|date|before:today',
-            'sexo' => 'required|in:masculino,feminino',
-            'telefone' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'endereco' => 'required|array',
-            'endereco.rua' => 'required|string|max:255',
-            'endereco.numero' => 'nullable|string|max:10',
-            'endereco.bairro' => 'required|string|max:100',
-            'endereco.cidade' => 'required|string|max:100',
-            'endereco.uf' => 'required|string|size:2',
-            'endereco.cep' => 'required|string|max:10',
-            'orgao_trabalho' => 'required|string|max:255',
-            'cargo' => 'required|string|max:255',
-            'matricula_funcional' => 'nullable|string|max:50',
-            'tipo_orgao' => 'required|string',
-            'data_inicial' => 'required|date|after_or_equal:today',
-            'data_final' => 'required|date|after_or_equal:data_inicial',
-            'motivo' => 'required|string',
-            'condicao' => 'required|string',
-            'documento_identidade' => 'required|file|mimes:pdf|max:5120',
-            'documento_funcional' => 'nullable|file|mimes:pdf|max:5120',
-            'documento_comprobatorio' => 'nullable|file|mimes:pdf|max:5120',
-            'aceita_termos' => 'required|boolean|accepted',
+{
+    // Validar os dados
+    $validator = Validator::make($request->all(), [
+        'nome' => 'required|string|max:255',
+        'cpf' => 'required|string|max:20',
+        'rg' => 'required|string|max:20',
+        'orgao_expedidor_rg' => 'required|string|max:20',
+        'data_nascimento' => 'required|date|before:today',
+        'sexo' => 'required|in:masculino,feminino',
+        'telefone' => 'required|string|max:20',
+        'email' => 'required|email|max:255',
+        'endereco' => 'required|array',
+        'endereco.rua' => 'required|string|max:255',
+        'endereco.numero' => 'nullable|string|max:10',
+        'endereco.bairro' => 'required|string|max:100',
+        'endereco.cidade' => 'required|string|max:100',
+        'endereco.uf' => 'required|string|size:2',
+        'endereco.cep' => 'required|string|max:10',
+        'orgao_trabalho' => 'required|string|max:255',
+        'cargo' => 'required|string|max:255',
+        'matricula_funcional' => 'nullable|string|max:50',
+        'tipo_orgao' => 'required|string',
+        'data_inicial' => 'required|date|after_or_equal:today',
+        'data_final' => 'required|date|after_or_equal:data_inicial',
+        'motivo' => 'required|string',
+        'condicao' => 'required|string',
+        'documento_identidade' => 'required|file|mimes:pdf|max:5120',
+        'documento_funcional' => 'nullable|file|mimes:pdf|max:5120',
+        'documento_comprobatorio' => 'nullable|file|mimes:pdf|max:5120',
+        'aceita_termos' => 'required|boolean|accepted',
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    // Verificar se já existe reserva no período
+    $cpf = preg_replace('/[^0-9]/', '', $request->cpf);
+    
+    //VERIFICAR RESERVAS APROVADAS
+    $reservaAprovadaExistente = Visitante::where('cpf', $cpf)
+        ->where('status', 'aprovada')
+        ->where(function($query) use ($request) {
+            $query->whereBetween('data_inicial', [$request->data_inicial, $request->data_final])
+                ->orWhereBetween('data_final', [$request->data_inicial, $request->data_final])
+                ->orWhere(function($query) use ($request) {
+                    $query->where('data_inicial', '<=', $request->data_inicial)
+                        ->where('data_final', '>=', $request->data_final);
+                });
+        })
+        ->exists();
+
+    if ($reservaAprovadaExistente) {
+        throw ValidationException::withMessages([
+            'message' => 'Já existe uma reserva aprovada para este CPF no período solicitado.'
+        ]);
+    }
+
+    //VERIFICAR RESERVAS PENDENTES
+    $reservaPendenteExistente = Visitante::where('cpf', $cpf)
+        ->where('status', 'pendente')
+        ->exists();
+
+    if ($reservaPendenteExistente) {
+        $reservaPendente = Visitante::where('cpf', $cpf)
+            ->where('status', 'pendente')
+            ->latest('created_at')
+            ->first();
+        
+        $mensagemErro = 'Você já possui uma reserva pendente de análise criada em ' . 
+            $reservaPendente->created_at->format('d/m/Y H:i') . 
+            ' para o período de ' . 
+            $reservaPendente->data_inicial->format('d/m/Y') . 
+            ' a ' . 
+            $reservaPendente->data_final->format('d/m/Y') . 
+            '. Aguarde a análise ou entre em contato com a administração.';
+        
+        throw ValidationException::withMessages([
+            'message' => $mensagemErro
+        ]);
+    }
+
+    try {
+        DB::beginTransaction();
+
+        // VERIFICAR se CPF já existe (primeiro uso ou retornando)
+        $visitanteExistente = Visitante::findByCpf($cpf);
+        
+        if ($visitanteExistente) {
+            // ATUALIZAR dados pessoais na reserva mais recente
+            $visitanteExistente->update([
+                'nome' => $request->nome,
+                'rg' => $request->rg,
+                'orgao_expedidor_rg' => $request->orgao_expedidor_rg,
+                'data_nascimento' => $request->data_nascimento,
+                'sexo' => $request->sexo,
+                'telefone' => $request->telefone,
+                'email' => $request->email,
+                'endereco' => $request->endereco,
+                'orgao_trabalho' => $request->orgao_trabalho,
+                'cargo' => $request->cargo,
+                'matricula_funcional' => $request->matricula_funcional,
+                'tipo_orgao' => $request->tipo_orgao,
+            ]);
+            
+            \Log::info('Dados pessoais atualizados para CPF: ' . $cpf, [
+                'visitante_id' => $visitanteExistente->id,
+                'nome' => $request->nome
+            ]);
+        }
+        
+        // SEMPRE CRIAR nova reserva (independente se é primeira vez ou não)
+        $novaReserva = new Visitante();
+        
+        // Dados pessoais (atualizados ou novos)
+        $novaReserva->nome = $request->nome;
+        $novaReserva->cpf = $cpf;
+        $novaReserva->rg = $request->rg;
+        $novaReserva->orgao_expedidor_rg = $request->orgao_expedidor_rg;
+        $novaReserva->data_nascimento = $request->data_nascimento;
+        $novaReserva->sexo = $request->sexo;
+        $novaReserva->telefone = $request->telefone;
+        $novaReserva->email = $request->email;
+        $novaReserva->endereco = $request->endereco;
+        $novaReserva->orgao_trabalho = $request->orgao_trabalho;
+        $novaReserva->cargo = $request->cargo;
+        $novaReserva->matricula_funcional = $request->matricula_funcional;
+        $novaReserva->tipo_orgao = $request->tipo_orgao;
+        
+        // Dados específicos da reserva (sempre novos)
+        $novaReserva->data_inicial = $request->data_inicial;
+        $novaReserva->data_final = $request->data_final;
+        $novaReserva->motivo = $request->motivo;
+        $novaReserva->condicao = $request->condicao;
+        $novaReserva->ip = $request->ip();
+        $novaReserva->user_agent = $request->userAgent();
+        $novaReserva->status = 'pendente';
+
+        // Processar uploads da nova reserva
+        if ($request->hasFile('documento_identidade')) {
+            $path = $request->file('documento_identidade')->store('documentos_visitantes/identidade', 'public');
+            $novaReserva->documento_identidade = $path;
+        }
+
+        if ($request->hasFile('documento_funcional')) {
+            $path = $request->file('documento_funcional')->store('documentos_visitantes/funcional', 'public');
+            $novaReserva->documento_funcional = $path;
+        }
+
+        if ($request->hasFile('documento_comprobatorio')) {
+            $path = $request->file('documento_comprobatorio')->store('documentos_visitantes/comprobatorio', 'public');
+            $novaReserva->documento_comprobatorio = $path;
+        }
+
+        $novaReserva->save();
+
+        // ✅ Log de sucesso
+        \Log::info($visitanteExistente ? 'Nova reserva criada para visitante existente' : 'Primeira reserva criada', [
+            'nova_reserva_id' => $novaReserva->id,
+            'cpf' => $cpf,
+            'nome' => $request->nome,
+            'eh_primeira_reserva' => !$visitanteExistente
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // Verificar se já existe reserva no período
-        $cpf = preg_replace('/[^0-9]/', '', $request->cpf);
+        // Enviar email para administrador
+        $administradorEmail = config('alojamento.admin_email', 'matiasnobrega7@gmail.com');
         
-        $reservaExistente = Visitante::where('cpf', $cpf)
-            ->where('status', 'aprovada')
-            ->where(function($query) use ($request) {
-                $query->whereBetween('data_inicial', [$request->data_inicial, $request->data_final])
-                    ->orWhereBetween('data_final', [$request->data_inicial, $request->data_final])
-                    ->orWhere(function($query) use ($request) {
-                        $query->where('data_inicial', '<=', $request->data_inicial)
-                            ->where('data_final', '>=', $request->data_final);
-                    });
-            })
-            ->exists();
-
-        if ($reservaExistente) {
-            return redirect()->back()
-                ->with('error', 'Já existe uma reserva aprovada para este CPF no período solicitado.')
-                ->withInput();
+        // Registrar na auditoria (se o serviço estiver disponível)
+        if ($this->auditLogger) {
+            $this->auditLogger->registrarAcao(
+                $visitanteExistente ? 'Nova reserva de visitante recorrente criada' : 'Primeira reserva de visitante criada',
+                'visitante',
+                [
+                    'nova_reserva_id' => $novaReserva->id,
+                    'cpf' => $novaReserva->formatted_cpf,
+                    'nome' => $novaReserva->nome,
+                    'orgao' => $novaReserva->orgao_trabalho,
+                    'eh_primeira_reserva' => !$visitanteExistente
+                ]
+            );
         }
 
-        try {
-            // Criar a reserva
-            $visitante = new Visitante();
-            
-            // Campos básicos
-            $visitante->nome = $request->nome;
-            $visitante->cpf = $cpf;
-            $visitante->rg = $request->rg;
-            $visitante->orgao_expedidor_rg = $request->orgao_expedidor_rg;
-            $visitante->data_nascimento = $request->data_nascimento;
-            $visitante->sexo = $request->sexo;
-            $visitante->telefone = $request->telefone;
-            $visitante->email = $request->email;
-            $visitante->endereco = $request->endereco;
-            $visitante->orgao_trabalho = $request->orgao_trabalho;
-            $visitante->cargo = $request->cargo;
-            $visitante->matricula_funcional = $request->matricula_funcional;
-            $visitante->tipo_orgao = $request->tipo_orgao;
-            $visitante->data_inicial = $request->data_inicial;
-            $visitante->data_final = $request->data_final;
-            $visitante->motivo = $request->motivo;
-            $visitante->condicao = $request->condicao;
-            $visitante->ip = $request->ip();
-            $visitante->user_agent = $request->userAgent();
-            $visitante->status = 'pendente';
+        // Armazenar detalhes na sessão
+        session(['detalhes_reserva_visitante' => [
+            'nome' => $novaReserva->nome,
+            'cpf' => $novaReserva->formatted_cpf,
+            'data_inicial' => $novaReserva->data_inicial->format('d/m/Y'),
+            'data_final' => $novaReserva->data_final->format('d/m/Y'),
+            'id' => $novaReserva->id,
+            'created_at' => $novaReserva->created_at->format('d/m/Y H:i'),
+            'eh_primeira_reserva' => !$visitanteExistente
+        ]]);
 
-            // Processar uploads
-            if ($request->hasFile('documento_identidade')) {
-                $path = $request->file('documento_identidade')->store('documentos_visitantes/identidade', 'public');
-                $visitante->documento_identidade = $path;
-            }
+        DB::commit();
 
-            if ($request->hasFile('documento_funcional')) {
-                $path = $request->file('documento_funcional')->store('documentos_visitantes/funcional', 'public');
-                $visitante->documento_funcional = $path;
-            }
+        return redirect()->route('visitante.confirmacao')
+            ->with('message', 'Sua solicitação de reserva foi enviada com sucesso!');
 
-            if ($request->hasFile('documento_comprobatorio')) {
-                $path = $request->file('documento_comprobatorio')->store('documentos_visitantes/comprobatorio', 'public');
-                $visitante->documento_comprobatorio = $path;
-            }
-
-            $visitante->save();
-
-            // Enviar email para administrador
-            $administradorEmail = config('alojamento.admin_email', 'matiasnobrega7@gmail.com');
-            
-            // Registrar na auditoria (se o serviço estiver disponível)
-            if ($this->auditLogger) {
-                $this->auditLogger->registrarAcao(
-                    'Nova reserva de visitante criada',
-                    'visitante',
-                    [
-                        'visitante_id' => $visitante->id,
-                        'cpf' => $visitante->formatted_cpf,
-                        'nome' => $visitante->nome,
-                        'orgao' => $visitante->orgao_trabalho
-                    ]
-                );
-            }
-
-            // Armazenar detalhes na sessão
-            session(['detalhes_reserva_visitante' => [
-                'nome' => $visitante->nome,
-                'cpf' => $visitante->formatted_cpf,
-                'data_inicial' => $visitante->data_inicial->format('d/m/Y'),
-                'data_final' => $visitante->data_final->format('d/m/Y'),
-                'id' => $visitante->id,
-                'created_at' => $visitante->created_at->format('d/m/Y H:i')
-            ]]);
-
-            return redirect()->route('visitante.confirmacao')
-                ->with('message', 'Sua solicitação de reserva foi enviada com sucesso!');
-
-        } catch (\Exception $e) {
-            \Log::error('Erro ao criar reserva de visitante: ' . $e->getMessage());
-            
-            return redirect()->back()
-                ->with('error', 'Ocorreu um erro ao processar sua solicitação. Tente novamente.')
-                ->withInput();
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        \Log::error('Erro ao criar reserva de visitante: ' . $e->getMessage(), [
+            'cpf' => $cpf,
+            'nome' => $request->nome,
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        throw ValidationException::withMessages([
+            'message' => 'Ocorreu um erro ao processar sua solicitação. Tente novamente.'
+        ]);
     }
+}
 
     /**
      * Página de confirmação
