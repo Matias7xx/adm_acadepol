@@ -29,6 +29,25 @@ const formattedName = computed(() => {
     
     return `${names[0]} ${names[names.length - 1]}`;
 });
+
+//URL da foto do usuário
+const userPhotoUrl = computed(() => {
+    if (user && user.cpf) {
+        // Remove formatação do CPF (pontos e traços)
+        const cpfLimpo = user.cpf.replace(/[.-]/g, '');
+        // Retorna a URL da rota que busca a foto usando StorageHelper
+        // A rota espera o CPF limpo e automaticamente adiciona o "_F.jpg"
+        return `/foto-usuario/${cpfLimpo}`;
+    }
+    return null;
+});
+
+// Estado para controlar se a foto carregou com erro
+const photoError = ref(false);
+
+const handlePhotoError = () => {
+    photoError.value = true;
+};
 </script>
 
 <template>
@@ -48,8 +67,25 @@ const formattedName = computed(() => {
                         <!-- User Info -->
                         <div class="p-6 border-b border-gray-200">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-[#bea55a] text-white rounded-full h-12 w-12 flex items-center justify-center font-semibold text-lg">
-                                    {{ formattedName.charAt(0) }}
+                                <div class="flex-shrink-0 relative">
+                                    <!-- Foto do usuário ou avatar padrão -->
+                                    <div class="h-12 w-12 rounded-full overflow-hidden bg-[#bea55a] flex items-center justify-center">
+                                        <img 
+                                            v-if="userPhotoUrl && !photoError"
+                                            :src="userPhotoUrl" 
+                                            :alt="`Foto de ${formattedName}`"
+                                            @error="handlePhotoError"
+                                            class="w-full h-full object-cover"
+                                            style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: optimizeQuality; filter: contrast(1.1) brightness(1.05) saturate(1.1); backface-visibility: hidden; transform: translateZ(0);"
+                                        />
+                                        <!-- Fallback para iniciais caso não tenha foto ou erro no carregamento -->
+                                        <span 
+                                            v-else
+                                            class="text-white font-semibold text-lg"
+                                        >
+                                            {{ formattedName.charAt(0) }}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="ml-4">
                                     <h2 class="text-lg font-medium text-gray-900">

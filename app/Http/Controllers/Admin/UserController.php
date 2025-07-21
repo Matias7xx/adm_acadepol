@@ -340,23 +340,31 @@ class UserController extends Controller
             // Gerar número único do certificado
             $numeroCertificado = Certificado::gerarNumeroCertificado();
             
-            // Usar helper para gerar caminho estruturado
-            $caminhoCompleto = CertificadoHelper::gerarCaminhoParaUsuario($user, $nomeCurso, $numeroCertificado);
+            // USAR MINIO PARA SALVAR
+            $nomeUsuario = CertificadoHelper::sanitizeFolderName($user->name);
+            $nomeCursoSanitizado = CertificadoHelper::sanitizeFolderName($nomeCurso);
             
-            // Garantir que o diretório existe
-            if (!CertificadoHelper::criarEstruturaDiretorios($caminhoCompleto)) {
-                throw new \Exception('Não foi possível criar a estrutura de diretórios');
+            // Gerar nome único do arquivo
+            $nomeArquivo = \Illuminate\Support\Str::uuid() . '.pdf';
+            
+            // Caminho virtual no MinIO
+            if ($tipoOrigem === Certificado::TIPO_CURSO_EXTERNO) {
+                $caminhoVirtual = "certificados-externos/{$nomeUsuario}/{$nomeCursoSanitizado}/{$nomeArquivo}";
+                $diretorioUpload = "certificados-externos/{$nomeUsuario}/{$nomeCursoSanitizado}";
+            } else {
+                $caminhoVirtual = "certificados/{$nomeUsuario}/{$nomeCursoSanitizado}/{$nomeArquivo}";
+                $diretorioUpload = "certificados/{$nomeUsuario}/{$nomeCursoSanitizado}";
             }
             
-            // Extrair diretório e nome do arquivo
-            $diretorio = dirname($caminhoCompleto);
-            $nomeArquivo = basename($caminhoCompleto);
+            // SALVAR NO BUCKET 'certificados' VIA STORAGEHELPER
+            $sucesso = \App\Helpers\StorageHelper::certificados()->putFileAs(
+                $diretorioUpload,
+                $request->file('certificado_pdf'),
+                $nomeArquivo
+            );
             
-            // Salvar arquivo no storage
-            $arquivoSalvo = $request->file('certificado_pdf')->storeAs($diretorio, $nomeArquivo, 'local');
-            
-            if (!$arquivoSalvo) {
-                throw new \Exception('Falha ao salvar o arquivo do certificado');
+            if (!$sucesso) {
+                throw new \Exception('Falha ao salvar o arquivo do certificado no MinIO');
             }
             
             // Salvar registro no banco
@@ -365,7 +373,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'curso_id' => $curso ? $curso->id : null,
                 'numero_certificado' => $numeroCertificado,
-                'arquivo_path' => $caminhoCompleto,
+                'arquivo_path' => $caminhoVirtual, // ✅ CAMINHO VIRTUAL NO MINIO
                 'data_emissao' => now(),
                 'data_conclusao_curso' => $validated['data_conclusao'],
                 'carga_horaria' => $validated['carga_horaria'],
@@ -376,20 +384,21 @@ class UserController extends Controller
                 'ativo' => true
             ]);
             
-            Log::info('Certificado adicionado manualmente pelo admin', [
+            Log::info('Certificado adicionado manualmente pelo admin via MinIO', [
                 'certificado_id' => $certificado->id,
                 'user_id' => $user->id,
                 'curso_id' => $curso ? $curso->id : null,
                 'tipo_origem' => $tipoOrigem,
                 'admin_id' => Auth::id(),
                 'arquivo_original' => $request->file('certificado_pdf')->getClientOriginalName(),
-                'caminho_final' => $caminhoCompleto
+                'caminho_virtual' => $caminhoVirtual,
+                'bucket' => 'certificados'
             ]);
             
-            return redirect()->back()->with('success', 'Certificado adicionado com sucesso!');
+            return redirect()->back()->with('success', 'Certificado adicionado com sucesso no MinIO!');
             
         } catch (\Exception $e) {
-            Log::error('Erro ao adicionar certificado para usuário', [
+            Log::error('Erro ao adicionar certificado para usuário via MinIO', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => $user->id,
@@ -414,22 +423,27 @@ class UserController extends Controller
                 return redirect()->back()->with('error', 'Este certificado não pertence ao usuário selecionado');
             }
             
-            // Remover arquivo do storage
+            // REMOVER ARQUIVO DO MINIO
             if ($certificado->arquivoExiste()) {
-                Storage::disk('local')->delete($certificado->arquivo_path);
+                \App\Helpers\StorageHelper::certificados()->delete($certificado->arquivo_path);
                 
-                // Limpar diretórios vazios com helper
-                CertificadoHelper::limparDiretoriosVazios($certificado->arquivo_path);
+                Log::info('Arquivo de certificado removido do MinIO', [
+                    'arquivo_path' => $certificado->arquivo_path,
+                    'certificado_id' => $certificado->id,
+                    'bucket' => 'certificados'
+                ]); 
             }
             
-            // Remover registro do banco
+            // Salvar informações antes de remover
             $certificadoInfo = [
                 'id' => $certificado->id,
                 'numero' => $certificado->numero_certificado,
                 'curso' => $certificado->nome_curso,
-                'arquivo_path' => $certificado->arquivo_path
+                'arquivo_path' => $certificado->arquivo_path,
+                'bucket' => $certificado->getBucketName()
             ];
             
+            // Remover registro do banco
             $certificado->delete();
             
             Log::info('Certificado removido pelo admin', [
@@ -438,10 +452,10 @@ class UserController extends Controller
                 'admin_id' => Auth::id()
             ]);
             
-            return redirect()->back()->with('success', 'Certificado removido com sucesso!');
+            return redirect()->back()->with('success', 'Certificado removido com sucesso do MinIO!');
             
         } catch (\Exception $e) {
-            Log::error('Erro ao remover certificado do usuário', [
+            Log::error('Erro ao remover certificado do usuário via MinIO', [
                 'error' => $e->getMessage(),
                 'certificado_id' => $certificado->id ?? null,
                 'user_id' => $user->id,

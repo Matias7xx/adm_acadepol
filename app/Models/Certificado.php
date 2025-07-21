@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\StorageHelper;
 
 class Certificado extends Model
 {
@@ -78,11 +79,20 @@ class Certificado extends Model
     }
 
     /**
-     * Verificar se o arquivo do certificado existe
+     * VERIFICAR SE O ARQUIVO EXISTE NO MINIO VIA STORAGEHELPER
      */
     public function arquivoExiste()
     {
-        return Storage::disk('local')->exists($this->arquivo_path);
+        try {
+            return StorageHelper::certificados()->exists($this->arquivo_path);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao verificar existência do certificado no MinIO', [
+                'certificado_id' => $this->id,
+                'arquivo_path' => $this->arquivo_path,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -91,6 +101,14 @@ class Certificado extends Model
     public function getUrlDownload()
     {
         return route('certificados.download', $this->id);
+    }
+    
+    /**
+     * OBTER URL PARA VISUALIZAÇÃO DO CERTIFICADO
+     */
+    public function getUrlView()
+    {
+        return route('certificados.view', $this->id);
     }
 
     /**
@@ -109,22 +127,97 @@ class Certificado extends Model
     }
 
     /**
-     * Obter tamanho do arquivo em formato legível
+     * OBTER TAMANHO DO ARQUIVO NO MINIO
      */
     public function getTamanhoArquivoAttribute()
     {
-        if (!$this->arquivoExiste()) {
-            return 'Arquivo não encontrado';
+        try {
+            if (!$this->arquivoExiste()) {
+                return 'Arquivo não encontrado';
+            }
+            
+            $size = StorageHelper::certificados()->size($this->arquivo_path);
+            $units = ['B', 'KB', 'MB', 'GB'];
+            
+            for ($i = 0; $size > 1024 && $i < count($units) - 1; $i++) {
+                $size /= 1024;
+            }
+            
+            return round($size, 2) . ' ' . $units[$i];
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro ao obter tamanho do certificado no MinIO', [
+                'certificado_id' => $this->id,
+                'arquivo_path' => $this->arquivo_path,
+                'error' => $e->getMessage()
+            ]);
+            return 'Erro ao obter tamanho';
         }
-        
-        $size = Storage::disk('local')->size($this->arquivo_path);
-        $units = ['B', 'KB', 'MB', 'GB'];
-        
-        for ($i = 0; $size > 1024 && $i < count($units) - 1; $i++) {
-            $size /= 1024;
+    }
+
+    /**
+     * OBTER ÚLTIMA MODIFICAÇÃO DO ARQUIVO NO MINIO
+     */
+    public function getDataModificacaoAttribute()
+    {
+        try {
+            if (!$this->arquivoExiste()) {
+                return null;
+            }
+            
+            $timestamp = StorageHelper::certificados()->lastModified($this->arquivo_path);
+            return $timestamp ? \Carbon\Carbon::createFromTimestamp($timestamp) : null;
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro ao obter data de modificação do certificado no MinIO', [
+                'certificado_id' => $this->id,
+                'arquivo_path' => $this->arquivo_path,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
-        
-        return round($size, 2) . ' ' . $units[$i];
+    }
+
+    /**
+     * OBTER INFORMAÇÕES COMPLETAS DO ARQUIVO NO MINIO
+     */
+    public function getInfoArquivo()
+    {
+        try {
+            if (!$this->arquivoExiste()) {
+                return [
+                    'exists' => false,
+                    'size' => null,
+                    'size_human' => 'Arquivo não encontrado',
+                    'last_modified' => null
+                ];
+            }
+            
+            $size = StorageHelper::certificados()->size($this->arquivo_path);
+            $lastModified = StorageHelper::certificados()->lastModified($this->arquivo_path);
+            
+            return [
+                'exists' => true,
+                'path' => $this->arquivo_path,
+                'size' => $size,
+                'size_human' => $this->tamanho_arquivo,
+                'last_modified' => $lastModified ? \Carbon\Carbon::createFromTimestamp($lastModified) : null,
+                'download_url' => $this->getUrlDownload(),
+                'view_url' => $this->getUrlView()
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro ao obter informações do certificado no MinIO', [
+                'certificado_id' => $this->id,
+                'arquivo_path' => $this->arquivo_path,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'exists' => false,
+                'error' => 'Erro ao acessar arquivo'
+            ];
+        }
     }
 
     /**
@@ -175,6 +268,19 @@ class Certificado extends Model
             self::TIPO_CURSO_EXTERNO => 'warning',
             default => 'gray'
         };
+    }
+
+    /**
+     * OBTER NOME DO BUCKET ONDE ESTÁ ARMAZENADO
+     */
+    public function getBucketName()
+    {
+        // Determinar bucket baseado no caminho
+        if (str_starts_with($this->arquivo_path, 'certificados-externos/')) {
+            return 'certificados (externos)';
+        }
+        
+        return 'certificados';
     }
 
     /**

@@ -15,6 +15,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\URL;
+use App\Helpers\StorageHelper;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 URL::forceScheme(env('HTTP_SCHEMA'));
 URL::forceRootUrl(env('APP_URL'));
@@ -170,6 +174,63 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard'); */
 
+     //Rota para servir as imagens do minIO
+    Route::get('/foto-usuario/{cpf?}', function($cpf = null) {
+        Log::info("=== DEBUG ROTA FOTO ===");
+        Log::info("CPF recebido: " . ($cpf ?? 'null'));
+        
+        if (!Auth::check()) {
+            Log::warning("Usuário não autenticado");
+            return abort(404);
+        }
+        
+        // Se não passou CPF, usa o do usuário logado
+        if (!$cpf) {
+            $cpf = str_replace(['.', '-'], '', Auth::user()->cpf ?? '');
+            Log::info("CPF do usuário logado: {$cpf}");
+        }
+        
+        $nomeArquivo = "{$cpf}_F.jpg";
+        Log::info("Nome do arquivo: {$nomeArquivo}");
+        
+        try {
+            // DEBUG: Configuração do disco
+            $diskConfig = config('filesystems.disks.s3');
+            Log::info("Configuração do disco:", $diskConfig);
+            
+            // Usar o disco s3 (bucket funcionais)
+            $exists = StorageHelper::fotos()->exists($nomeArquivo);
+            Log::info("Arquivo existe: " . ($exists ? 'SIM' : 'NÃO'));
+            
+            if ($exists) {
+                $conteudo = StorageHelper::fotos()->get($nomeArquivo);
+                $tamanho = strlen($conteudo);
+                Log::info("Arquivo encontrado - Tamanho: {$tamanho} bytes");
+                
+                return response($conteudo, 200)
+                    ->header('Content-Type', 'image/jpg')
+                    ->header('Cache-Control', 'public, max-age=3600'); // Cache por 1 hora
+            } else {
+                // DEBUG: Listar o que tem no bucket
+                try {
+                    $files = Storage::disk('s3')->allFiles();
+                    Log::info("Arquivos no bucket:", $files);
+                } catch (\Exception $e) {
+                    Log::error("Erro ao listar arquivos: " . $e->getMessage());
+                }
+                
+                Log::warning("Arquivo não encontrado: {$nomeArquivo}");
+                return abort(404);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error("Erro na rota de foto: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            return abort(500);
+        }
+        
+    })->name('foto.usuario');
+
     // Perfil do usuário
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'edit')->name('profile.edit');
@@ -205,8 +266,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Certificados - Acesso autenticado
     Route::controller(CertificadoController::class)->prefix('certificados')->name('certificados.')->group(function () {
+        // Listar certificados do usuário logado
         Route::get('/meus', 'meusCertificados')->name('meus');
-        Route::get('/{certificado}/download', 'download')->name('download');
+        
+        // DOWNLOAD via MinIO
+        Route::get('/{certificado}/download', 'download')->name('download')
+            ->where('certificado', '[0-9]+');
+        
+        // VISUALIZAR via MinIO
+        Route::get('/{certificado}/view', 'view')->name('view')
+            ->where('certificado', '[0-9]+');
     });
 });
 

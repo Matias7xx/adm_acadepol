@@ -351,7 +351,7 @@ onMounted(() => {
     <div class="bg-gradient-to-r from-black to-gray-900 text-white py-5 shadow-md">
       <div class="container mx-auto flex justify-between items-center px-4">
         <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#bea55a] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
           <h1 class="text-2xl font-bold">Formulário de Pré-Reserva de Alojamento</h1>
@@ -1002,7 +1002,7 @@ onMounted(() => {
           <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-8 pt-6 border-t border-gray-200">
             <button 
               type="submit" 
-              class="bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 px-8 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 flex items-center justify-center"
+              class="bg-[#bea55a] text-white py-3 px-8 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 flex items-center justify-center"
               :disabled="isSubmitting"
             >
               <svg v-if="!isSubmitting" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

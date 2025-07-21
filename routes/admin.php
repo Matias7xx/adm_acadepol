@@ -99,9 +99,20 @@ Route::group([
 
     // Certificados - Administrador
     Route::prefix('certificados')->name('certificados.')->group(function () {
-        Route::post('/gerar/{matricula}', [CertificadoController::class, 'gerar'])->name('gerar');
-        Route::delete('/{certificado}', [CertificadoController::class, 'excluir'])->name('excluir');
-        Route::get('/estrutura', [CertificadoController::class, 'listarEstrutura'])->name('estrutura');
+        
+        // GERAR CERTIFICADO
+        Route::post('/gerar/{matricula}', [CertificadoController::class, 'gerar'])
+            ->name('gerar')
+            ->where('matricula', '[0-9]+');
+        
+        // CRIAR CERTIFICADO EXTERNO (cursos fora do sistema)
+        Route::post('/externo', [CertificadoController::class, 'criarCertificadoExterno'])
+            ->name('externo.criar');
+        
+        // EXCLUIR CERTIFICADO
+        Route::delete('/{certificado}', [CertificadoController::class, 'excluir'])
+            ->name('excluir')
+            ->where('certificado', '[0-9]+'); 
     });
     
     /*
@@ -111,52 +122,52 @@ Route::group([
     */
     
     Route::prefix('alojamento')->group(function () {
-    // Listagem e visualização
-    Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
-    
-    // Rota para visualizar reservas de qualquer tipo
-    Route::get('/{tipo}/{id}', [AlojamentoController::class, 'showReserva'])
-        ->where(['tipo' => 'usuario|visitante', 'id' => '[0-9]+'])
-        ->name('alojamento.show.reserva');
-    
-    // Visualização de reservas de usuário
-    Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
-    
-    // Ações de aprovação/rejeição
-    Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
-    Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
-    Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
+        // Listagem e visualização
+        Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
+        
+        // Rota para visualizar reservas de qualquer tipo
+        Route::get('/{tipo}/{id}', [AlojamentoController::class, 'showReserva'])
+            ->where(['tipo' => 'usuario|visitante', 'id' => '[0-9]+'])
+            ->name('alojamento.show.reserva');
+        
+        // Visualização de reservas de usuário
+        Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
+        
+        // Ações de aprovação/rejeição
+        Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
+        Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
+        Route::patch('/{alojamento}/alterar-status', [AlojamentoController::class, 'alterarStatus'])->name('alojamento.alterar-status');
 
-    // Ficha de hospedagem para usuários
-    Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
-        ->name('alojamento.ficha')
-        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+        // Ficha de hospedagem para usuários
+        Route::get('/{alojamento}/ficha', [AlojamentoController::class, 'gerarFichaHospedagem'])
+            ->name('alojamento.ficha')
+            ->withoutMiddleware([HandleInertiaAdminRequests::class]);
 
-    // Adicionar rotas de check-in/check-out para reservas individuais
-    Route::post('/{alojamento}/checkin', [AlojamentoController::class, 'checkin'])->name('alojamento.checkin');
-    Route::post('/{alojamento}/checkout', [AlojamentoController::class, 'checkout'])->name('alojamento.checkout');
-});
+        // Adicionar rotas de check-in/check-out para reservas individuais
+        Route::post('/{alojamento}/checkin', [AlojamentoController::class, 'checkin'])->name('alojamento.checkin');
+        Route::post('/{alojamento}/checkout', [AlojamentoController::class, 'checkout'])->name('alojamento.checkout');
+    });
 
-Route::prefix('visitante')->group(function () {
-    // Visualização
-    Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('visitante.show');
-    
-    // Rota para alteração de status
-    Route::patch('/{visitante}/alterar-status', [VisitanteController::class, 'alterarStatus'])->name('visitante.alterar-status');
+    Route::prefix('visitante')->group(function () {
+        // Visualização
+        Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('visitante.show');
+        
+        // Rota para alteração de status
+        Route::patch('/{visitante}/alterar-status', [VisitanteController::class, 'alterarStatus'])->name('visitante.alterar-status');
 
-    // Rotas para gerar a ficha de hospedagem
-    Route::get('/{visitante}/ficha', [VisitanteController::class, 'gerarFichaHospedagem'])
-        ->name('visitante.ficha')
-        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+        // Rotas para gerar a ficha de hospedagem
+        Route::get('/{visitante}/ficha', [VisitanteController::class, 'gerarFichaHospedagem'])
+            ->name('visitante.ficha')
+            ->withoutMiddleware([HandleInertiaAdminRequests::class]);
 
-    Route::get('/{visitante}/ficha/visualizar', [VisitanteController::class, 'visualizarFichaHospedagem'])
-        ->name('visitante.ficha.visualizar')
-        ->withoutMiddleware([HandleInertiaAdminRequests::class]);
+        Route::get('/{visitante}/ficha/visualizar', [VisitanteController::class, 'visualizarFichaHospedagem'])
+            ->name('visitante.ficha.visualizar')
+            ->withoutMiddleware([HandleInertiaAdminRequests::class]);
 
         // Adicionar rotas de check-in/check-out para visitantes
-    Route::post('/{visitante}/checkin', [VisitanteController::class, 'checkin'])->name('visitante.checkin');
-    Route::post('/{visitante}/checkout', [VisitanteController::class, 'checkout'])->name('visitante.checkout');
-});
+        Route::post('/{visitante}/checkin', [VisitanteController::class, 'checkin'])->name('visitante.checkin');
+        Route::post('/{visitante}/checkout', [VisitanteController::class, 'checkout'])->name('visitante.checkout');
+    });
 
     /*
     |--------------------------------------------------------------------------
@@ -174,14 +185,14 @@ Route::prefix('visitante')->group(function () {
         Route::patch('/{visitante}/rejeitar', [VisitanteController::class, 'rejeitar'])->name('rejeitar');
     });
 
-     /*
+    /*
     |--------------------------------------------------------------------------
     | Gerenciamento de Notícias
     |--------------------------------------------------------------------------
     */
     Route::resource('noticias', NoticiaController::class);
     Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
-    ->name('noticias.toggle-destaque');
+        ->name('noticias.toggle-destaque');
 
     /*
     |--------------------------------------------------------------------------
@@ -217,29 +228,28 @@ Route::prefix('visitante')->group(function () {
     });
 
     /*
-|--------------------------------------------------------------------------
-| Gerenciamento de Ocupação de Dormitórios
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('ocupacao')->name('ocupacao.')->group(function () {
-    // Dashboard principal de ocupação
-    Route::get('/', [OcupacaoController::class, 'index'])->name('index');
-    
-    // Buscar reservas para check-in rápido
-    Route::get('/buscar-reservas', [OcupacaoController::class, 'buscarReservas'])->name('buscar-reservas');
-    
-    // Funcionalidades de check-in e check-out
-    Route::get('/modal-checkin', [OcupacaoController::class, 'modalCheckin'])->name('modal-checkin');
-    Route::post('/checkin', [OcupacaoController::class, 'checkin'])->name('checkin');
-    Route::post('/{ocupacao}/checkout', [OcupacaoController::class, 'checkout'])->name('checkout');
-    
-    // Informações
-    Route::get('/dormitorios-disponiveis', [OcupacaoController::class, 'dormitoriosDisponiveis'])->name('dormitorios-disponiveis');
-    Route::get('/dormitorio/{dormitorio}/detalhes', [OcupacaoController::class, 'dormitorioDetalhes'])->name('dormitorio-detalhes');
-    
-    // API para atualização em tempo real
-    Route::get('/api', [OcupacaoController::class, 'apiIndex'])->name('api.index');
-});
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Ocupação de Dormitórios
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('ocupacao')->name('ocupacao.')->group(function () {
+        // Dashboard principal de ocupação
+        Route::get('/', [OcupacaoController::class, 'index'])->name('index');
+        
+        // Buscar reservas para check-in rápido
+        Route::get('/buscar-reservas', [OcupacaoController::class, 'buscarReservas'])->name('buscar-reservas');
+        
+        // Funcionalidades de check-in e check-out
+        Route::get('/modal-checkin', [OcupacaoController::class, 'modalCheckin'])->name('modal-checkin');
+        Route::post('/checkin', [OcupacaoController::class, 'checkin'])->name('checkin');
+        Route::post('/{ocupacao}/checkout', [OcupacaoController::class, 'checkout'])->name('checkout');
+        
+        // Informações
+        Route::get('/dormitorios-disponiveis', [OcupacaoController::class, 'dormitoriosDisponiveis'])->name('dormitorios-disponiveis');
+        Route::get('/dormitorio/{dormitorio}/detalhes', [OcupacaoController::class, 'dormitorioDetalhes'])->name('dormitorio-detalhes');
+        
+        // API para atualização em tempo real
+        Route::get('/api', [OcupacaoController::class, 'apiIndex'])->name('api.index');
+    });
 
 });
