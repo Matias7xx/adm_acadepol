@@ -25,6 +25,7 @@ TABLES_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>
 if [ "$TABLES_COUNT" = "0" ]; then
     echo "📊 Executando seeders (primeira execução)..."
     php artisan db:seed --class=AdminCoreSeeder --force
+    php artisan db:seed --class=DormitorioSeeder
 else
     echo "📈 Banco já possui dados, pulando seeders..."
 fi
