@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import DropdownInstitucional from './DropdownInstitucional.vue';
-import DropdownServiços from './DropdownServiços.vue';
+import DropdownServicos from './DropdownServicos.vue';
 import SocialMedia from './SocialMedia.vue';
 import Search from './Search.vue';
 import Header from './Header.vue';
@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
           <div class="flex justify-between items-center h-14">
             <div class="hidden sm:flex space-x-6 items-center">
               <DropdownInstitucional />
-              <DropdownServiços />
+              <DropdownServicos />
               <Link href="/cursos" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Cursos</Link>
               <!-- <Link href="#" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Banco de Currículos</Link> -->
               <Link href="/concursos" class="text-black hover:bg-[#a38e4d] rounded-md px-3 py-2 text-sm font-medium">Concursos</Link>
@@ -176,7 +176,7 @@ onBeforeUnmount(() => {
         <div v-if="isMenuOpen" class="sm:hidden bg-white border-t border-gray-200">
           <div class="flex flex-col space-y-2 p-4">
             <DropdownInstitucional />
-            <DropdownServiços />
+            <DropdownServicos />
             <Link href="/cursos" class="text-black hover:text-[#a38e4d] px-3 py-2">Cursos</Link>
             <!-- <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Banco de Currículos</Link> -->
             <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Concursos e Seleções</Link>

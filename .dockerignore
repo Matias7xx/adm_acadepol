@@ -1,0 +1,57 @@
+# Dependências que serão instaladas no container
+node_modules
+vendor
+
+# Cache e build local (será gerado no container)
+.phpunit.cache
+/storage/debugbar
+/storage/clockwork
+
+# Arquivos de ambiente (usar apenas .env que está no projeto)
+#.env.backup
+#.env.production
+#.env.local
+#.env.testing
+#.env.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# OS Specific
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Logs locais
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Testing
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+
+# Docker
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile
+
+# Documentação (opcional)
+README.md
+
+# Backup files
+*.bak
+*.backup
+*~

@@ -13,3 +13,9 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+# Docker volumes e dados
+.docker/
+data/
+docker-compose.yml
+docker-compose.override.yml
+*.pid

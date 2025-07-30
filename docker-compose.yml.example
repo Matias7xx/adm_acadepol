@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    container_name: acadepol
+    ports:
+      - "8015:80"
+    restart: always
+    volumes:
+      - /data/acadepol:/var/www/storage/app/public
+      - /var/www/node_modules
+      - /var/www/vendor
+    networks:
+      - diti
+
+networks:
+  diti:
+    external: true

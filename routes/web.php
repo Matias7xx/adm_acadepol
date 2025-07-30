@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-URL::forceScheme(env('HTTP_SCHEMA'));
-URL::forceRootUrl(env('APP_URL'));
+/* URL::forceScheme(env('HTTP_SCHEMA'));
+URL::forceRootUrl(env('APP_URL')); */
 
 /*
 |--------------------------------------------------------------------------

@@ -349,62 +349,69 @@ export default {
       },
       {
         id: 2,
+        titulo: 'Laboratório ACADEPOL',
+        descricao: 'Laboratório moderno da ACADEPOL equipado com tecnologia avançada para ensino e treinamento',
+        categoria: 'Laboratórios',
+        url: '/images/estrutura/laboratorio.jpg'
+      },
+      {
+        id: 3,
         titulo: 'Laboratório de Informática',
         descricao: 'Laboratório equipado com computadores de última geração para treinamento digital',
         categoria: 'Laboratórios',
         url: 'https://pm.es.gov.br/Media/PMES/_Profiles/c4d8c6e6/9a583751/materia174mes10edit.jpg?v=637972173914939020'
       },
       {
-        id: 3,
+        id: 4,
         titulo: 'Sala de Aula Interativa',
         descricao: 'Sala moderna com recursos multimídia para aulas dinâmicas e interativas',
         categoria: 'Salas de Aula',
         url: 'https://www.es.gov.br/Media/PortalES/_Profiles/c4d8c6e6/d8d1f292/WhatsApp%20Image%202023-11-13%20at%2013.18.54%20(1)-1.jpeg?v=638513060550508360'
       },
       {
-        id: 4,
+        id: 5,
         titulo: 'Biblioteca Central',
         descricao: 'Acervo completo com obras especializadas em segurança pública e direito',
         categoria: 'Biblioteca',
         url: 'https://images.pexels.com/photos/1370296/pexels-photo-1370296.jpeg'
       },
       {
-        id: 5,
+        id: 6,
         titulo: 'Auditório Principal',
         descricao: 'Capacidade para 300 pessoas, equipado com sistema de som e projeção modernos',
         categoria: 'Auditório',
         url: 'https://www.policiacivil.pb.gov.br/noticias/acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestra-sobre-administracao-publica/22092023-acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestr-1.jpg/@@images/6e0e85f7-3f3e-4bf8-a70c-3f35c0ab93db.jpeg'
       },
       {
-        id: 6,
+        id: 7,
         titulo: 'Laboratório de Balística',
         descricao: 'Ambiente especializado para análises e estudos balísticos avançados',
         categoria: 'Laboratórios',
         url: 'https://thumbs.dreamstime.com/z/pol%C3%ADcia-cient%C3%ADfica-extrai-vest%C3%ADgios-de-arma-no-laborat%C3%B3rio-bal%C3%ADstica-imagem-conceitual-181491170.jpg?ct=jpeg'
       },
       {
-        id: 7,
+        id: 8,
         titulo: 'Quadra Poliesportiva',
         descricao: 'Espaço amplo para atividades físicas e treinamento tático dos alunos',
         categoria: 'Instalações Esportivas',
         url: 'https://brejo.com/wp-content/uploads/2023/08/acadepol2.jpeg'
       },
       {
-        id: 8,
+        id: 9,
         titulo: 'Estande de Tiro',
         descricao: 'Ambiente seguro e controlado para treinamento de tiro e manuseio de armas',
         categoria: 'Instalações Esportivas',
         url: 'https://www.policiacivil.pb.gov.br/noticias/capacitacao-acadepol-promove-cursos-de-tiro-defensivo-investigacao-de-homicidios-e-extracao-de-dados-para-policiais/capacitacao2.jpeg/@@images/bf056900-b1d1-4dc0-9e44-3a3ad75f6bcb.jpeg'
       },
       {
-        id: 9,
+        id: 10,
         titulo: 'Laboratório de Química Forense',
         descricao: 'Laboratório moderno para análises químicas e perícias forenses',
         categoria: 'Laboratórios',
         url: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg'
       },
       {
-        id: 10,
+        id: 11,
         titulo: 'Sala de Simulação',
         descricao: 'Ambiente para simulações práticas de situações reais',
         categoria: 'Salas de Aula',
