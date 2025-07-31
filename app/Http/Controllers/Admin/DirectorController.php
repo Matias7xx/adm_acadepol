@@ -8,10 +8,11 @@ use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DirectorController extends Controller
 {
-        public function index()
+    public function index()
     {
         $this->authorize('adminViewAny', Director::class);
         $diretores = (new Director)->newQuery();
@@ -29,8 +30,9 @@ class DirectorController extends Controller
             }
             $diretores->orderBy($attribute, $sort_order);
         } else {
-            $diretores->orderBy('ordem', 'asc')
-                    ->orderBy('data_inicio', 'desc');
+            // Ordenação: diretor atual primeiro, depois cronológica (mais recente primeiro)
+            $diretores->orderByRaw('(CASE WHEN atual = true THEN 0 ELSE 1 END)')
+                     ->orderBy('data_inicio', 'desc');
         }
 
         $diretores = $diretores->paginate(config('admin.paginate.per_page'))
@@ -38,7 +40,6 @@ class DirectorController extends Controller
                     ->appends(request()->query());
 
         $diretores->getCollection()->transform(function($director) {
-            // Formatar URL da imagem usando UploadHelper
             $director->imagem = $director->imagem ? UploadHelper::getPublicUrl($director->imagem) : null;
             return $director;
         });
@@ -68,13 +69,34 @@ class DirectorController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'data_inicio' => 'required|date',
-            'data_fim' => 'nullable|date|after_or_equal:data_inicio',
-            'historico' => 'nullable|string',
+            'data_fim' => [
+                'nullable',
+                'date',
+                'after_or_equal:data_inicio',
+                // Se atual = false, data_fim é obrigatória
+                Rule::requiredIf(!$request->boolean('atual'))
+            ],
+            'historico' => 'nullable|string|max:5000',
             'realizacoes' => 'nullable|array',
+            'realizacoes.*' => 'string|max:500',
             'atual' => 'boolean',
-            'ordem' => 'integer',
-            'imagem_file' => 'nullable|image|max:2048',
+            'imagem_file' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+        ], [
+            'data_fim.required_if' => 'A data de término é obrigatória quando não é o diretor atual.',
+            'data_fim.after_or_equal' => 'A data de término deve ser posterior ou igual à data de início.',
+            'imagem_file.max' => 'A imagem deve ter no máximo 2MB.',
+            'realizacoes.*.max' => 'Cada realização deve ter no máximo 500 caracteres.',
         ]);
+
+        // Verificar se já existe um diretor atual
+        if ($validated['atual']) {
+            $diretorAtualExistente = Director::where('atual', true)->first();
+            if ($diretorAtualExistente) {
+                return back()->withErrors([
+                    'atual' => 'Já existe um diretor atual. Você deve primeiro desmarcar o diretor atual antes de definir um novo.'
+                ]);
+            }
+        }
 
         // Processar upload de imagem
         if ($request->hasFile('imagem_file')) {
@@ -87,12 +109,12 @@ class DirectorController extends Controller
             $validated['imagem'] = $imagePath;
         }
         
-        // Se data_fim é null e atual = true, garantir que data_fim seja null
-        if ($validated['atual'] && empty($validated['data_fim'])) {
+        // Se atual = true, garantir que data_fim seja null
+        if ($validated['atual']) {
             $validated['data_fim'] = null;
         }
         
-        // Converter arrays para JSON
+        // Converter realizações para JSON
         $validated['realizacoes'] = json_encode($validated['realizacoes'] ?? []);
         
         // Remover arquivo da validação
@@ -104,11 +126,10 @@ class DirectorController extends Controller
             ->with('message', 'Diretor cadastrado com sucesso!');
     }
 
-        public function show(Director $director)
+    public function show(Director $director)
     {
         $this->authorize('adminView', $director);
 
-        //Formatar os dados do diretor incluindo URL correta da imagem
         $directorData = [
             'id' => $director->id,
             'nome' => $director->nome,
@@ -119,11 +140,9 @@ class DirectorController extends Controller
                 ? json_decode($director->realizacoes, true) 
                 : $director->realizacoes,
             'atual' => $director->atual,
-            'ordem' => $director->ordem,
             'imagem' => $director->imagem ? UploadHelper::getPublicUrl($director->imagem) : null,
             'created_at' => $director->created_at,
             'updated_at' => $director->updated_at,
-            // Adicionar período formatado para exibição
             'periodo_formatado' => $director->periodo_formatado,
         ];
 
@@ -132,11 +151,10 @@ class DirectorController extends Controller
         ]);
     }
 
-        public function edit(Director $director)
+    public function edit(Director $director)
     {
         $this->authorize('adminUpdate', $director);
 
-        // Formatar os dados do diretor incluindo URL correta da imagem
         $directorData = [
             'id' => $director->id,
             'nome' => $director->nome,
@@ -147,7 +165,6 @@ class DirectorController extends Controller
                 ? json_decode($director->realizacoes, true) 
                 : $director->realizacoes,
             'atual' => $director->atual,
-            'ordem' => $director->ordem,
             'imagem' => $director->imagem ? UploadHelper::getPublicUrl($director->imagem) : null,
         ];
 
@@ -163,13 +180,36 @@ class DirectorController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'data_inicio' => 'required|date',
-            'data_fim' => 'nullable|date|after_or_equal:data_inicio',
-            'historico' => 'nullable|string',
+            'data_fim' => [
+                'nullable',
+                'date',
+                'after_or_equal:data_inicio',
+                // Se atual = false, data_fim é obrigatória
+                Rule::requiredIf(!$request->boolean('atual'))
+            ],
+            'historico' => 'nullable|string|max:5000',
             'realizacoes' => 'nullable|array',
+            'realizacoes.*' => 'string|max:500',
             'atual' => 'boolean',
-            'ordem' => 'integer',
-            'imagem_file' => 'nullable|image|max:2048',
+            'imagem_file' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+        ], [
+            'data_fim.required_if' => 'A data de término é obrigatória quando não é o diretor atual.',
+            'data_fim.after_or_equal' => 'A data de término deve ser posterior ou igual à data de início.',
+            'imagem_file.max' => 'A imagem deve ter no máximo 2MB.',
+            'realizacoes.*.max' => 'Cada realização deve ter no máximo 500 caracteres.',
         ]);
+
+        // Verificar se já existe outro diretor atual (apenas se este não for o atual)
+        if ($validated['atual'] && !$director->atual) {
+            $diretorAtualExistente = Director::where('atual', true)
+                                          ->where('id', '!=', $director->id)
+                                          ->first();
+            if ($diretorAtualExistente) {
+                return back()->withErrors([
+                    'atual' => "Já existe um diretor atual ({$diretorAtualExistente->nome}). Você deve primeiro desmarcar o diretor atual antes de definir um novo."
+                ]);
+            }
+        }
 
         // Verificar se o nome do diretor mudou
         $nomeAntigo = $director->nome;
@@ -204,12 +244,12 @@ class DirectorController extends Controller
             }
         }
         
-        // Se data_fim é null e atual = true, garantir que data_fim seja null
-        if ($validated['atual'] && empty($validated['data_fim'])) {
+        // Se atual = true, garantir que data_fim seja null
+        if ($validated['atual']) {
             $validated['data_fim'] = null;
         }
         
-        // Converter arrays para JSON
+        // Converter realizações para JSON
         $validated['realizacoes'] = json_encode($validated['realizacoes'] ?? []);
         
         // Remover arquivo da validação
@@ -247,12 +287,14 @@ class DirectorController extends Controller
             ->with('message', 'Diretor excluído com sucesso!');
     }
     
+    /**
+     * endpoint para listar diretores na galeria pública
+     */
     public function listarDiretores()
     {
         try {
-            $diretores = Director::orderBy('ordem', 'asc')
+            $diretores = Director::orderByRaw('(CASE WHEN atual = true THEN 0 ELSE 1 END)')
                          ->orderBy('data_inicio', 'desc')
-                         ->orderByRaw('(CASE WHEN atual = true THEN 0 ELSE 1 END)')
                          ->get()
                          ->map(function ($director) {
                              // Formatar o período
@@ -276,16 +318,55 @@ class DirectorController extends Controller
                                  'nome' => $director->nome,
                                  'periodo' => $periodo,
                                  'historico' => $director->historico,
-                                 'imagem' => $director->imagem ? UploadHelper::getPublicUrl($director->imagem) : '/images/placeholder-profile.jpg',
+                                 'imagem' => $director->imagem 
+                                     ? UploadHelper::getPublicUrl($director->imagem) 
+                                     : '/images/placeholder-profile.jpg',
                                  'realizacoes' => $realizacoes,
-                                 'atual' => (bool)$director->atual
+                                 'atual' => (bool)$director->atual,
+                                 // dados para ordenação cronológica no frontend
+                                 'data_inicio' => $director->data_inicio?->format('Y-m-d'),
+                                 'data_fim' => $director->data_fim?->format('Y-m-d'),
                              ];
                          });
         
             return response()->json($diretores);
         } catch (\Exception $e) {
             \Log::error('Erro ao listar diretores: ' . $e->getMessage());
-            return response()->json(['error' => 'Erro ao carregar diretores: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Erro ao carregar diretores: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    /**
+     * Método para alternar diretor atual
+     */
+    public function toggleAtual(Director $director)
+    {
+        $this->authorize('adminUpdate', $director);
+
+        // Se está marcando como atual
+        if (!$director->atual) {
+            // Desmarcar outros diretores atuais
+            Director::where('atual', true)->update(['atual' => false, 'data_fim' => now()]);
+            
+            // Marcar este como atual
+            $director->update([
+                'atual' => true,
+                'data_fim' => null
+            ]);
+
+            $message = "{$director->nome} foi marcado como diretor atual.";
+        } else {
+            // Desmarcar como atual
+            $director->update([
+                'atual' => false,
+                'data_fim' => now()->format('Y-m-d')
+            ]);
+
+            $message = "{$director->nome} não é mais o diretor atual.";
+        }
+
+        return back()->with('message', $message);
     }
 }
