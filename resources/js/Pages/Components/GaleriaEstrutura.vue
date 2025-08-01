@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8" role="main">
     <!-- Cabeçalho -->
     <header class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 mb-4">Estrutura Física da ACADEPOL</h1>
+      <h1 class="text-3xl font-bold text-gray-800 mb-4">Estrutura Física</h1>
       <p class="text-gray-700 text-lg leading-relaxed">
         {{ descricao }}
       </p>
@@ -219,17 +219,17 @@
     <!-- Modal -->
     <div 
       v-if="fotoSelecionada" 
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90"
+      class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-90"
       @click.self="fecharModal"
       @keydown.esc="fecharModal"
       role="dialog"
       aria-modal="true"
     >
-      <div class="relative w-full max-w-6xl max-h-screen flex flex-col bg-white rounded-lg shadow-2xl overflow-hidden">
+      <div class="relative w-full h-full max-w-7xl flex flex-col bg-white rounded-lg shadow-2xl overflow-hidden modal-container">
         <!-- Cabeçalho do modal -->
-        <div class="flex items-center justify-between p-4 border-b bg-gray-50">
-          <h2 class="text-lg font-semibold text-gray-900">{{ fotoSelecionada.titulo }}</h2>
-          <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50 flex-shrink-0">
+          <h2 class="text-base sm:text-lg font-semibold text-gray-900 truncate pr-4">{{ fotoSelecionada.titulo }}</h2>
+          <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             
             <!-- Botão de compartilhar -->
             <button 
@@ -237,7 +237,7 @@
               class="p-2 rounded-full hover:bg-gray-200 transition-colors"
               title="Compartilhar foto"
             >
-              <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
               </svg>
             </button>
@@ -248,29 +248,30 @@
               class="p-2 rounded-full hover:bg-gray-200 transition-colors"
               title="Fechar modal"
             >
-              <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
         
-        <!-- Imagem ampliada -->
-        <div class="relative flex-1 flex items-center justify-center bg-gray-100 min-h-0">
+        <!-- Container da imagem - ocupa o espaço disponível -->
+        <div class="relative flex-1 flex items-center justify-center bg-gray-100 min-h-0 overflow-hidden">
           <img 
             :src="fotoSelecionada.url" 
             :alt="fotoSelecionada.titulo" 
             class="max-w-full max-h-full object-contain"
+            style="max-height: calc(100vh - 200px);"
           />
           
           <!-- Botões de navegação -->
           <button 
             v-if="indiceAtual > 0"
             @click="navegarFoto(-1)" 
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all"
+            class="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all"
             aria-label="Foto anterior"
           >
-            <svg class="h-6 w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -278,37 +279,37 @@
           <button 
             v-if="indiceAtual < fotosFiltradas.length - 1"
             @click="navegarFoto(1)" 
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all"
+            class="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-80 rounded-full flex items-center justify-center shadow-lg hover:bg-opacity-100 transition-all"
             aria-label="Próxima foto"
           >
-            <svg class="h-6 w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 sm:h-6 sm:w-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
         
         <!-- Informações da foto -->
-        <div class="p-4 bg-white border-t">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-gray-800">{{ fotoSelecionada.titulo }}</h3>
-            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">{{ fotoSelecionada.categoria }}</span>
+        <div class="p-3 sm:p-4 bg-white border-t flex-shrink-0 max-h-48 overflow-y-auto">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex-1">{{ fotoSelecionada.titulo }}</h3>
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium flex-shrink-0">{{ fotoSelecionada.categoria }}</span>
           </div>
-          <p class="text-gray-700 mb-4">{{ fotoSelecionada.descricao }}</p>
+          <p class="text-gray-700 mb-4 text-sm sm:text-base">{{ fotoSelecionada.descricao }}</p>
           
           <!-- Navegação inferior -->
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">{{ indiceAtual + 1 }} de {{ fotosFiltradas.length }}</span>
-            <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span class="text-sm text-gray-500 order-2 sm:order-1">{{ indiceAtual + 1 }} de {{ fotosFiltradas.length }}</span>
+            <div class="flex gap-2 order-1 sm:order-2">
               <button 
                 @click="navegarFoto(-1)" 
-                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-3 py-2 sm:px-4 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="indiceAtual === 0"
               >
                 Anterior
               </button>
               <button 
                 @click="navegarFoto(1)" 
-                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-3 py-2 sm:px-4 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="indiceAtual === fotosFiltradas.length - 1"
               >
                 Próximo
@@ -318,6 +319,11 @@
         </div>
       </div>
     </div>
+
+      <!-- Rodapé -->
+      <footer class="mt-12 text-center text-gray-500 text-sm">
+        <p>&copy; 2023 ACADEPOL - Todos os direitos reservados.</p>
+      </footer>
   </div>
 </template>
 
@@ -509,19 +515,50 @@ export default {
     const abrirModal = (foto) => {
       fotoSelecionada.value = foto;
       indiceAtual.value = fotosFiltradas.value.findIndex(f => f.id === foto.id);
+      
+      // Prevenir scroll do body
       document.body.style.overflow = 'hidden';
+      
+      // Adicionar classe para dispositivos móveis se necessário
+      if (window.innerWidth <= 768) {
+        document.body.classList.add('modal-mobile-open');
+      }
+      
+      // Focus trap para acessibilidade
+      setTimeout(() => {
+        const modal = document.querySelector('[role="dialog"]');
+        if (modal) {
+          modal.focus();
+        }
+      }, 100);
     };
 
     const fecharModal = () => {
       fotoSelecionada.value = null;
+      
+      // Restaurar scroll do body
       document.body.style.overflow = '';
+      document.body.classList.remove('modal-mobile-open');
+      
+      // Retornar foco para o elemento que abriu o modal
+      const focusTarget = document.querySelector(`[data-foto-id="${indiceAtual.value}"]`) || 
+                        document.querySelector('.group[tabindex="0"]');
+      if (focusTarget) {
+        focusTarget.focus();
+      }
     };
 
     const navegarFoto = (direcao) => {
       const novoIndice = indiceAtual.value + direcao;
-      if (novoIndice >= 0 && novoIndice < fotosFiltradas.value.length) {
+      const totalFotos = fotosFiltradas.value.length;
+      
+      if (novoIndice >= 0 && novoIndice < totalFotos) {
         indiceAtual.value = novoIndice;
         fotoSelecionada.value = fotosFiltradas.value[novoIndice];
+        
+        // Anunciar mudança para screen readers
+        const announcement = `Foto ${novoIndice + 1} de ${totalFotos}: ${fotoSelecionada.value.titulo}`;
+        announceToScreenReader(announcement);
       }
     };
 
@@ -687,6 +724,88 @@ export default {
   .space-y-4 > * + * {
     margin-top: 0.75rem;
   }
+}
+
+/* Modal responsivo */
+.modal-container {
+  max-height: calc(100vh - 1rem);
+  height: auto;
+}
+
+/* Breakpoints específicos para notebooks */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .modal-container {
+    max-height: calc(100vh - 2rem);
+    max-width: 90vw;
+  }
+  
+  .modal-container img {
+    max-height: calc(100vh - 240px) !important;
+  }
+}
+
+/* Telas muito pequenas (celular) */
+@media (max-width: 640px) {
+  .modal-container {
+    max-height: calc(100vh - 0.5rem);
+    border-radius: 0.5rem;
+  }
+  
+  .modal-container img {
+    max-height: calc(100vh - 180px) !important;
+  }
+}
+
+/* Tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-container {
+    max-height: calc(100vh - 1.5rem);
+    max-width: 95vw;
+  }
+  
+  .modal-container img {
+    max-height: calc(100vh - 220px) !important;
+  }
+}
+
+/* Notebooks pequenos (altura limitada) */
+@media (max-height: 768px) {
+  .modal-container {
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .modal-container img {
+    max-height: calc(100vh - 180px) !important;
+  }
+  
+  .modal-container .p-3,
+  .modal-container .p-4 {
+    padding: 0.75rem;
+  }
+}
+
+/* Notebooks médios */
+@media (min-height: 769px) and (max-height: 900px) {
+  .modal-container img {
+    max-height: calc(100vh - 200px) !important;
+  }
+}
+
+/* Telas grandes */
+@media (min-height: 901px) {
+  .modal-container img {
+    max-height: calc(100vh - 240px) !important;
+  }
+}
+
+/* Melhor scroll no rodapé se necessário */
+.max-h-48 {
+  max-height: 12rem;
+}
+
+/* Garantir que o modal não ultrapasse a tela */
+.fixed.inset-0 {
+  overflow: hidden;
 }
 
 /* ===== ESTADOS DE FOCO ===== */
