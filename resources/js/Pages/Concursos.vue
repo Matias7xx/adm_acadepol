@@ -11,14 +11,14 @@ const linksConcursos = ref([
     titulo: 'Concurso PC/PB - 2021',
     descricao: 'Informações completas sobre o edital e processo seletivo',
     url: 'https://www.cebraspe.org.br/concursos/pc_pb_21',
-    cor: 'bg-gray-500 hover:bg-blue-600'
+    cor: 'bg-gray-500 hover:bg-[#bea55a]'
   },
   {
     id: 2,
     titulo: 'Concurso PC/PB - 2008',
     descricao: 'Informações completas sobre o edital e processo seletivo',
     url: 'http://www.cespe.unb.br/concursos/pcpb2008/',
-    cor: 'bg-gray-500 hover:bg-blue-600'
+    cor: 'bg-gray-500 hover:bg-[#bea55a]'
   }
 ])
 
@@ -38,12 +38,12 @@ const abrirLink = (url) => {
     <div class="bg-gradient-to-r from-black to-gray-900 text-white py-5 shadow-md">
       <div class="container mx-auto flex justify-between items-center px-4">
         <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#bea55a] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
           <h1 class="text-2xl font-bold">Concursos Anteriores</h1>
         </div>
-        <Link :href="route('home')" class="flex items-center text-gray-400 hover:text-gray-300 transition">
+        <Link :href="route('home')" class="flex items-center text-[#bea55a] hover:text-gray-300 transition">
           <span>Voltar</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />

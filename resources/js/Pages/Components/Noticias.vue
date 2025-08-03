@@ -189,7 +189,7 @@ onUnmounted(() => {
           ></span>
         </h2>
         <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-          Fique por dentro das últimas novidades e acontecimentos da ACADEPOL
+          Últimas novidades e acontecimentos da ACADEPOL
         </p>
       </div>
 
@@ -342,13 +342,13 @@ onUnmounted(() => {
                   </div>
                   
                   <!-- Ação compacta -->
-                  <div class="mt-3">
+                  <div class="">
                     <Link 
                       :href="`/noticias/${noticia.id}`"
                       class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-sm group-hover:gap-2 gap-1 transition-all duration-300"
                       :aria-label="`Leia a notícia completa: ${noticia.titulo}`"
                     >
-                      Saiba mais
+                      Leia mais
                       <svg class="h-3 w-3 transform group-hover:translate-x-0.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>

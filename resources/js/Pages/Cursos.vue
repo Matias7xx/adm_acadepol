@@ -12,10 +12,10 @@
         </div>
 
         <!-- Seção de Busca -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-8">
+          <div class="flex flex-col gap-4">
             <!-- Campo de busca -->
-            <div class="flex-1">
+            <div class="w-full">
               <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
                 Buscar cursos
               </label>
@@ -29,18 +29,18 @@
                   id="search"
                   v-model="searchForm.search"
                   type="text"
-                  placeholder="Digite o nome do curso, descrição ou modalidade..."
-                  class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[#bea55a] focus:border-[#bea55a] transition-colors"
+                  placeholder="Digite o nome ou descrição do curso..."
+                  class="block w-full pl-10 pr-3 py-3 text-sm border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[#bea55a] focus:border-[#bea55a] transition-colors"
                   @keyup.enter="buscarCursos"
                 />
               </div>
             </div>
             
             <!-- Botões de ação -->
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-2 w-full">
               <button
                 @click="buscarCursos"
-                class="bg-[#bea55a] hover:bg-[#a38e4d] text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
+                class="w-full sm:w-auto bg-[#bea55a] hover:bg-[#a38e4d] text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center order-1"
               >
                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -51,7 +51,7 @@
               <button
                 v-if="filters.search"
                 @click="limparBusca"
-                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200"
+                class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 order-2"
               >
                 Limpar
               </button>
@@ -59,7 +59,7 @@
           </div>
           
           <!-- Filtros ativos -->
-          <div v-if="filters.search" class="mt-4 flex items-center gap-2">
+        <div v-if="filters.search" class="mt-4 flex flex-wrap items-center gap-2">
             <span class="text-sm text-gray-600">Buscando por:</span>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#bea55a] bg-opacity-10 text-[#bea55a] border border-[#bea55a] border-opacity-20">
               {{ filters.search }}

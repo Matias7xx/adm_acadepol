@@ -7,7 +7,7 @@ import Footer from './Components/Footer.vue';
 import ExibirDocumentos from './Components/ExibirDocumentos.vue';
 
 const DOCUMENT_URL = '/storage/documentos/ManualDoAluno.pdf';
-const DOCUMENT_TITLE = 'Manual do Aluno da ACADEPOL';
+const DOCUMENT_TITLE = 'Manual do Aluno';
 const DOCUMENT_FILENAME = 'Manual_do_Aluno_ACADEPOL';
 const DOCUMENT_DESCRIPTION = 'Este documento contém todas as orientações, normas e procedimentos que os alunos devem seguir durante sua formação na Academia de Polícia Civil.';
 
@@ -75,7 +75,7 @@ const additionalInfo = [
         <div class="mt-8 bg-white shadow-md rounded-lg p-6">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">Importância do Manual do Aluno</h2>
           <p class="text-gray-600 mb-4">
-            O Manual do Aluno da ACADEPOL é um guia completo que orienta todos os aspectos da vida acadêmica, 
+            O Manual do Aluno é um guia completo que orienta todos os aspectos da vida acadêmica, 
             desde a matrícula até a conclusão do curso. Ele contém informações sobre avaliações, frequência, 
             conduta, uniformes, procedimentos administrativos e demais orientações essenciais.
           </p>
@@ -93,5 +93,4 @@ const additionalInfo = [
 </template>
 
 <style scoped>
-/* Estilos específicos podem ser adicionados aqui se necessário */
 </style>

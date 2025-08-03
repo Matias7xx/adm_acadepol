@@ -1016,7 +1016,7 @@ onMounted(() => {
               <span v-else>Enviar Solicitação de Reserva</span>
             </button>
             <Link
-              href="/alojamento/tipo-usuario"
+              href="/"
               class="text-center border border-gray-300 bg-white text-gray-700 py-3 px-8 rounded-md font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 flex items-center justify-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

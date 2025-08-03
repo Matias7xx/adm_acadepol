@@ -150,7 +150,7 @@ const estatisticas = computed(() => {
             </div>
             <h2 class="text-2xl font-bold text-gray-800">Seus Certificados</h2>
           </div>
-          <div class="text-sm text-gray-500">{{ certificados.total }} certificado(s) encontrado(s)</div>
+          <!-- <div class="text-sm text-gray-500">{{ certificados.total }} certificado(s) encontrado(s)</div> -->
         </div>
 
         <!-- Lista de Certificados -->

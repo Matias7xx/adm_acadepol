@@ -216,18 +216,36 @@ const formatarPeriodo = (diretor) => {
 
 const selecionarDiretor = (diretor) => {
   diretorSelecionado.value = diretor;
+  
+  // Prevenir scroll do body
   document.body.style.overflow = 'hidden';
   
-  // Acessibilidade: Foco no modal
+  // Adicionar classe para dispositivos móveis se necessário
+  if (window.innerWidth <= 768) {
+    document.body.classList.add('modal-diretor-mobile-open');
+  }
+  
+  // Focus trap para acessibilidade
   nextTick(() => {
     const modal = document.querySelector('[role="dialog"]');
-    modal?.focus();
+    if (modal) {
+      modal.focus();
+    }
   });
 };
 
 const fecharModal = () => {
   diretorSelecionado.value = null;
+  
+  // Restaurar scroll do body
   document.body.style.overflow = '';
+  document.body.classList.remove('modal-diretor-mobile-open', 'modal-diretor-compact');
+  
+  // Retornar foco para o elemento que abriu o modal
+  const focusTarget = document.querySelector('.group[tabindex="0"]');
+  if (focusTarget) {
+    focusTarget.focus();
+  }
 };
 
 // Filtros e busca
@@ -742,7 +760,7 @@ watch(offline, (novoValor) => {
       <!-- Modal -->
       <div 
         v-if="diretorSelecionado" 
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto"
         @click.self="fecharModal"
         role="dialog"
         aria-modal="true"
@@ -750,37 +768,40 @@ watch(offline, (novoValor) => {
         tabindex="-1"
       >
         <div 
-          class="bg-white rounded-lg shadow-xl max-w-4xl w-full relative overflow-hidden my-8 animate-modal-enter"
+          class="bg-white rounded-lg shadow-xl w-full max-w-5xl relative overflow-hidden modal-diretor-container animate-modal-enter"
           @click.stop
         >
           <!-- Cabeçalho do modal -->
-          <div class="flex items-center justify-between p-4 border-b bg-gray-50">
-            <h2 :id="`diretor-nome-${diretorSelecionado.id}`" class="text-xl font-semibold text-gray-900">
+          <div class="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50 flex-shrink-0">
+            <h2 
+              :id="`diretor-nome-${diretorSelecionado.id}`" 
+              class="text-base sm:text-xl font-semibold text-gray-900 truncate pr-4"
+            >
               Detalhes do Diretor
             </h2>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <!-- Navegação entre diretores -->
-              <div class="flex items-center gap-1 mr-4">
+              <div class="flex items-center gap-1 mr-2 sm:mr-4">
                 <button 
                   @click="navegarDiretor(-1)"
                   :disabled="diretoresFiltrados.findIndex(d => d.id === diretorSelecionado.id) === 0"
-                  class="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Diretor anterior"
                 >
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <span class="text-sm text-gray-500 px-2">
+                <span class="text-xs sm:text-sm text-gray-500 px-1 sm:px-2 whitespace-nowrap">
                   {{ diretoresFiltrados.findIndex(d => d.id === diretorSelecionado.id) + 1 }} de {{ diretoresFiltrados.length }}
                 </span>
                 <button 
                   @click="navegarDiretor(1)"
                   :disabled="diretoresFiltrados.findIndex(d => d.id === diretorSelecionado.id) === diretoresFiltrados.length - 1"
-                  class="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Próximo diretor"
                 >
-                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -789,10 +810,10 @@ watch(offline, (novoValor) => {
               <!-- Botão de compartilhar -->
               <button 
                 @click="compartilharDiretor(diretorSelecionado)"
-                class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                class="p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors"
                 title="Compartilhar informações do diretor"
               >
-                <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                 </svg>
               </button>
@@ -800,38 +821,59 @@ watch(offline, (novoValor) => {
               <!-- Botão de fechar -->
               <button 
                 @click="fecharModal" 
-                class="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                class="p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors"
                 aria-label="Fechar modal"
               >
-                <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
           
-          <div class="flex flex-col lg:flex-row">
-            <!-- Imagem -->
-            <div class="lg:w-2/5 relative">
+          <!-- Conteúdo principal do modal -->
+          <div class="flex flex-col lg:flex-row modal-content-container">
+            <!-- Seção da imagem -->
+            <div class="w-full lg:w-2/5 relative flex-shrink-0">
               <img 
                 :src="diretorSelecionado.imagem" 
                 :alt="`Foto de ${diretorSelecionado.nome}`"
-                class="w-full h-64 lg:h-full object-cover" 
+                class="w-full h-48 sm:h-64 lg:h-full object-cover" 
                 loading="lazy"
                 @error="onImageError(diretorSelecionado.id, $event)"
               />
               <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent lg:hidden"></div>
+              
+              <!-- Badge diretor atual sobreposto na imagem -->
+              <div v-if="diretorSelecionado.periodo?.includes('ATUALMENTE') || diretorSelecionado.atual" 
+                  class="absolute top-3 right-3 lg:top-4 lg:right-4">
+                <span class="inline-flex items-center px-2 py-1 sm:px-3 rounded-full text-xs font-bold bg-green-500 text-white shadow-lg">
+                  <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  ATUAL
+                </span>
+              </div>
             </div>
             
-            <!-- Conteúdo -->
-            <div class="lg:w-3/5 p-6">
+            <!-- Seção do conteúdo -->
+            <div class="flex-1 p-4 sm:p-6 overflow-y-auto modal-content-scroll">
               <div class="space-y-4">
                 <!-- Nome e período -->
                 <div>
-                  <div class="flex items-center gap-2 mb-2">
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                     <span 
                       v-if="diretorSelecionado.periodo?.includes('ATUALMENTE') || diretorSelecionado.atual" 
-                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 w-fit lg:hidden"
+                    >
+                      <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      Diretor Atual
+                    </span>
+                    <span 
+                      v-if="diretorSelecionado.periodo?.includes('ATUALMENTE') || diretorSelecionado.atual" 
+                      class="hidden lg:inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
                     >
                       <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -839,8 +881,8 @@ watch(offline, (novoValor) => {
                       Diretor Atual
                     </span>
                   </div>
-                  <h2 class="text-3xl font-bold text-gray-800">{{ diretorSelecionado.nome }}</h2>
-                  <p class="text-gray-600 mt-1 font-medium">{{ diretorSelecionado.periodo }}</p>
+                  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{{ diretorSelecionado.nome }}</h2>
+                  <p class="text-gray-600 font-medium text-base sm:text-lg">{{ diretorSelecionado.periodo }}</p>
                   <p v-if="diretorSelecionado.duracaoMandato" class="text-gray-500 mt-2 text-sm">
                     Duração: {{ formatarDuracao(diretorSelecionado.duracaoMandato) }}
                   </p>
@@ -849,14 +891,15 @@ watch(offline, (novoValor) => {
                 <!-- Histórico -->
                 <div v-if="diretorSelecionado.historico" class="space-y-2">
                   <h3 class="text-lg font-semibold text-gray-800">Histórico</h3>
-                  <p class="text-gray-700 leading-relaxed">{{ diretorSelecionado.historico }}</p>
+                  <p class="text-gray-700 leading-relaxed text-sm sm:text-base">{{ diretorSelecionado.historico }}</p>
                 </div>
                 
                 <!-- Realizações -->
                 <div v-if="diretorSelecionado.realizacoes?.length" class="space-y-2">
                   <h3 class="text-lg font-semibold text-gray-800">Principais Realizações</h3>
                   <ul class="list-disc pl-5 space-y-2">
-                    <li v-for="(realizacao, index) in diretorSelecionado.realizacoes" :key="index" class="text-gray-700">
+                    <li v-for="(realizacao, index) in diretorSelecionado.realizacoes" :key="index" 
+                        class="text-gray-700 text-sm sm:text-base">
                       {{ realizacao }}
                     </li>
                   </ul>
@@ -1034,4 +1077,108 @@ html {
     background-color: rgba(255, 255, 255, 0.8);
   }
 }
+
+/* Modal para diretores */
+.modal-diretor-container {
+  max-height: calc(100vh - 1rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.modal-content-scroll {
+  max-height: calc(100vh - 200px);
+}
+
+/* Breakpoints específicos para notebooks */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .modal-diretor-container {
+    max-height: calc(100vh - 2rem);
+    max-width: 90vw;
+  }
+  
+  .modal-content-scroll {
+    max-height: calc(100vh - 180px);
+  }
+}
+
+/* Telas muito pequenas (celular) */
+@media (max-width: 640px) {
+  .modal-diretor-container {
+    max-height: calc(100vh - 0.5rem);
+    border-radius: 0.5rem;
+  }
+  
+  .modal-content-scroll {
+    max-height: calc(100vh - 160px);
+  }
+  
+  .modal-content-container {
+    flex-direction: column;
+  }
+}
+
+/* Tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-diretor-container {
+    max-height: calc(100vh - 1.5rem);
+    max-width: 95vw;
+  }
+  
+  .modal-content-scroll {
+    max-height: calc(100vh - 170px);
+  }
+}
+
+/* Notebooks pequenos (altura limitada) */
+@media (max-height: 768px) {
+  .modal-diretor-container {
+    max-height: calc(100vh - 0.5rem);
+  }
+  
+  .modal-content-scroll {
+    max-height: calc(100vh - 140px);
+  }
+  
+  .modal-diretor-container .p-3,
+  .modal-diretor-container .p-4,
+  .modal-diretor-container .p-6 {
+    padding: 0.75rem;
+  }
+}
+
+/* Notebooks médios */
+@media (min-height: 769px) and (max-height: 900px) {
+  .modal-content-scroll {
+    max-height: calc(100vh - 160px);
+  }
+}
+
+/* Telas grandes */
+@media (min-height: 901px) {
+  .modal-content-scroll {
+    max-height: calc(100vh - 200px);
+  }
+}
+
+/* Layout em landscape para tablets */
+@media (min-width: 641px) and (max-width: 1024px) and (orientation: landscape) {
+  .modal-content-container {
+    flex-direction: row;
+  }
+  
+  .modal-content-scroll {
+    max-height: calc(100vh - 120px);
+  }
+}
+
+/* Garantir que o modal não ultrapasse a tela */
+.fixed.inset-0 {
+  overflow: hidden;
+}
+
 </style>

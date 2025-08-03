@@ -179,7 +179,7 @@ onBeforeUnmount(() => {
             <DropdownServicos />
             <Link href="/cursos" class="text-black hover:text-[#a38e4d] px-3 py-2">Cursos</Link>
             <!-- <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Banco de Currículos</Link> -->
-            <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Concursos e Seleções</Link>
+            <Link href="/concursos" class="text-black hover:text-[#a38e4d] px-3 py-2">Concursos</Link>
             <Link href="/fale-conosco" class="text-black hover:text-[#a38e4d] px-3 py-2">Fale Conosco</Link>
             
             <!-- Redes Sociais no Mobile -->

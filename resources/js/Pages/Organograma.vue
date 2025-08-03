@@ -13,7 +13,6 @@ const DOCUMENT_DESCRIPTION = 'Estrutura organizacional e hierárquica atualizada
 const additionalInfo = [
   'Este organograma apresenta a estrutura atual da Polícia Civil da Paraíba, conforme a última reestruturação organizacional.',
   'As unidades especializadas estão destacadas conforme suas respectivas competências.',
-  'Em caso de dúvidas, consulte a Diretoria da ACADEPOL.'
 ];
 </script>
 

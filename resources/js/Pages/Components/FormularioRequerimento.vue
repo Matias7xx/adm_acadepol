@@ -118,12 +118,12 @@ const validarCPF = (cpf) => {
     <div class="bg-gradient-to-r from-black to-gray-900 text-white py-5 shadow-md">
       <div class="container mx-auto flex justify-between items-center px-4">
         <div class="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#bea55a] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <h1 class="text-2xl font-bold">Formulário de Requerimento</h1>
         </div>
-        <Link :href="route('home')" class="flex items-center text-blue-400 hover:text-blue-300 transition">
+        <Link :href="route('home')" class="flex items-center text-amber-400 hover:text-amber-300 transition">
           <span>Voltar</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -135,10 +135,10 @@ const validarCPF = (cpf) => {
     <!-- Conteúdo Principal -->
     <div class="container mx-auto py-8 px-4">
       <div class="bg-white rounded-lg shadow-lg p-6 mb-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-6 pb-3 border-b border-blue-200">
+        <div class="flex items-center justify-between mb-6 pb-3 border-b border-amber-200">
           <div class="flex items-center">
-            <div class="bg-blue-100 p-3 rounded-full mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="bg-amber-100 p-3 rounded-full mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
@@ -148,16 +148,16 @@ const validarCPF = (cpf) => {
         </div>
         
         <!-- Aviso Importante -->
-        <div class="bg-gradient-to-r from-blue-50 to-blue-50 border-l-4 border-blue-500 p-4 mb-6 shadow-sm">
+        <div class="bg-gradient-to-r from-amber-50 to-amber-50 border-l-4 border-amber-500 p-4 mb-6 shadow-sm">
           <div class="flex">
             <div class="flex-shrink-0">
-              <svg class="h-6 w-6 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg class="h-6 w-6 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
               </svg>
             </div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-blue-800">Informações Importantes</h3>
-              <p class="mt-1 text-sm text-blue-700">
+              <h3 class="text-sm font-medium text-amber-800">Informações Importantes</h3>
+              <p class="mt-1 text-sm text-amber-700">
                 Preencha todos os campos corretamente. Sua solicitação será analisada pela equipe da ACADEPOL e você será notificado por e-mail sobre o status do requerimento.
               </p>
             </div>
@@ -168,7 +168,7 @@ const validarCPF = (cpf) => {
           <!-- Informações Pessoais -->
           <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
             <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
               </svg>
               Informações Pessoais
@@ -184,7 +184,7 @@ const validarCPF = (cpf) => {
                   id="nome" 
                   v-model="formData.nome" 
                   type="text" 
-                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                   readonly
                 >
@@ -200,7 +200,7 @@ const validarCPF = (cpf) => {
                   v-model="formData.cpf" 
                   type="text" 
                   placeholder="000.000.000-00"
-                  class="w-full border-gray-300 rounded-md shadow-sm bg-slate-100 focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 rounded-md shadow-sm bg-slate-100 focus:border-amber-500 focus:ring focus:ring-amber-200"
                   readonly
                   required
                 >
@@ -218,7 +218,7 @@ const validarCPF = (cpf) => {
                   id="cargo" 
                   v-model="formData.cargo" 
                   type="text" 
-                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                   readonly
                 >
@@ -233,7 +233,7 @@ const validarCPF = (cpf) => {
                   id="matricula" 
                   v-model="formData.matricula" 
                   type="text" 
-                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full bg-slate-100 border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                   readonly
                 >
@@ -248,7 +248,7 @@ const validarCPF = (cpf) => {
                   id="orgao" 
                   v-model="formData.orgao" 
                   type="text" 
-                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 bg-slate-100 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                   readonly
                 >
@@ -259,7 +259,7 @@ const validarCPF = (cpf) => {
           <!-- Informações de Contato -->
           <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
             <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
               </svg>
               Informações de Contato
@@ -275,7 +275,7 @@ const validarCPF = (cpf) => {
                   id="email" 
                   v-model="formData.email" 
                   type="email" 
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                 >
               </div>
@@ -290,7 +290,7 @@ const validarCPF = (cpf) => {
                   v-model="formData.telefone" 
                   type="tel" 
                   placeholder="(00) 00000-0000"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                 >
               </div>
@@ -300,7 +300,7 @@ const validarCPF = (cpf) => {
           <!-- Detalhes do Requerimento -->
           <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm">
             <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
               </svg>
               Detalhes do Requerimento
@@ -315,7 +315,7 @@ const validarCPF = (cpf) => {
                 <select 
                   id="tipo_requerimento" 
                   v-model="formData.tipo_requerimento" 
-                  class="border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
                 >
                   <option value="">Selecione um tipo...</option>
@@ -334,7 +334,7 @@ const validarCPF = (cpf) => {
                   id="descricao" 
                   v-model="formData.descricao" 
                   rows="5"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   placeholder="Descreva detalhadamente o seu requerimento, incluindo todas as informações relevantes"
                   required
                 ></textarea>
@@ -351,7 +351,7 @@ const validarCPF = (cpf) => {
                     type="file" 
                     @change="handleDocumentoChange"
                     accept=".pdf"
-                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
                   >
                 </div>
                 <p class="mt-1 text-xs text-gray-500">
@@ -364,7 +364,7 @@ const validarCPF = (cpf) => {
           <!-- Termos e Condições -->
           <div class="mb-6">
             <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
               </svg>
               Termos e Condições
@@ -374,7 +374,7 @@ const validarCPF = (cpf) => {
               <button 
                 type="button" 
                 @click="toggleTermos" 
-                class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                class="text-amber-600 hover:text-amber-800 text-sm font-medium"
               >
                 {{ termoVisivel ? 'Ocultar Termos' : 'Ver Termos Completos' }}
               </button>
@@ -410,7 +410,7 @@ const validarCPF = (cpf) => {
                   id="aceita_termos" 
                   v-model="formData.aceita_termos" 
                   type="checkbox" 
-                  class="w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500"
+                  class="w-4 h-4 border-gray-300 rounded text-amber-600 focus:ring-amber-500"
                   required
                 >
               </div>
@@ -424,7 +424,7 @@ const validarCPF = (cpf) => {
           <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-8 pt-6 border-t border-gray-200">
             <button 
               type="submit" 
-              class="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-8 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300 flex items-center justify-center"
+              class="bg-[#bea55a] text-white py-3 px-8 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 flex items-center justify-center"
               :disabled="isSubmitting"
             >
               <svg v-if="!isSubmitting" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

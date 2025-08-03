@@ -5,7 +5,7 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-  <footer class="bg-black text-gray-300">
+  <footer class="bg-black text-gray-300" role="contentinfo">
     <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10">
       <!-- Grid Principal -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8 items-start">
@@ -158,6 +158,21 @@ import { Link } from '@inertiajs/vue3';
 @media (max-width: 480px) {
   .social-media-footer {
     gap: 0.75rem !important;
+  }
+}
+
+/* Para Tablets */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Garantir que títulos não quebrem em telas pequenas */
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
   }
 }
 </style>

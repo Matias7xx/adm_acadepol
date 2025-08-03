@@ -555,10 +555,6 @@ export default {
       if (novoIndice >= 0 && novoIndice < totalFotos) {
         indiceAtual.value = novoIndice;
         fotoSelecionada.value = fotosFiltradas.value[novoIndice];
-        
-        // Anunciar mudança para screen readers
-        const announcement = `Foto ${novoIndice + 1} de ${totalFotos}: ${fotoSelecionada.value.titulo}`;
-        announceToScreenReader(announcement);
       }
     };
 

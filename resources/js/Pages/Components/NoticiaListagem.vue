@@ -342,7 +342,7 @@ onUnmounted(() => {
               Todas as Notícias
             </h1>
             <p class="text-gray-600 text-md">
-              Explore nosso arquivo completo de notícias e fique sempre atualizado sobre as atividades da ACADEPOL
+              Explore nosso arquivo completo e fique sempre atualizado sobre as atividades da ACADEPOL
             </p>
           </div>
           
@@ -535,7 +535,7 @@ onUnmounted(() => {
                 </div>
                 
                 <!-- Ação -->
-                <div class="mt-3">
+                <div class="">
                   <Link 
                     :href="`/noticias/${noticia.id}`"
                     class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-sm group-hover:gap-2 gap-1 transition-all duration-300"
