@@ -1,9 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import iconAgenda from '@/src/assets/icon-agenda.png'
 import iconOnline from '@/src/assets/icon-online.png'
 import iconAlojamento from '@/src/assets/icon-alojamento.png'
-import { Link } from '@inertiajs/vue3'
 
 </script>
 

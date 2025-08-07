@@ -61,9 +61,9 @@ class UserController extends Controller
             'users' => $users,
             'filters' => request()->all('search'),
             'can' => [
-                'create' => Auth::user()->can('user create'),
-                'edit' => Auth::user()->can('user edit'),
-                'delete' => Auth::user()->can('user delete'),
+                'create' => Auth::user()->can('adminCreate', User::class),
+                'edit' => Auth::user()->can('adminUpdate', User::class),
+                'delete' => Auth::user()->can('adminDelete', User::class),
             ],
         ]);
     }

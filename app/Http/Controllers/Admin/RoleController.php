@@ -48,9 +48,9 @@ class RoleController extends Controller
             'roles' => $roles,
             'filters' => request()->all('search'),
             'can' => [
-                'create' => Auth::user()->can('role create'),
-                'edit' => Auth::user()->can('role edit'),
-                'delete' => Auth::user()->can('role delete'),
+                'create' => Auth::user()->can('adminCreate', Role::class),
+                'edit' => Auth::user()->can('adminUpdate', Role::class),
+                'delete' => Auth::user()->can('adminDelete', Role::class),
             ],
         ]);
     }

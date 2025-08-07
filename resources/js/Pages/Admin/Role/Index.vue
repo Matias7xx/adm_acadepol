@@ -39,7 +39,7 @@ const form = useForm({
 const formDelete = useForm({})
 
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
+  if (confirm("Tem certeza de que deseja remover esta role?")) {
     formDelete.delete(route("admin.role.destroy", id))
   }
 }
@@ -55,10 +55,10 @@ function destroy(id) {
         main
       >
         <BaseButton
-          v-if="can.delete"
+          v-if="can.create"
           :route-name="route('admin.role.create')"
           :icon="mdiPlus"
-          label="Add"
+          label="Cadastrar"
           color="info"
           rounded-full
           small
@@ -89,10 +89,10 @@ function destroy(id) {
                   focus:ring-opacity-50
                   text-gray-900
                 "
-                placeholder="Search"
+                placeholder="Pesquisar por nome"
               />
               <BaseButton
-                label="Search"
+                label="Pesquisar"
                 type="submit"
                 color="info"
                 class="ml-4 inline-flex items-center px-4 py-2"
@@ -106,15 +106,15 @@ function destroy(id) {
           <thead>
             <tr>
               <th>
-                <Sort label="Name" attribute="name" />
+                <Sort label="Nome" attribute="name" />
               </th>
-              <th v-if="can.edit || can.delete">Actions</th>
+              <th v-if="can.edit || can.delete">Ações</th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-for="role in roles.data" :key="role.id">
-              <td data-label="Name">
+              <td data-label="Nome">
                 <Link
                   :href="route('admin.role.show', role.id)"
                   class="

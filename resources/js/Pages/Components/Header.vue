@@ -1,8 +1,6 @@
 <script setup>
 import logoPC from '@/src/assets/logo-pcpb2.png'
 import logoAC from '@/src/assets/logo-acadepol.png'
-import iconGlobe from '@/src/assets/globe.png'
-import iconComputer from '@/src/assets/computer.png'
 import Search from './Search.vue'
 
 import { Link } from '@inertiajs/vue3';

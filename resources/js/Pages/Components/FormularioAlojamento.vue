@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { Link, useForm, Head } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
 import Header from '../Components/Header.vue';

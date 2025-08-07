@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, Head, Link, usePage } from '@inertiajs/vue3'
-import { mdiAccount, mdiAsterisk, mdiAccountTieHat, mdiEye, mdiEyeOff } from '@mdi/js'
+import { mdiAsterisk, mdiAccountTieHat, mdiEye, mdiEyeOff } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
 import CardBox from '@/Components/CardBox.vue'
@@ -10,13 +10,13 @@ import FormControl from '@/Components/FormControl.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
-import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
 import Toast from '../Components/Toast.vue'
 import imgUrl from '@/src/assets/logo-acadepol.png'
 import { computed, ref, watch } from 'vue';
 import { useToast } from '@/Composables/useToast';
+import BaseIcon from '@/Components/BaseIcon.vue'
 
 const props = defineProps({
   canResetPassword: Boolean,
@@ -107,7 +107,9 @@ const submit = () => {
         form
         @submit.prevent="submit"
       >
-      <div class="flex items-center mt-2 justify-center "><img :src="imgUrl" class=""/></div>
+      <div class="flex items-center mt-2 justify-center">
+        <img :src="imgUrl" class="w-auto h-16 sm:h-20 md:h-24 max-w-full" />
+      </div>
       
         <!-- Somente para erros que não são de autenticação -->
         <!-- <FormValidationErrors /> -->
@@ -119,7 +121,7 @@ const submit = () => {
           {{ status }}
         </NotificationBarInCard>
         <div class="w-full mt-2 px-1 py-1 overflow-hidden text-center flex justify-center">
-          <p class="text-gray-400 mb-3">{{ loginDescription }}</p>
+          <p class="text-gray-400 mb-3 text-sm sm:text-base px-2">{{ loginDescription }}</p>
         </div>
         <FormField
           label="Matrícula"
@@ -153,30 +155,15 @@ const submit = () => {
             <button 
               type="button" 
               @click="isPasswordVisible = !isPasswordVisible" 
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              :aria-label="isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'"
               tabindex="-1"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                class="h-5 w-5" 
-                viewBox="0 0 20 20" 
-                fill="currentColor"
-              >
-                <path 
-                  v-if="!isPasswordVisible" 
-                  d="M10 12a2 2 0 100-4 2 2 0 000 4z" 
-                />
-                <path 
-                  v-if="!isPasswordVisible" 
-                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" 
-                />
-                <path 
-                  v-else 
-                  fill-rule="evenodd" 
-                  d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0020 10c-1.274-4.057-5.064-7-9.542-7-1.81 0-3.532.518-5.014 1.454l-1.737-1.737z" 
-                  clip-rule="evenodd" 
-                />
-              </svg>
+              <BaseIcon 
+                :path="isPasswordVisible ? mdiEyeOff : mdiEye" 
+                class="h-5 w-5"
+                size="20"
+              />
             </button>
           </div>
         </FormField>
@@ -190,7 +177,7 @@ const submit = () => {
         <BaseDivider />
 
         <BaseLevel>
-          <BaseButtons>
+          <BaseButtons class="flex-col sm:flex-row">
             <BaseButton
               class="bg-[#bea54a] text-[black] hover:bg-[#a38e5d]"
               type="submit"

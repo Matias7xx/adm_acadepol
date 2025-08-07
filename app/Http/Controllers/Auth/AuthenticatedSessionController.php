@@ -69,9 +69,9 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Redirecionamento baseado em role
-     if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+     /* if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
         return redirect()->route('admin.dashboard');
-     }/* else if ($user->hasRole('servidor')) {
+     } *//* else if ($user->hasRole('servidor')) {
         // Redirecionar para a home do servidor no portal-aluno
         return redirect($portalUrl . '/servidor');
     } else if ($user->hasRole('aluno')) {

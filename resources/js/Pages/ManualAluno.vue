@@ -1,6 +1,5 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import SiteNavbar from './Components/SiteNavbar.vue';
 import Header from './Components/Header.vue';
 import Footer from './Components/Footer.vue';

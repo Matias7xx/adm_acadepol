@@ -8,10 +8,17 @@ import {
     mdiEmail,
     mdiLogout,
     mdiThemeLightDark,
-    mdiGithub
+    mdiGithub,
+    mdiHome
   } from '@mdi/js'
   
   export default [
+    {
+      icon: mdiHome,
+      label: 'Voltar ao Site',
+      to: '/',
+      isDesktopNoLabel: false
+    },
     /* {
       icon: mdiMenu,
       label: 'Menu',

@@ -20,14 +20,19 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        'App\Models\Role' => 'BalajiDharma\LaravelAdminCore\Policies\RolePolicy',
+        // Sobrescrever policies do Laravel Admin Core APENAS para Users e Roles
+        'App\Models\Role' => 'App\Policies\RolePolicy',
+        'App\Models\User' => 'App\Policies\UserPolicy',
+        
         'App\Models\Permission' => 'BalajiDharma\LaravelAdminCore\Policies\PermissionPolicy',
-        'App\Models\User' => 'BalajiDharma\LaravelAdminCore\Policies\UserPolicy',
+        
+        // Manter as policies originais para outras funcionalidades
         'BalajiDharma\LaravelCategory\Models\Category' => 'BalajiDharma\LaravelAdminCore\Policies\CategoryPolicy',
         'BalajiDharma\LaravelCategory\Models\CategoryType' => 'BalajiDharma\LaravelAdminCore\Policies\CategoryTypePolicy',
         'BalajiDharma\LaravelMenu\Models\Menu' => 'BalajiDharma\LaravelAdminCore\Policies\MenuPolicy',
         'BalajiDharma\LaravelMenu\Models\MenuItem' => 'BalajiDharma\LaravelAdminCore\Policies\MenuItemPolicy',
         'Plank\Mediable\Media' => 'BalajiDharma\LaravelAdminCore\Policies\MediaPolicy',
+        
         'App\Models\Matricula' => 'App\Policies\MatriculaPolicy',
         'App\Models\Curso' => 'App\Policies\CursoPolicy',
         'App\Models\Director' => 'App\Policies\DirectorPolicy',

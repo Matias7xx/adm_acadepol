@@ -1,7 +1,6 @@
 <script setup>
   import SiteNavbar from './Components/SiteNavbar.vue';
   import Footer from './Components/Footer.vue';
-  import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
   import Missao from '@/src/assets/missao.jpeg'
   import Missao2 from '@/src/assets/missao2.jpeg'

@@ -1,3 +1,72 @@
+<script setup>
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, reactive } from 'vue';
+
+// Componentes
+import Header from './Components/Header.vue';
+import SiteNavbar from './Components/SiteNavbar.vue';
+import Footer from './Components/Footer.vue';
+
+const props = defineProps({
+  cursos: {
+    type: Object,
+    required: true,
+    default: () => ({ 
+      data: [],
+      links: [],
+      meta: {},
+      from: 0,
+      to: 0,
+      total: 0
+    })
+  },
+  filters: {
+    type: Object,
+    default: () => ({})
+  }
+});
+
+// Form de busca
+const searchForm = reactive({
+  search: props.filters.search || ''
+});
+
+// Verificar se há cursos disponíveis
+const hasCursos = computed(() => props.cursos.data && props.cursos.data.length > 0);
+
+// Função para buscar cursos
+const buscarCursos = () => {
+  router.get(route('cursos'), {
+    search: searchForm.search
+  }, {
+    preserveState: true,
+    preserveScroll: true
+  });
+};
+
+// Função para limpar busca
+const limparBusca = () => {
+  searchForm.search = '';
+  router.get(route('cursos'), {}, {
+    preserveState: true,
+    preserveScroll: true
+  });
+};
+
+// Função para navegar entre páginas
+const irParaPagina = (url) => {
+  router.visit(url, {
+    preserveState: true,
+    preserveScroll: true
+  });
+};
+
+// Tratamento de erro de imagem
+const handleImageError = (event) => {
+  event.target.src = '/images/placeholder-news2.png';
+};
+</script>
+
 <template>
   <Head title="Cursos" />
   <div class="min-h-screen flex flex-col bg-gray-100">
@@ -346,75 +415,6 @@
     <Footer />
   </div>
 </template>
-
-<script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, reactive } from 'vue';
-
-// Componentes
-import Header from './Components/Header.vue';
-import SiteNavbar from './Components/SiteNavbar.vue';
-import Footer from './Components/Footer.vue';
-
-const props = defineProps({
-  cursos: {
-    type: Object,
-    required: true,
-    default: () => ({ 
-      data: [],
-      links: [],
-      meta: {},
-      from: 0,
-      to: 0,
-      total: 0
-    })
-  },
-  filters: {
-    type: Object,
-    default: () => ({})
-  }
-});
-
-// Form de busca
-const searchForm = reactive({
-  search: props.filters.search || ''
-});
-
-// Verificar se há cursos disponíveis
-const hasCursos = computed(() => props.cursos.data && props.cursos.data.length > 0);
-
-// Função para buscar cursos
-const buscarCursos = () => {
-  router.get(route('cursos'), {
-    search: searchForm.search
-  }, {
-    preserveState: true,
-    preserveScroll: true
-  });
-};
-
-// Função para limpar busca
-const limparBusca = () => {
-  searchForm.search = '';
-  router.get(route('cursos'), {}, {
-    preserveState: true,
-    preserveScroll: true
-  });
-};
-
-// Função para navegar entre páginas
-const irParaPagina = (url) => {
-  router.visit(url, {
-    preserveState: true,
-    preserveScroll: true
-  });
-};
-
-// Tratamento de erro de imagem
-const handleImageError = (event) => {
-  event.target.src = '/images/placeholder-news2.png';
-};
-</script>
 
 <style scoped>
 .line-clamp-2 {

@@ -1,7 +1,6 @@
 <script setup>
   import SiteNavbar from './Components/SiteNavbar.vue';
   import Footer from './Components/Footer.vue';
-  import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
   import Acadepol1 from '@/src/assets/acadepol1.jpg'
   import Placa from '@/src/assets/PLACA-ACADEPOL.jpg'

@@ -285,6 +285,7 @@ const estatisticasCalculadas = computed(() => {
             :icon="mdiViewGrid"
             label="Controle de Dormitórios"
             color="success"
+            rounded-full
             :disabled="loadingOcupacao"
             title="Abrir painel de controle de ocupação dos dormitórios"
           />

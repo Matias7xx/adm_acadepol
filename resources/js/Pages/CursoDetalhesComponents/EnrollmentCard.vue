@@ -1,5 +1,5 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
 import Toast from '../Components/Toast.vue';
 

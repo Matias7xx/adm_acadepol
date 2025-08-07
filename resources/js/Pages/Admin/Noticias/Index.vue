@@ -85,6 +85,17 @@ function getStatusClass(status) {
         title="Notícias"
         main
       >
+      <div class="flex items-center gap-3">
+        <BaseButton
+            href="/noticias"
+            :icon="mdiEye"
+            label="Ver Notícias"
+            color="light"
+            rounded-full
+            small
+            target="_blank"
+          />
+
         <BaseButton
           v-if="can.create"
           :route-name="route('admin.noticias.create')"
@@ -94,6 +105,7 @@ function getStatusClass(status) {
           rounded-full
           small
         />
+      </div>
       </SectionTitleLineWithButton>
       <NotificationBar
         :key="Date.now()"

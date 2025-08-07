@@ -1,7 +1,6 @@
 <script setup>
 import SocialMedia from './SocialMedia.vue';
 import governoPb from '@/src/assets/governopb.png'
-import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, Head, usePage, router } from '@inertiajs/vue3';
+import { Link, Head, router } from '@inertiajs/vue3';
 import Header from './Header.vue';
 import SiteNavbar from './SiteNavbar.vue';
 import Footer from './Footer.vue';
@@ -189,8 +189,8 @@ const navegarComScroll = (url) => {
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span class="hidden sm:inline">Atualizado</span>
-              <span class="sm:hidden">Atualizad.</span>
+              <span class="hidden sm:inline mr-1">Atualizado</span>
+              <span class="sm:hidden mr-1">Atualizado</span>
               {{ dataAtualizacaoFormatada }}
             </div>
             
@@ -203,13 +203,13 @@ const navegarComScroll = (url) => {
             </div>
             
             <!-- Visualizações -->
-            <div class="flex items-center">
+            <!-- <div class="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                 <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
               </svg>
               {{ noticia.visualizacoes }}
-            </div>
+            </div> -->
             
             <!-- Badge de destaque -->
             <div v-if="noticia.destaque" class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full">

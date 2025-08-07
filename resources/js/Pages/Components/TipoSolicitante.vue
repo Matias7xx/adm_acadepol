@@ -1,10 +1,8 @@
 <script setup>
 import { Link, Head } from '@inertiajs/vue3'
-import { mdiAccountTieHat, mdiAccount, mdiShieldCheck, mdiFileDocument } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
 import CardBox from '@/Components/CardBox.vue'
-import BaseButton from '@/Components/BaseButton.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
 import imgUrl from '@/src/assets/logo-acadepol.png'

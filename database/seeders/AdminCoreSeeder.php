@@ -73,6 +73,10 @@ class AdminCoreSeeder extends Seeder
             'director create',
             'director edit',
             'director delete',
+            'noticia list',
+            'noticia create', 
+            'noticia edit',
+            'noticia delete'
         ];
 
         foreach ($permissions as $permission) {

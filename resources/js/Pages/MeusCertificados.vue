@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { Link, Head } from '@inertiajs/vue3'
 import { useToast } from '@/Composables/useToast'
 import SiteNavbar from './Components/SiteNavbar.vue';

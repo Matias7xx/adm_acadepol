@@ -103,6 +103,7 @@ function formatPeriod(diretor) {
             :icon="mdiEye"
             label="Ver Galeria"
             color="light"
+            rounded-full
             small
             target="_blank"
           />
@@ -112,6 +113,7 @@ function formatPeriod(diretor) {
             :icon="mdiPlus"
             label="Novo Diretor"
             color="info"
+            rounded-full
             small
           />
         </div>

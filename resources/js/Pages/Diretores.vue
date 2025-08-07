@@ -1,9 +1,7 @@
 <script setup>
   import SiteNavbar from './Components/SiteNavbar.vue';
   import Footer from './Components/Footer.vue';
-  import { ref } from 'vue';
   import { Head } from '@inertiajs/vue3';
-  import Acadepol from '@/src/assets/PLACA-ACADEPOL.jpg'
   import CardDiretores from './Components/CardDiretores.vue';
   import Header from './Components/Header.vue';
 

@@ -54,7 +54,6 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { Link } from '@inertiajs/vue3';
 
 const isOpen = ref(false);
 const isMobile = ref(false);

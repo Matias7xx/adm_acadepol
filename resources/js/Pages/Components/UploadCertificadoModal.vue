@@ -3,11 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import BaseButton from '@/Components/BaseButton.vue';
 import { 
-  mdiFileDocument, 
-  mdiUpload, 
-  mdiClose,
-  mdiAlert,
-  mdiCheckCircle 
+  mdiUpload
 } from '@mdi/js';
 
 const props = defineProps({

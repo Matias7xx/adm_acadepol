@@ -55,15 +55,27 @@ function destroy(id) {
         title="Cursos"
         main
       >
+      <div class="flex items-center gap-3">
+        <BaseButton
+            href="/cursos"
+            :icon="mdiEye"
+            label="Ver Cursos"
+            color="light"
+            rounded-full
+            small
+            target="_blank"
+          />
+
         <BaseButton
           v-if="can.delete"
           :route-name="route('admin.cursos.create')"
           :icon="mdiPlus"
-          label="Cadastrar Curso"
+          label="Novo Curso"
           color="info"
           rounded-full
           small
         />
+      </div>
       </SectionTitleLineWithButton>
       <NotificationBar
         :key="Date.now()"

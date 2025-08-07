@@ -1,15 +1,11 @@
 <script setup>
 import SiteNavbar from './Components/SiteNavbar.vue';
 import HomeCarousel from './Components/HomeCarousel.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import Cards from './Components/Cards.vue';
 import Footer from './Components/Footer.vue';
 import Noticias from './Components/Noticias.vue';
 import Header from './Components/Header.vue';
-import Search from './Components/Search.vue';
-import Breadcrumb from '@/Components/Admin/Breadcrumb.vue';
-import Toast from './Components/Toast.vue';
-import FlashMessage from './Components/FlashMessage.vue';
 import PowerBIComponent from './Components/PowerBIComponent.vue';
 
 // URL do relatório Power BI

@@ -265,7 +265,6 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
 import { useNotifications } from '@/Composables/useNotifications'
 import ModalDetalhesOcupacao from './ModalDetalhesOcupacao.vue'
 import ModalCheckout from './ModalCheckout.vue'

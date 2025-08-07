@@ -328,7 +328,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 export default {
   name: 'GaleriaFotosAprimorada',

@@ -1,26 +1,17 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import {
-  mdiAccountMultiple,
   mdiSchool,
-  mdiCalendarCheck,
-  mdiCalendarClock,
   mdiHome,
   mdiClipboardList,
   mdiEmailOutline,
   mdiChartTimelineVariant,
   mdiReload,
-  mdiTrendingUp,
-  mdiTrendingDown,
-  mdiCalendar,
-  mdiAccountGroup,
-  mdiFileDocumentOutline,
   mdiAccountKey
 } from '@mdi/js'
 import LineChart from '@/Components/Charts/LineChart.vue'
 import SectionMain from '@/Components/SectionMain.vue'
-import CardBoxWidget from '@/Components/CardBoxWidget.vue'
 import CardBox from '@/Components/CardBox.vue'
 import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue'
 import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue'

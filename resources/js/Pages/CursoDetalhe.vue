@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { usePage, Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
 import Header from './Components/Header.vue';
 import SiteNavbar from './Components/SiteNavbar.vue';
