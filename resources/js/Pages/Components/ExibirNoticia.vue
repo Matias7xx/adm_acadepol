@@ -218,9 +218,8 @@ const navegarComScroll = (url) => {
           </div>
         </div>
         
-        <!-- Imagem principal - Tamanho otimizado -->
-        <div v-if="noticia.imagem && imagemCarregada" class="relative">
-          <!-- Aspect ratio responsivo - menor em mobile -->
+        <!-- Imagem principal -->
+        <!-- <div v-if="noticia.imagem && imagemCarregada" class="relative">
           <div class="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] overflow-hidden">
             <img 
               :src="noticia.imagem" 
@@ -232,7 +231,7 @@ const navegarComScroll = (url) => {
               Foto: ACADEPOL/PB
             </div>
           </div>
-        </div>
+        </div> -->
         
         <div class="p-4 sm:p-6">
           <!-- Descrição curta destacada -->

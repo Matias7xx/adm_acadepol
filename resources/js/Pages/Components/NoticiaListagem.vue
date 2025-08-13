@@ -338,9 +338,9 @@ onUnmounted(() => {
       <div class="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
         <div class="lg:flex lg:items-center lg:justify-between">
           <div class="flex-1 min-w-0">
-            <h1 class="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            <!-- <h1 class="text-2xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
               Todas as Notícias
-            </h1>
+            </h1> -->
             <p class="text-gray-600 text-md">
               Explore nosso arquivo completo e fique sempre atualizado sobre as atividades da ACADEPOL
             </p>
@@ -530,7 +530,7 @@ onUnmounted(() => {
                   
                   <!-- Descrição -->
                   <p class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">
-                    {{ truncateText(noticia.descricao_curta, 100) }}
+                    {{ truncateText(noticia.descricao_curta, 181) }}
                   </p>
                 </div>
                 

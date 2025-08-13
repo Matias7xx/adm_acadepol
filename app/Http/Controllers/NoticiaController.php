@@ -18,10 +18,16 @@ class NoticiaController extends Controller
     {
         $noticias = Noticia::publicado()
             ->when($request->search, function($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('titulo', 'like', "%{$search}%")
-                    ->orWhere('descricao_curta', 'like', "%{$search}%");
-                });
+                $searchTerm = trim($search);
+                if (!empty($searchTerm)) {
+                    $query->where(function($q) use ($searchTerm) {
+                        // Converter tanto o termo de busca quanto os campos para minúsculas
+                        $searchLower = strtolower($searchTerm);
+                        
+                        $q->whereRaw('LOWER(titulo) LIKE ?', ["%{$searchLower}%"])
+                          ->orWhereRaw('LOWER(descricao_curta) LIKE ?', ["%{$searchLower}%"]);
+                    });
+                }
             })
             // NÃO FILTRAR POR DESTAQUE
             ->orderBy('data_publicacao', 'desc')
@@ -180,10 +186,16 @@ class NoticiaController extends Controller
             ->where('data_publicacao', '<=', now())
             ->whereNull('deleted_at')
             ->when($search, function($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('titulo', 'like', "%{$search}%")
-                    ->orWhere('descricao_curta', 'like', "%{$search}%");
-                });
+                $searchTerm = trim($search);
+                if (!empty($searchTerm)) {
+                    $query->where(function($q) use ($searchTerm) {
+                        // Converter tanto o termo de busca quanto os campos para minúsculas
+                        $searchLower = strtolower($searchTerm);
+                        
+                        $q->whereRaw('LOWER(titulo) LIKE ?', ["%{$searchLower}%"])
+                          ->orWhereRaw('LOWER(descricao_curta) LIKE ?', ["%{$searchLower}%"]);
+                    });
+                }
             })
             ->orderBy('data_publicacao', 'desc')
             ->orderBy('created_at', 'desc')
