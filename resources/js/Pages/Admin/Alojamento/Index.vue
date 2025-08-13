@@ -193,11 +193,14 @@ const getTipoConfig = (reserva) => {
 
 // Enviar formulário de busca
 const submitSearch = () => {
-  useForm({
+
+  const form = useForm({
     search: search.value,
     status: statusFilter.value,
     ocupacao: ocupacaoFilter.value
-  }).get(route('admin.alojamento.index'), {
+  });
+
+  form.get(route('admin.alojamento.index'), {
     preserveState: true,
     replace: true
   });
@@ -367,10 +370,10 @@ const estatisticasCalculadas = computed(() => {
       <!--Filtros -->
       <CardBox class="mb-6">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <FormField label="Buscar" :icon="mdiMagnify">
+          <FormField label="Buscar por CPF" :icon="mdiMagnify">
             <input
               v-model="search"
-              placeholder="Nome, CPF, matrícula ou email"
+              placeholder="Informe o CPF"
               type="text"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               @keyup.enter="submitSearch"
@@ -402,7 +405,7 @@ const estatisticasCalculadas = computed(() => {
               <option value="com_checkin">Com Check-in</option>
               <option value="sem_checkin">Sem Check-in</option>
               <option value="checkout_realizado">Check-out Realizado</option>
-              <option value="disponivel">Apenas Disponíveis</option>
+              <!-- <option value="disponivel">Apenas Disponíveis</option> -->
             </select>
           </FormField>
           

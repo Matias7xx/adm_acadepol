@@ -261,19 +261,12 @@ class AlojamentoController extends Controller
 
         // Buscar reservas de usuários COM informações de ocupação ATUAL E HISTÓRICO
         $reservasUsuarios = Alojamento::with(['usuario', 'ocupacaoAtual.dormitorio', 'ocupacoes'])
-            ->when($request->search, function($query, $search) {
+            ->when($request->search, function($query, $search) {                
                 return $query->where(function($q) use ($search) {
-                    // Busca por nome, matrícula, email ou CPF
-                    $q->where('nome', 'like', "%{$search}%")
-                      ->orWhere('matricula', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('cpf', 'like', "%{$search}%")
-                      // Busca por CPF sem formatação
-                      ->orWhere('cpf', 'like', "%" . preg_replace('/[^0-9]/', '', $search) . "%");
-                })->orWhereHas('usuario', function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('matricula', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                    // Busca APENAS por CPF
+                    $cpfLimpo = preg_replace('/[^0-9]/', '', $search);
+                    $q->where('cpf', 'like', "%{$search}%")
+                      ->orWhere('cpf', 'like', "%{$cpfLimpo}%");
                 });
             })
             ->when($request->status, function($query, $status) {
@@ -299,9 +292,11 @@ class AlojamentoController extends Controller
                         return $query->where('status', '!=', 'aprovada')
                                     ->orWhereDoesntHave('ocupacaoAtual');
                 }
-            })
-            ->get()
-            ->map(function($reserva) {
+            });
+
+            $reservasUsuarios = $reservasUsuarios->get();
+
+            $reservasUsuarios = $reservasUsuarios->map(function($reserva) {
                 $ocupacaoAtual = $reserva->ocupacaoAtual;
                 
                 // Verificar se já teve checkout
@@ -338,8 +333,8 @@ class AlojamentoController extends Controller
                     ] : null,
                     // Informações de ocupação
                     'tem_ocupacao_ativa' => $ocupacaoAtual ? true : false,
-                    'teve_ocupacao_anterior' => $teveCheckout, // NOVO
-                    'checkout_realizado' => $teveCheckout && !$ocupacaoAtual, // NOVO
+                    'teve_ocupacao_anterior' => $teveCheckout,
+                    'checkout_realizado' => $teveCheckout && !$ocupacaoAtual,
                     'ocupacao_info' => $ocupacaoAtual ? [
                         'dormitorio_numero' => $ocupacaoAtual->dormitorio->numero,
                         'dormitorio_nome' => $ocupacaoAtual->dormitorio->nome,
@@ -352,16 +347,12 @@ class AlojamentoController extends Controller
 
         // Buscar reservas de visitantes COM informações de ocupação ATUAL E HISTÓRICO
         $reservasVisitantes = \App\Models\Visitante::with(['ocupacaoAtual.dormitorio', 'ocupacoes'])
-            ->when($request->search, function($query, $search) {
+            ->when($request->search, function($query, $search) {                
                 return $query->where(function($q) use ($search) {
-                    // Busca por nome, CPF, email ou órgão
-                    $q->where('nome', 'like', "%{$search}%")
-                      ->orWhere('cpf', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('orgao_trabalho', 'like', "%{$search}%")
-                      ->orWhere('matricula_funcional', 'like', "%{$search}%")
-                      // Busca por CPF sem formatação
-                      ->orWhere('cpf', 'like', "%" . preg_replace('/[^0-9]/', '', $search) . "%");
+                    // Busca APENAS por CPF
+                    $cpfLimpo = preg_replace('/[^0-9]/', '', $search);
+                    $q->where('cpf', 'like', "%{$search}%")
+                      ->orWhere('cpf', 'like', "%{$cpfLimpo}%");
                 });
             })
             ->when($request->status, function($query, $status) {
@@ -387,9 +378,11 @@ class AlojamentoController extends Controller
                         return $query->where('status', '!=', 'aprovada')
                                     ->orWhereDoesntHave('ocupacaoAtual');
                 }
-            })
-            ->get()
-            ->map(function($visitante) {
+            });
+
+        $reservasVisitantes = $reservasVisitantes->get();
+
+        $reservasVisitantes = $reservasVisitantes->map(function($visitante) {
                 $ocupacaoAtual = $visitante->ocupacaoAtual;
                 
                 // Verificar se já teve checkout
@@ -427,8 +420,8 @@ class AlojamentoController extends Controller
                     'documento_comprobatorio_url' => $visitante->documento_comprobatorio_url,
                     // Informações de ocupação
                     'tem_ocupacao_ativa' => $ocupacaoAtual ? true : false,
-                    'teve_ocupacao_anterior' => $teveCheckout, // NOVO
-                    'checkout_realizado' => $teveCheckout && !$ocupacaoAtual, // NOVO
+                    'teve_ocupacao_anterior' => $teveCheckout,
+                    'checkout_realizado' => $teveCheckout && !$ocupacaoAtual,
                     'ocupacao_info' => $ocupacaoAtual ? [
                         'dormitorio_numero' => $ocupacaoAtual->dormitorio->numero,
                         'dormitorio_nome' => $ocupacaoAtual->dormitorio->nome,
@@ -476,7 +469,7 @@ class AlojamentoController extends Controller
             'total_sem_checkin' => $todasReservas->where('status', 'aprovada')
                                                 ->where('tem_ocupacao_ativa', false)
                                                 ->where('checkout_realizado', false)->count(),
-            'total_checkout_realizado' => $todasReservas->where('checkout_realizado', true)->count(), // NOVO
+            'total_checkout_realizado' => $todasReservas->where('checkout_realizado', true)->count(),
         ];
 
         return Inertia::render('Admin/Alojamento/Index', [
