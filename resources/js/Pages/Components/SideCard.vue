@@ -1,5 +1,4 @@
 <script setup>
-import iconOnline from '@/src/assets/icon-online.png'
 import iconAlojamento from '@/src/assets/icon-alojamento.png'
 
 </script>
@@ -41,11 +40,10 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png'
                 overflow-hidden group">
       <div class="p-4 flex items-center gap-4">
         <div class="w-12 h-12 flex-shrink-0 rounded-full bg-gray-300 flex items-center justify-center">
-          <img 
-            :src="iconOnline" 
-            class="h-6 w-auto" 
-            alt="Ícone de requerimentos"
-          >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
         </div>
         
         <div class="flex-1">
@@ -53,7 +51,7 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png'
             REQUERIMENTOS
           </h4>
           <p class="text-sm text-gray-600 mt-1">
-            Envie documentos e faça solicitações online.
+            Solicite 2ª via de certificados e declaração de participação em cursos.
           </p>
           <a href="/requerimentos/novo" class="text-sm font-medium text-[#bea55a] hover:text-yellow-600 inline-block mt-2 group-hover:underline">
             Fazer requerimento →

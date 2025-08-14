@@ -44,7 +44,7 @@ const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00N
         <section class="mb-19">
           <PowerBIComponent 
             :src="powerBIUrl"
-            title="Dados e estatísticas"
+            title="Dados e Estatísticas"
             height="650px"
           />
         </section>

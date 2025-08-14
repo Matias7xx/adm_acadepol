@@ -99,6 +99,23 @@ const dataFormatada = computed(() => {
   });
 });
 
+const formatDateTime = (isoString) => {
+  if (!isoString) return 'Data não disponível';
+  
+  try {
+    return new Date(isoString).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.warn('Erro ao formatar data:', error);
+    return 'Data inválida';
+  }
+};
+
 // Computed para a URL da imagem
 const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
 </script>
@@ -276,11 +293,11 @@ const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
           </div>
           <div>
             <span class="text-gray-600 text-sm">Data de Criação:</span>
-            <span class="ml-2 font-medium">{{ new Date(noticia.created_at).toLocaleString('pt-BR') }}</span>
+            <span class="ml-2 font-medium">{{ formatDateTime(noticia.created_at) }}</span>
           </div>
           <div>
             <span class="text-gray-600 text-sm">Última Atualização:</span>
-            <span class="ml-2 font-medium">{{ new Date(noticia.updated_at).toLocaleString('pt-BR') }}</span>
+            <span class="ml-2 font-medium">{{ formatDateTime(noticia.updated_at) }}</span>
           </div>
           <div>
             <span class="text-gray-600 text-sm">Destaque:</span>

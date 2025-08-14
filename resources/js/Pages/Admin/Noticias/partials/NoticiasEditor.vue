@@ -30,7 +30,6 @@ const isPreviewMode = ref(false);
 const isFullScreen = ref(false);
 const editorHeight = ref(props.height);
 const wordCount = ref(0);
-const lastSaved = ref('Agora');
 const editorContainer = ref(null);
 const showDocumentUpload = ref(false);
 const documentUploadProgress = ref(0);
@@ -249,12 +248,6 @@ const insertDocumentInEditor = (documentData) => {
       align-items: center !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     ">
-      <span style="
-        color: #64748b;
-        font-size: 16px;
-        margin-right: 10px;
-        flex-shrink: 0 !important;
-      ">📎</span>
       
       <span style="
         color: #334155; 
@@ -345,17 +338,16 @@ const showDocumentUploadModal = () => {
 
 // Configuração do editor
 const editorConfig = {
-  toolbar: [
-    'heading', 
-    '|', 
-    'bold', 'italic', 'link', 'bulletedList', 'numberedList',
-    '|',
-    'indent', 'outdent',
-    '|',
-    'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed',
-    '|',
-    'undo', 'redo'
-  ],
+  toolbar: {
+    shouldNotGroupWhenFull: true,
+    items: [
+      'heading', '|', 'bold', 'italic', 'link', 
+      'bulletedList', 'numberedList', '|',
+      'indent', 'outdent', '|',
+      'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
+      'undo', 'redo'
+    ]
+  },
   heading: {
     options: [
       { model: 'paragraph', title: 'Parágrafo', class: 'ck-heading_paragraph' },
@@ -518,34 +510,6 @@ const toggleFullScreen = async () => {
   }
 };
 
-const setupAutoSave = () => {
-  // Auto-save a cada 60 segundos
-  autoSaveTimer = setInterval(() => {
-    if (content.value && content.value.length > 10) {
-      try {
-        // Salvar no localStorage
-        localStorage.setItem('noticia_draft_' + Date.now(), JSON.stringify({
-          content: content.value,
-          timestamp: new Date().toISOString(),
-          wordCount: wordCount.value
-        }));
-        
-        // Atualizar timestamp
-        const now = new Date();
-        lastSaved.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
-        // Limpar drafts antigos (manter apenas os últimos 3)
-        const keys = Object.keys(localStorage).filter(key => key.startsWith('noticia_draft_'));
-        if (keys.length > 3) {
-          keys.sort().slice(0, -3).forEach(key => localStorage.removeItem(key));
-        }
-      } catch (e) {
-        console.warn('Erro ao salvar draft:', e);
-      }
-    }
-  }, 60000);
-};
-
 // Handler para ESC key
 const handleEscKey = (event) => {
   if (event.key === 'Escape') {
@@ -693,13 +657,6 @@ onMounted(() => {
             {{ documentCount }} documento(s)
           </div>
           
-          <div v-if="!hasBase64Images && documentCount === 0" class="text-xs bg-green-600 px-2 py-1 rounded-md flex items-center">
-            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" />
-            </svg>
-            Arquivos processados
-          </div>
-          
           <button 
             type="button" 
             class="px-3 py-1.5 rounded-md flex items-center text-sm shadow transition"
@@ -770,10 +727,6 @@ onMounted(() => {
                 <path d="M5,3A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H14.09C14.03,20.67 14,20.34 14,20C14,19.32 14.12,18.64 14.35,18H5L8.5,13.5L11,16.5L14.5,12L16.73,14.97C17.7,14.34 18.84,14 20,14C20.34,14 20.67,14.03 21,14.09V5C21,3.89 20.1,3 19,3H5M19,16V19H16V21H19V24H21V21H24V19H21V16H19Z" />
               </svg>
               {{ base64ImageCount }} temporária(s)
-            </span>
-            
-            <span class="text-xs text-gray-500">
-              Salvo: {{ lastSaved }}
             </span>
           </div>
         </div>

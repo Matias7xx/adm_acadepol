@@ -138,8 +138,8 @@ class NoticiaController extends Controller
                 'data_formatada' => $noticia->data_formatada,
                 'status' => $noticia->status,
                 'visualizacoes' => $noticia->visualizacoes,
-                'created_at' => $noticia->created_at->format('d/m/Y H:i'),
-                'updated_at' => $noticia->updated_at->format('d/m/Y H:i'),
+                'created_at' => $noticia->created_at->toISOString(),
+                'updated_at' => $noticia->updated_at->toISOString(),
             ],
             'can' => [
                 'edit' => Auth::user()->can('adminEdit', Noticia::class),
@@ -265,7 +265,7 @@ class NoticiaController extends Controller
         }
         
         // Invalidar cache após atualizar notícia
-        $this->invalidateNoticiasCache();
+        $this->invalidateAllNoticiasCache();
         
         return redirect()->route('admin.noticias.index')
             ->with('message', 'Notícia atualizada com sucesso.');

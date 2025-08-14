@@ -175,7 +175,7 @@ class NoticiaController extends Controller
      */
     public function apiNoticias(Request $request)
     {
-        $perPage = $request->input('per_page', 6); // 6 como padrão
+        $perPage = $request->input('per_page', 10); // 10 como padrão VISUALIZAR TODAS AS NOTÍCIAS
         $search = $request->input('search', '');
         $page = $request->input('page', 1);
         

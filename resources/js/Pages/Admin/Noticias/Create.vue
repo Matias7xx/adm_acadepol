@@ -419,7 +419,7 @@ const isProcessing = computed(() => {
               </div>
               
               <div class="mt-4 flex flex-col gap-2" v-if="imagePreview">
-                <p class="text-sm font-medium">A imagem será exibida nas listagens e no topo da notícia</p>
+                <p class="text-sm font-medium">A imagem será exibida nas listagens e no carrossel de imagens (caso seja marcada como destaque)</p>
                 <p class="text-xs text-gray-500">Para melhor qualidade, use imagens na proporção 16:9</p>
               </div>
             </div>

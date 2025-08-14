@@ -188,9 +188,6 @@ onUnmounted(() => {
             aria-hidden="true"
           ></span>
         </h2>
-        <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-          Últimas novidades e acontecimentos da ACADEPOL
-        </p>
       </div>
 
       <!-- Conteúdo principal -->
