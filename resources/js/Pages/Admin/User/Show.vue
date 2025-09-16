@@ -82,32 +82,104 @@ const cursoSelecionado = computed(() => {
 
 // Watch para auto-preencher campos quando selecionar curso do sistema
 watch(() => addCertificadoForm.curso_id, (novoCursoId) => {
-  
+
   if (addCertificadoForm.tipo_certificado === 'curso_sistema' && novoCursoId) {
     const curso = props.cursos.find(c => c.id == novoCursoId)
-    
-    if (curso && curso.carga_horaria) {
-      addCertificadoForm.carga_horaria = curso.carga_horaria
+
+    if (curso) {
+      // Carga horária
+      if (curso.carga_horaria) {
+        addCertificadoForm.carga_horaria = curso.carga_horaria
+      }
+
+      // Data de conclusão do curso
+      if (curso.data_fim) {
+        addCertificadoForm.data_conclusao = formatDateForInput(curso.data_fim)
+      }
     }
   }
 }, { immediate: false })
 
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return ''
+
+  // Se já está no formato YYYY-MM-DD retorna diretamente
+  if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateValue
+  }
+
+  try {
+    // Força timezone local
+    const date = new Date(dateValue + 'T12:00:00')
+
+    if (isNaN(date.getTime())) return ''
+
+    // Métodos locais para evitar conversão de timezone
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}-${month}-${day}`
+  } catch (error) {
+    return ''
+  }
+}
+
+// Formatar data para exibição
+const formatarDataExibicao = (dateString) => {
+  if (!dateString) return '-'
+
+  // Se é string no formato YYYY-MM-DD, converte diretamente
+  if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Se não, usar helper
+  const formatted = formatDateForInput(dateString)
+  if (formatted) {
+    const [year, month, day] = formatted.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  return '-'
+}
+
+// Informações adicionais do curso selecionado
+const infoCursoSelecionado = computed(() => {
+  if (!addCertificadoForm.curso_id || addCertificadoForm.tipo_certificado !== 'curso_sistema') {
+    return null
+  }
+
+  const curso = props.cursos.find(curso => curso.id == addCertificadoForm.curso_id)
+  if (!curso) return null
+
+  return {
+    nome: curso.nome,
+    data_inicio: curso.data_inicio,
+    data_fim: curso.data_fim,
+    carga_horaria: curso.carga_horaria,
+    modalidade: curso.modalidade,
+    localizacao: curso.localizacao
+  }
+})
+
 // Watch para limpar campos quando mudar tipo de certificado
 watch(() => addCertificadoForm.tipo_certificado, (novoTipo) => {
-  
+
   // Limpar campos específicos quando mudar o tipo
   addCertificadoForm.curso_id = ''
   addCertificadoForm.nome_curso_externo = ''
   addCertificadoForm.carga_horaria = ''
   addCertificadoForm.data_conclusao = ''
-  
+
   // Limpar erros também
   addCertificadoForm.clearErrors()
 }, { immediate: false })
 
 const fileInfo = computed(() => {
   if (!addCertificadoForm.certificado_pdf) return null
-  
+
   return {
     name: addCertificadoForm.certificado_pdf.name,
     size: formatFileSize(addCertificadoForm.certificado_pdf.size),
@@ -118,32 +190,32 @@ const fileInfo = computed(() => {
 // Funções de formatação
 const formatDate = (dateString) => {
   if (!dateString) return '-';
-  
+
   const date = new Date(dateString);
   return date.toLocaleDateString('pt-BR');
 }
 
 const formatCPF = (cpf) => {
   if (!cpf) return '-';
-  
+
   const cleanCPF = cpf.replace(/\D/g, '');
-  
+
   if (cleanCPF.length !== 11) return cpf;
-  
+
   return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 }
 
 const formatPhone = (phone) => {
   if (!phone) return '-';
-  
+
   const cleanPhone = phone.replace(/\D/g, '');
-  
+
   if (cleanPhone.length === 11) {
     return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   } else if (cleanPhone.length === 10) {
     return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
-  
+
   return phone;
 }
 
@@ -158,13 +230,13 @@ const formatFileSize = (bytes) => {
 // Função para obter badge de tipo de certificado
 const getTipoBadge = (certificado) => {
   if (!certificado.tipo_origem) return { label: 'Regular', color: 'success' }
-  
+
   const tipos = {
     'matricula': { label: 'Regular', color: 'success' },
     'curso_sistema': { label: 'Sistema', color: 'info' },
     'curso_externo': { label: 'Externo', color: 'warning' }
   }
-  
+
   return tipos[certificado.tipo_origem] || { label: 'Regular', color: 'success' }
 }
 
@@ -194,7 +266,7 @@ const handleFileSelect = (event) => {
 const handleDrop = (event) => {
   event.preventDefault()
   isDragOver.value = false
-  
+
   const files = event.dataTransfer.files
   if (files.length > 0 && validateFile(files[0])) {
     addCertificadoForm.certificado_pdf = files[0]
@@ -215,13 +287,13 @@ const validateFile = (file) => {
     toast.error('Apenas arquivos PDF são permitidos.')
     return false
   }
-  
+
   const maxSize = 10 * 1024 * 1024
   if (file.size > maxSize) {
     toast.error('O arquivo não pode ser maior que 10MB.')
     return false
   }
-  
+
   return true
 }
 
@@ -243,27 +315,27 @@ const adicionarCertificado = () => {
     toast.error('Por favor, selecione um curso do sistema.')
     return
   }
-  
+
   if (addCertificadoForm.tipo_certificado === 'curso_externo' && !addCertificadoForm.nome_curso_externo) {
     toast.error('Por favor, digite o nome do curso externo.')
     return
   }
-  
+
   if (!addCertificadoForm.carga_horaria) {
     toast.error('Por favor, informe a carga horária.')
     return
   }
-  
+
   if (!addCertificadoForm.data_conclusao) {
     toast.error('Por favor, informe a data de conclusão.')
     return
   }
-  
+
   if (!addCertificadoForm.certificado_pdf) {
     toast.error('Por favor, selecione um arquivo PDF.')
     return
   }
-  
+
   addCertificadoForm.post(route('admin.certificados.adicionar.usuario', props.user.id), {
     onSuccess: () => {
       toast.success('Certificado adicionado com sucesso!')
@@ -284,9 +356,9 @@ const confirmarExclusao = (certificado) => {
 
 const excluirCertificado = () => {
   if (!certificadoParaExcluir.value) return
-  
+
   const form = useForm({})
-  
+
   form.delete(route('admin.certificados.remover.usuario', [props.user.id, certificadoParaExcluir.value.id]), {
     onSuccess: () => {
       toast.success('Certificado excluído com sucesso!')
@@ -329,7 +401,7 @@ const baixarCertificado = (certificado) => {
           small
         />
       </SectionTitleLineWithButton>
-      
+
       <!-- Informações do Usuário -->
       <CardBox class="mb-6">
         <table>
@@ -412,8 +484,8 @@ const baixarCertificado = (certificado) => {
               </td>
               <td data-label="Funções">
                 <div class="flex flex-wrap gap-1">
-                  <span 
-                    v-for="role in userHasRoles" 
+                  <span
+                    v-for="role in userHasRoles"
                     :key="role"
                     class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
                   >
@@ -453,7 +525,7 @@ const baixarCertificado = (certificado) => {
               Certificados ({{ certificados.length }})
             </h2>
           </div>
-          
+
           <BaseButton
             @click="abrirModalAddCertificado"
             :icon="mdiPlus"
@@ -465,8 +537,8 @@ const baixarCertificado = (certificado) => {
 
         <!-- Lista de Certificados -->
         <div v-if="certificados.length > 0" class="space-y-4">
-          <div 
-            v-for="certificado in certificados" 
+          <div
+            v-for="certificado in certificados"
             :key="certificado.id"
             class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
@@ -479,9 +551,9 @@ const baixarCertificado = (certificado) => {
                   <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                     {{ certificado.nome_curso }}
                   </h3>
-                  
+
                   <!-- Badge do tipo de certificado -->
-                  <span 
+                  <span
                     :class="[
                       'ml-2 px-2 py-1 text-xs font-medium rounded-full',
                       {
@@ -494,7 +566,7 @@ const baixarCertificado = (certificado) => {
                     {{ getTipoBadge(certificado).label }}
                   </span>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
                   <div class="flex items-center">
                     <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -502,14 +574,14 @@ const baixarCertificado = (certificado) => {
                     </svg>
                     <span>{{ certificado.numero_certificado }}</span>
                   </div>
-                  
+
                   <div class="flex items-center">
                     <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path :d="mdiCalendar"></path>
                     </svg>
                     <span>{{ formatDate(certificado.data_emissao) }}</span>
                   </div>
-                  
+
                   <div class="flex items-center">
                     <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path :d="mdiClockOutline"></path>
@@ -518,7 +590,7 @@ const baixarCertificado = (certificado) => {
                   </div>
                 </div>
               </div>
-              
+
               <div class="flex items-center space-x-2 ml-4">
                 <BaseButton
                   @click="baixarCertificado(certificado)"
@@ -528,7 +600,7 @@ const baixarCertificado = (certificado) => {
                   outline
                   title="Baixar Certificado"
                 />
-                
+
                 <BaseButton
                   @click="confirmarExclusao(certificado)"
                   :icon="mdiDelete"
@@ -560,8 +632,8 @@ const baixarCertificado = (certificado) => {
       </CardBox>
 
       <!-- Modal Adicionar Certificado -->
-      <div 
-        v-if="showAddCertificadoModal" 
+      <div
+        v-if="showAddCertificadoModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
         @click.self="fecharModalAddCertificado"
       >
@@ -581,8 +653,8 @@ const baixarCertificado = (certificado) => {
                 </p>
               </div>
             </div>
-            
-            <button 
+
+            <button
               @click="fecharModalAddCertificado"
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
@@ -597,9 +669,9 @@ const baixarCertificado = (certificado) => {
             <FormField label="Tipo de Certificado" required>
               <div class="flex space-x-6">
                 <label class="flex items-center">
-                  <input 
-                    type="radio" 
-                    v-model="addCertificadoForm.tipo_certificado" 
+                  <input
+                    type="radio"
+                    v-model="addCertificadoForm.tipo_certificado"
                     value="curso_sistema"
                     class="mr-2 text-blue-600"
                   />
@@ -611,9 +683,9 @@ const baixarCertificado = (certificado) => {
                   </div>
                 </label>
                 <label class="flex items-center">
-                  <input 
-                    type="radio" 
-                    v-model="addCertificadoForm.tipo_certificado" 
+                  <input
+                    type="radio"
+                    v-model="addCertificadoForm.tipo_certificado"
                     value="curso_externo"
                     class="mr-2 text-blue-600"
                   />
@@ -637,33 +709,80 @@ const baixarCertificado = (certificado) => {
                 required
               >
                 <option value="">Selecione um curso</option>
-                <option 
-                  v-for="curso in cursos" 
-                  :key="curso.id" 
+                <option
+                  v-for="curso in cursos"
+                  :key="curso.id"
                   :value="curso.id"
                 >
                   {{ curso.nome }} ({{ curso.carga_horaria }}h)
                 </option>
               </select>
             </FormField>
+
+            <!-- Informações do Curso Selecionado -->
+            <div v-if="infoCursoSelecionado" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h4 class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-3 flex items-center">
+                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path :d="mdiSchool"></path>
+                </svg>
+                Informações do Curso Selecionado
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="flex items-center text-blue-800 dark:text-blue-300">
+                  <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path :d="mdiCalendar"></path>
+                  </svg>
+                  <div>
+                    <span class="font-medium">Início:</span>
+                    <span class="ml-1">{{ formatarDataExibicao(infoCursoSelecionado.data_inicio) }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center text-blue-800 dark:text-blue-300">
+                  <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path :d="mdiCalendar"></path>
+                  </svg>
+                  <div>
+                    <span class="font-medium">Término:</span>
+                    <span class="ml-1">{{ formatarDataExibicao(infoCursoSelecionado.data_fim) }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center text-blue-800 dark:text-blue-300">
+                  <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path :d="mdiClockOutline"></path>
+                  </svg>
+                  <div>
+                    <span class="font-medium">Carga Horária:</span>
+                    <span class="ml-1">{{ infoCursoSelecionado.carga_horaria }}h</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center text-blue-800 dark:text-blue-300">
+                  <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path :d="mdiMapMarker"></path>
+                  </svg>
+                  <div>
+                    <span class="font-medium">Local:</span>
+                    <span class="ml-1">{{ infoCursoSelecionado.localizacao }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center text-blue-800 dark:text-blue-300 md:col-span-2">
+                  <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path :d="mdiWeb"></path>
+                  </svg>
+                  <div>
+                    <span class="font-medium">Modalidade:</span>
+                    <span class="ml-1 capitalize">{{ infoCursoSelecionado.modalidade }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <p v-if="addCertificadoForm.errors.curso_id" class="mt-1 text-sm text-red-600">
               {{ addCertificadoForm.errors.curso_id }}
-            </p>
-          </div>
-
-          <!-- Nome do Curso Externo -->
-          <div v-if="addCertificadoForm.tipo_certificado === 'curso_externo'" class="mb-6">
-            <FormField label="Nome do Curso Externo" required>
-              <input
-                v-model="addCertificadoForm.nome_curso_externo"
-                type="text"
-                placeholder="Ex: Curso de Segurança Pública - ENASP"
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                required
-              />
-            </FormField>
-            <p v-if="addCertificadoForm.errors.nome_curso_externo" class="mt-1 text-sm text-red-600">
-              {{ addCertificadoForm.errors.nome_curso_externo }}
             </p>
           </div>
 
@@ -685,9 +804,6 @@ const baixarCertificado = (certificado) => {
                 ]"
                 required
               />
-              <p v-if="addCertificadoForm.tipo_certificado === 'curso_sistema' && cursoSelecionado" class="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                📋 Carga horária preenchida automaticamente do curso selecionado
-              </p>
             </FormField>
             <p v-if="addCertificadoForm.errors.carga_horaria" class="mt-1 text-sm text-red-600">
               {{ addCertificadoForm.errors.carga_horaria }}
@@ -710,22 +826,38 @@ const baixarCertificado = (certificado) => {
             </p>
           </div>
 
+          <!-- Nome do Curso Externo -->
+          <div v-if="addCertificadoForm.tipo_certificado === 'curso_externo'" class="mb-6">
+            <FormField label="Nome do Curso Externo" required>
+              <input
+                v-model="addCertificadoForm.nome_curso_externo"
+                type="text"
+                placeholder="Ex: Curso de Segurança Pública - ENASP"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                required
+              />
+            </FormField>
+            <p v-if="addCertificadoForm.errors.nome_curso_externo" class="mt-1 text-sm text-red-600">
+              {{ addCertificadoForm.errors.nome_curso_externo }}
+            </p>
+          </div>
+
           <!-- Área de Upload -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Arquivo do Certificado (PDF) *
             </label>
-            
+
             <!-- Drop Zone -->
-            <div 
+            <div
               @drop="handleDrop"
               @dragover="handleDragOver"
               @dragleave="handleDragLeave"
               @click="openFileDialog"
               :class="[
                 'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors',
-                isDragOver 
-                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20' 
+                isDragOver
+                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
                   : 'border-gray-300 dark:border-gray-600 hover:border-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700'
               ]"
             >
@@ -736,13 +868,13 @@ const baixarCertificado = (certificado) => {
                     <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd"></path>
                   </svg>
                 </div>
-                
+
                 <div>
                   <p class="text-sm font-medium text-gray-900 dark:text-white">{{ fileInfo.name }}</p>
                   <p class="text-xs text-gray-500">{{ fileInfo.size }}</p>
                 </div>
-                
-                <button 
+
+                <button
                   @click.stop="removeFile"
                   class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                 >
@@ -752,7 +884,7 @@ const baixarCertificado = (certificado) => {
                   Remover
                 </button>
               </div>
-              
+
               <!-- No File Selected -->
               <div v-else class="space-y-3">
                 <div class="flex items-center justify-center">
@@ -760,7 +892,7 @@ const baixarCertificado = (certificado) => {
                     <path :d="mdiUpload" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                   </svg>
                 </div>
-                
+
                 <div>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     <span class="font-medium text-amber-600 hover:text-amber-500">Clique para selecionar</span>
@@ -770,7 +902,7 @@ const baixarCertificado = (certificado) => {
                 </div>
               </div>
             </div>
-            
+
             <!-- Input File Hidden -->
             <input
               ref="fileInputRef"
@@ -779,7 +911,7 @@ const baixarCertificado = (certificado) => {
               @change="handleFileSelect"
               class="hidden"
             />
-            
+
             <!-- Erro de Validação -->
             <p v-if="addCertificadoForm.errors.certificado_pdf" class="mt-2 text-sm text-red-600">
               {{ addCertificadoForm.errors.certificado_pdf }}
@@ -798,14 +930,14 @@ const baixarCertificado = (certificado) => {
 
           <!-- Actions -->
           <div class="flex justify-end gap-4">
-            <BaseButton 
-              @click="fecharModalAddCertificado" 
+            <BaseButton
+              @click="fecharModalAddCertificado"
               label="Cancelar"
               color="white"
               :disabled="addCertificadoForm.processing"
             />
-            <BaseButton 
-              @click="adicionarCertificado" 
+            <BaseButton
+              @click="adicionarCertificado"
               label="Adicionar Certificado"
               :icon="mdiPlus"
               color="success"
@@ -817,8 +949,8 @@ const baixarCertificado = (certificado) => {
       </div>
 
       <!-- Modal de Confirmação de Exclusão -->
-      <div 
-        v-if="showDeleteModal" 
+      <div
+        v-if="showDeleteModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
       >
         <div class="relative mx-auto p-6 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
@@ -833,8 +965,8 @@ const baixarCertificado = (certificado) => {
             </h3>
             <div class="mt-2 px-7 py-3">
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                Tem certeza que deseja excluir o certificado 
-                <strong>{{ certificadoParaExcluir?.numero_certificado }}</strong> 
+                Tem certeza que deseja excluir o certificado
+                <strong>{{ certificadoParaExcluir?.numero_certificado }}</strong>
                 do curso <strong>{{ certificadoParaExcluir?.nome_curso }}</strong>?
               </p>
               <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
@@ -849,13 +981,13 @@ const baixarCertificado = (certificado) => {
               </div>
             </div>
             <div class="flex justify-center gap-4 mt-4">
-              <BaseButton 
-                @click="excluirCertificado" 
+              <BaseButton
+                @click="excluirCertificado"
                 label="Sim, Excluir"
                 color="danger"
               />
-              <BaseButton 
-                @click="cancelarExclusao" 
+              <BaseButton
+                @click="cancelarExclusao"
                 label="Cancelar"
                 color="white"
               />
@@ -961,7 +1093,7 @@ const baixarCertificado = (certificado) => {
   .certificate-card:hover {
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
   }
-  
+
   .drop-zone.drag-over {
     background-color: rgba(245, 158, 11, 0.1);
   }
@@ -973,11 +1105,11 @@ const baixarCertificado = (certificado) => {
     margin: 1rem;
     max-height: calc(100vh - 2rem);
   }
-  
+
   .certificate-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 0.5rem;

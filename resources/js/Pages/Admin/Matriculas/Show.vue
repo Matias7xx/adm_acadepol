@@ -17,7 +17,8 @@ import {
 // Props
 const props = defineProps({
   matricula: Object,
-  id: Number
+  id: Number,
+  curso_id: Number
 });
 
 // Toast
@@ -185,7 +186,7 @@ const handleConfirm = () => {
         main
       >
         <BaseButton
-          :route-name="route('admin.matriculas.index')"
+          :route-name="route('admin.matriculas.curso', { curso: props.curso_id })"
           :icon="mdiArrowLeftBoldOutline"
           label="Voltar"
           color="white"

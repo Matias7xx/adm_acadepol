@@ -108,12 +108,26 @@ class UserController extends Controller
         $certificados = Certificado::where('user_id', $user->id)
             ->orderBy('data_emissao', 'desc')
             ->get();
-        
+
+        // Carregar cursos
         $cursos = Curso::where('certificacao', true)
-            ->where('status', 'concluído')
             ->orderBy('nome')
-            ->get(['id', 'nome', 'carga_horaria']);
-        
+            ->get()
+            ->map(function($curso) {
+                return [
+                    'id' => $curso->id,
+                    'nome' => $curso->nome,
+                    'descricao' => $curso->descricao,
+                    'carga_horaria' => $curso->carga_horaria,
+                    'data_inicio' => $curso->data_inicio ? $curso->data_inicio->format('Y-m-d') : null,
+                    'data_fim' => $curso->data_fim ? $curso->data_fim->format('Y-m-d') : null,
+                    'localizacao' => $curso->localizacao,
+                    'modalidade' => $curso->modalidade,
+                    'status' => $curso->status,
+                    'capacidade_maxima' => $curso->capacidade_maxima
+                ];
+            });
+
         $roles = Role::all();
         $userHasRoles = array_column(json_decode($user->roles, true) ?: [], 'name');
 
@@ -260,7 +274,7 @@ class UserController extends Controller
         try {
             // Verificar permissão
             $this->authorize('update', $user);
-            
+
             // Validar dados incluindo campos para certificados livres
             $validator = Validator::make($request->all(), [
                 'tipo_certificado' => 'required|in:curso_sistema,curso_externo',
@@ -296,24 +310,24 @@ class UserController extends Controller
                     ->withErrors($validator)
                     ->with('error', 'Erro na validação: ' . implode(', ', $validator->errors()->all()));
             }
-            
+
             $validated = $validator->validated();
-            
+
             // Validação específica por tipo de certificado
             if ($validated['tipo_certificado'] === 'curso_sistema') {
                 if (empty($validated['curso_id'])) {
                     return redirect()->back()->with('error', 'Selecione um curso do sistema.');
                 }
-                
+
                 $curso = Curso::findOrFail($validated['curso_id']);
                 $nomeCurso = $curso->nome;
                 $tipoOrigem = Certificado::TIPO_CURSO_SISTEMA;
-                
+
                 // Verificar se já existe certificado para este usuário e curso
                 $certificadoExistente = Certificado::where('user_id', $user->id)
                     ->where('curso_id', $curso->id)
                     ->first();
-                    
+
                 if ($certificadoExistente) {
                     return redirect()->back()->with('error', 'Este usuário já possui certificado para este curso');
                 }
@@ -321,32 +335,32 @@ class UserController extends Controller
                 if (empty($validated['nome_curso_externo'])) {
                     return redirect()->back()->with('error', 'Digite o nome do curso externo.');
                 }
-                
+
                 $nomeCurso = $validated['nome_curso_externo'];
                 $tipoOrigem = Certificado::TIPO_CURSO_EXTERNO;
                 $curso = null; // Para cursos externos não há registro na tabela cursos
-                
+
                 // Para cursos externos, verificar duplicação pelo nome
                 $certificadoExistente = Certificado::where('user_id', $user->id)
                     ->where('nome_curso', $nomeCurso)
                     ->where('tipo_origem', $tipoOrigem)
                     ->first();
-                    
+
                 if ($certificadoExistente) {
                     return redirect()->back()->with('error', 'Este usuário já possui certificado para este curso externo');
                 }
             }
-            
+
             // Gerar número único do certificado
             $numeroCertificado = Certificado::gerarNumeroCertificado();
-            
+
             // USAR MINIO PARA SALVAR
             $nomeUsuario = CertificadoHelper::sanitizeFolderName($user->name);
             $nomeCursoSanitizado = CertificadoHelper::sanitizeFolderName($nomeCurso);
-            
+
             // Gerar nome único do arquivo
             $nomeArquivo = \Illuminate\Support\Str::uuid() . '.pdf';
-            
+
             // Caminho virtual no MinIO
             if ($tipoOrigem === Certificado::TIPO_CURSO_EXTERNO) {
                 $caminhoVirtual = "certificados-externos/{$nomeUsuario}/{$nomeCursoSanitizado}/{$nomeArquivo}";
@@ -355,18 +369,18 @@ class UserController extends Controller
                 $caminhoVirtual = "certificados/{$nomeUsuario}/{$nomeCursoSanitizado}/{$nomeArquivo}";
                 $diretorioUpload = "certificados/{$nomeUsuario}/{$nomeCursoSanitizado}";
             }
-            
+
             // SALVAR NO BUCKET 'certificados' VIA STORAGEHELPER
             $sucesso = \App\Helpers\StorageHelper::certificados()->putFileAs(
                 $diretorioUpload,
                 $request->file('certificado_pdf'),
                 $nomeArquivo
             );
-            
+
             if (!$sucesso) {
                 throw new \Exception('Falha ao salvar o arquivo do certificado no MinIO');
             }
-            
+
             // Salvar registro no banco
             $certificado = Certificado::create([
                 'matricula_id' => null,
@@ -383,7 +397,7 @@ class UserController extends Controller
                 'tipo_origem' => $tipoOrigem,
                 'ativo' => true
             ]);
-            
+
             Log::info('Certificado adicionado manualmente pelo admin via MinIO', [
                 'certificado_id' => $certificado->id,
                 'user_id' => $user->id,
@@ -394,9 +408,9 @@ class UserController extends Controller
                 'caminho_virtual' => $caminhoVirtual,
                 'bucket' => 'certificados'
             ]);
-            
+
             return redirect()->back()->with('success', 'Certificado adicionado com sucesso no MinIO!');
-            
+
         } catch (\Exception $e) {
             Log::error('Erro ao adicionar certificado para usuário via MinIO', [
                 'error' => $e->getMessage(),
@@ -404,7 +418,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'admin_id' => Auth::id()
             ]);
-            
+
             return redirect()->back()->with('error', 'Erro ao processar certificado: ' . $e->getMessage());
         }
     }
@@ -417,23 +431,23 @@ class UserController extends Controller
         try {
             // Verificar permissão
             $this->authorize('update', $user);
-            
+
             // Verificar se o certificado pertence ao usuário
             if ($certificado->user_id !== $user->id) {
                 return redirect()->back()->with('error', 'Este certificado não pertence ao usuário selecionado');
             }
-            
+
             // REMOVER ARQUIVO DO MINIO
             if ($certificado->arquivoExiste()) {
                 \App\Helpers\StorageHelper::certificados()->delete($certificado->arquivo_path);
-                
+
                 Log::info('Arquivo de certificado removido do MinIO', [
                     'arquivo_path' => $certificado->arquivo_path,
                     'certificado_id' => $certificado->id,
                     'bucket' => 'certificados'
-                ]); 
+                ]);
             }
-            
+
             // Salvar informações antes de remover
             $certificadoInfo = [
                 'id' => $certificado->id,
@@ -442,18 +456,18 @@ class UserController extends Controller
                 'arquivo_path' => $certificado->arquivo_path,
                 'bucket' => $certificado->getBucketName()
             ];
-            
+
             // Remover registro do banco
             $certificado->delete();
-            
+
             Log::info('Certificado removido pelo admin', [
                 'certificado_info' => $certificadoInfo,
                 'user_id' => $user->id,
                 'admin_id' => Auth::id()
             ]);
-            
+
             return redirect()->back()->with('success', 'Certificado removido com sucesso do MinIO!');
-            
+
         } catch (\Exception $e) {
             Log::error('Erro ao remover certificado do usuário via MinIO', [
                 'error' => $e->getMessage(),
@@ -461,7 +475,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'admin_id' => Auth::id()
             ]);
-            
+
             return redirect()->back()->with('error', 'Erro ao remover certificado: ' . $e->getMessage());
         }
     }

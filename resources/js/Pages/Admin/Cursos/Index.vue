@@ -7,6 +7,7 @@ import {
   mdiTrashCan,
   mdiAlertBoxOutline,
   mdiAccountGroup,
+  mdiEye,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -42,6 +43,22 @@ const formDelete = useForm({})
 function destroy(id) {
   if (confirm("Tem certeza de que deseja remover o curso?")) {
     formDelete.delete(route("admin.cursos.destroy", id))
+  }
+}
+
+// formatar data
+function formatDate(date) {
+  if (!date) return '-'
+
+  try {
+    const dateObj = new Date(date)
+    return dateObj.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  } catch (error) {
+    return '-'
   }
 }
 </script>
@@ -126,6 +143,12 @@ function destroy(id) {
                 <Sort label="Descrição" attribute="descricao" />
               </th>
               <th>
+                <Sort label="Início" attribute="data_inicio" />
+              </th>
+              <th>
+                <Sort label="Término" attribute="data_fim" />
+              </th>
+              <th>
                 <Sort label="Status" attribute="status" />
               </th>
               <th v-if="can.edit || can.delete">Ações</th>
@@ -148,10 +171,29 @@ function destroy(id) {
                 </Link>
               </td>
               <td data-label="descricao">
-                {{ curso.descricao }}
+                <div class="max-w-xs truncate" :title="curso.descricao">
+                  {{ curso.descricao }}
+                </div>
+              </td>
+              <td data-label="data_inicio">
+                {{ formatDate(curso.data_inicio) }}
+              </td>
+              <td data-label="data_fim">
+                {{ formatDate(curso.data_fim) }}
               </td>
               <td data-label="status">
-                {{ curso.status }}
+                <span
+                  :class="{
+                    'px-2 py-1 rounded-full text-xs font-medium': true,
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': curso.status === 'aberto',
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': curso.status === 'em andamento',
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': curso.status === 'concluido',
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': curso.status === 'cancelado',
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': curso.status === 'suspenso',
+                  }"
+                >
+                  {{ curso.status }}
+                </span>
               </td>
               <td
                 v-if="can.edit || can.delete"

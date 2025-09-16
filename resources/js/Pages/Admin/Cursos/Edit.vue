@@ -301,6 +301,7 @@ const previewImagem = computed(() => {
           <FormField
             label="Certificação"
             :error="errors.certificacao"
+            class="flex items-center space-x-2"
           >
             <FormControl
               v-model="form.certificacao"
@@ -310,7 +311,7 @@ const previewImagem = computed(() => {
             />
           </FormField>
 
-          <FormField
+          <!-- <FormField
             v-if="form.certificacao"
             label="Modelo de Certificado"
             :error="errors.certificacao_modelo"
@@ -320,7 +321,7 @@ const previewImagem = computed(() => {
               :error="errors.certificacao_modelo"
               placeholder="Referência ou modelo do certificado"
             />
-          </FormField>
+          </FormField> -->
 
           <!-- Pré-requisitos (lista) -->
           <div class="col-span-1 md:col-span-2">

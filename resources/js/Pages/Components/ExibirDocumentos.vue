@@ -33,14 +33,14 @@ const zoomLevel = ref(100);
 // Verificar se está em dispositivo móvel
 onMounted(() => {
   const checkDevice = () => {
-    isMobile.value = 
+    isMobile.value =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
       window.innerWidth < 768;
   };
-  
+
   checkDevice();
   window.addEventListener('resize', checkDevice);
-  
+
   // Simular carregamento
   const interval = setInterval(() => {
     loadingProgress.value += 10;
@@ -86,14 +86,14 @@ const iframeStyle = computed(() => ({
       <h1 class="text-xl sm:text-2xl font-bold text-gray-800">{{ documentTitle }}</h1>
       <p v-if="description" class="mt-2 text-sm sm:text-base text-gray-600">{{ description }}</p>
     </div>
-    
+
     <!-- Visualizador de documento -->
     <div class="p-4 sm:p-6">
       <!-- Estado de carregamento -->
       <div v-if="isLoading" class="flex flex-col justify-center items-center h-48 sm:h-64">
         <div class="w-48 sm:w-64 h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
-          <div 
-            class="h-full bg-blue-500 transition-all duration-200 ease-out" 
+          <div
+            class="h-full bg-blue-500 transition-all duration-200 ease-out"
             :style="{ width: `${loadingProgress}%` }"
           ></div>
         </div>
@@ -101,13 +101,13 @@ const iframeStyle = computed(() => ({
           Carregando documento... {{ loadingProgress }}%
         </p>
       </div>
-      
+
       <!-- Visualizador para desktop -->
       <div v-else-if="!isMobile" class="document-viewer">
         <!-- Controles de zoom -->
         <div class="zoom-controls mb-4 flex justify-center items-center space-x-4">
-          <button 
-            @click="zoomOut" 
+          <button
+            @click="zoomOut"
             class="bg-gray-200 hover:bg-gray-300 p-2 rounded transition-colors"
             :disabled="zoomLevel <= 50"
           >
@@ -116,8 +116,8 @@ const iframeStyle = computed(() => ({
             </svg>
           </button>
           <span class="text-sm sm:text-base font-medium">{{ zoomLevel }}%</span>
-          <button 
-            @click="zoomIn" 
+          <button
+            @click="zoomIn"
             class="bg-gray-200 hover:bg-gray-300 p-2 rounded transition-colors"
             :disabled="zoomLevel >= 200"
           >
@@ -129,15 +129,15 @@ const iframeStyle = computed(() => ({
 
         <!-- Iframe -->
         <div class="w-full h-64 sm:h-96 lg:h-[500px] bg-gray-50 rounded-md overflow-hidden shadow-inner">
-          <iframe 
-            :src="documentUrl" 
-            class="w-full h-full border-0" 
+          <iframe
+            :src="documentUrl"
+            class="w-full h-full border-0"
             :style="iframeStyle"
             :title="documentTitle"
           ></iframe>
         </div>
       </div>
-      
+
       <!-- Em dispositivos móveis - aviso -->
       <div v-else class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6" role="alert">
         <div class="flex">
@@ -153,11 +153,11 @@ const iframeStyle = computed(() => ({
           </div>
         </div>
       </div>
-      
+
       <!-- Opções para visualização e download -->
       <div class="mt-4 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
         <!-- Link para abrir o documento diretamente -->
-        <a 
+        <a
           :href="documentUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -168,10 +168,10 @@ const iframeStyle = computed(() => ({
           </svg>
           Abrir em nova aba
         </a>
-        
+
         <!-- Botão de download -->
-        <a 
-          :href="documentUrl" 
+        <a
+          :href="documentUrl"
           :download="downloadFileName"
           class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
         >
@@ -182,7 +182,7 @@ const iframeStyle = computed(() => ({
         </a>
       </div>
     </div>
-    
+
     <!-- Informações adicionais -->
     <div v-if="additionalInfo.length > 0" class="bg-gray-50 p-4 sm:p-6 border-t border-gray-200">
       <h2 class="text-lg font-medium text-gray-800 mb-4">Informações Importantes</h2>
@@ -207,7 +207,7 @@ const iframeStyle = computed(() => ({
   .zoom-controls {
     @apply space-x-2;
   }
-  
+
   .zoom-controls button {
     @apply p-1.5;
   }

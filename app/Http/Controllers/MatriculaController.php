@@ -467,7 +467,9 @@ class MatriculaController extends Controller
         $this->authorize('view', $matricula);
         
         return Inertia::render('Admin/Matriculas/Show', [
-            'matricula' => $matricula
+            'matricula' => $matricula,
+            'id' => $id,
+            'curso_id' => $matricula->curso_id
         ]);
     }
 }

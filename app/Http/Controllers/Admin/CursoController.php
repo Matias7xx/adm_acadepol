@@ -71,23 +71,32 @@ class CursoController extends Controller
         // Aplicar busca case-insensitive se fornecida
         if ($request->filled('search')) {
             $searchTerm = trim($request->get('search'));
-            
+
             if (!empty($searchTerm)) {
                 $query->where(function($q) use ($searchTerm) {
                     // Converter tanto o termo de busca quanto os campos para minúsculas
                     $searchLower = strtolower($searchTerm);
-                    
+
                     $q->whereRaw('LOWER(nome) LIKE ?', ["%{$searchLower}%"])
-                      ->orWhereRaw('LOWER(descricao) LIKE ?', ["%{$searchLower}%"])
-                      ->orWhereRaw('LOWER(localizacao) LIKE ?', ["%{$searchLower}%"])
-                      ->orWhereRaw('LOWER(modalidade) LIKE ?', ["%{$searchLower}%"])
-                      ->orWhereRaw('LOWER(status) LIKE ?', ["%{$searchLower}%"]);
+                    ->orWhereRaw('LOWER(descricao) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw('LOWER(localizacao) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw('LOWER(modalidade) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw('LOWER(status) LIKE ?', ["%{$searchLower}%"]);
                 });
             }
         }
 
+        // Subquery para encontrar o ID (mais recente) para cada curso
+        $latestCourseIds = DB::table('cursos as c1')
+            ->select('c1.id')
+            ->whereRaw('c1.id = (SELECT MAX(c2.id) FROM cursos c2 WHERE c2.nome = c1.nome)')
+            ->pluck('id');
+
+        // Filtrar apenas os cursos mais recentes por nome
+        $query->whereIn('id', $latestCourseIds);
+
         $cursos = $query->orderByRaw("
-                CASE 
+                CASE
                     WHEN status = 'aberto' THEN 1
                     WHEN status = 'fechado' THEN 2
                     WHEN status = 'suspenso' THEN 3
@@ -103,11 +112,11 @@ class CursoController extends Controller
         // Transformar os dados para incluir URLs corretas das imagens
         $cursos->getCollection()->transform(function($curso) {
             $curso->imagem = $curso->imagem ? UploadHelper::getPublicUrl($curso->imagem) : null;
-            
+
             // Garantir que o status está correto para o frontend
             $curso->is_concluido = in_array($curso->status, ['concluido', 'fechado']);
             $curso->is_aberto = $curso->status === 'aberto';
-            
+
             return $curso;
         });
 
@@ -182,11 +191,11 @@ class CursoController extends Controller
             'data_inicio' => $curso->data_inicio,
             'data_fim' => $curso->data_fim,
             'carga_horaria' => $curso->carga_horaria,
-            'pre_requisitos' => is_string($curso->pre_requisitos) 
-                ? json_decode($curso->pre_requisitos, true) 
+            'pre_requisitos' => is_string($curso->pre_requisitos)
+                ? json_decode($curso->pre_requisitos, true)
                 : $curso->pre_requisitos,
-            'enxoval' => is_string($curso->enxoval) 
-                ? json_decode($curso->enxoval, true) 
+            'enxoval' => is_string($curso->enxoval)
+                ? json_decode($curso->enxoval, true)
                 : $curso->enxoval,
             'localizacao' => $curso->localizacao,
             'capacidade_maxima' => $curso->capacidade_maxima,
@@ -214,11 +223,11 @@ class CursoController extends Controller
             'data_inicio' => $curso->data_inicio,
             'data_fim' => $curso->data_fim,
             'carga_horaria' => $curso->carga_horaria,
-            'pre_requisitos' => is_string($curso->pre_requisitos) 
-                ? json_decode($curso->pre_requisitos, true) 
+            'pre_requisitos' => is_string($curso->pre_requisitos)
+                ? json_decode($curso->pre_requisitos, true)
                 : $curso->pre_requisitos,
-            'enxoval' => is_string($curso->enxoval) 
-                ? json_decode($curso->enxoval, true) 
+            'enxoval' => is_string($curso->enxoval)
+                ? json_decode($curso->enxoval, true)
                 : $curso->enxoval,
             'localizacao' => $curso->localizacao,
             'capacidade_maxima' => $curso->capacidade_maxima,
@@ -257,11 +266,11 @@ class CursoController extends Controller
             'data_inicio' => $curso->data_inicio ? $curso->data_inicio->format('Y-m-d') : null,
             'data_fim' => $curso->data_fim ? $curso->data_fim->format('Y-m-d') : null,
             'carga_horaria' => $curso->carga_horaria,
-            'pre_requisitos' => is_string($curso->pre_requisitos) 
-                ? json_decode($curso->pre_requisitos, true) 
+            'pre_requisitos' => is_string($curso->pre_requisitos)
+                ? json_decode($curso->pre_requisitos, true)
                 : $curso->pre_requisitos,
-            'enxoval' => is_string($curso->enxoval) 
-                ? json_decode($curso->enxoval, true) 
+            'enxoval' => is_string($curso->enxoval)
+                ? json_decode($curso->enxoval, true)
                 : $curso->enxoval,
             'localizacao' => $curso->localizacao,
             'capacidade_maxima' => $curso->capacidade_maxima,
@@ -309,7 +318,7 @@ class CursoController extends Controller
             if ($curso->imagem) {
                 UploadHelper::deleteImage($curso->imagem);
             }
-            
+
             // Upload nova imagem
             $imagePath = UploadHelper::uploadImage(
                 $request->file('imagem_file'),
@@ -357,23 +366,23 @@ class CursoController extends Controller
 
         // Verificar se há matrículas associadas
         $matriculasAtivas = $curso->alunos()->whereIn('status', ['aprovada', 'pendente'])->count();
-        
+
         if ($matriculasAtivas > 0) {
             return redirect()->route('admin.cursos.index')
                 ->with('message', 'Não é possível excluir um curso com matrículas ativas.');
         }
-        
+
         // Remover a imagem do curso
         if ($curso->imagem) {
             UploadHelper::deleteImage($curso->imagem);
         }
-        
+
         $curso->delete();
 
         // Limpar pasta do curso
         $pastaCurso = 'cursos/' . UploadHelper::sanitizeFolderName($curso->nome);
         UploadHelper::cleanupEmptyFolder($pastaCurso);
-        
+
         return redirect()->route('admin.cursos.index')
             ->with('message', 'Curso excluído com sucesso!');
     }

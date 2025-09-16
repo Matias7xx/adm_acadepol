@@ -5,28 +5,27 @@ import Header from './Components/Header.vue';
 import Footer from './Components/Footer.vue';
 import ExibirDocumentos from './Components/ExibirDocumentos.vue';
 
-const DOCUMENT_URL = '/storage/documentos/OrganogramaPCPB.pdf';
-const DOCUMENT_TITLE = 'Organograma da Polícia Civil';
-const DOCUMENT_FILENAME = 'Organograma_Policia_Civil';
-const DOCUMENT_DESCRIPTION = 'Estrutura organizacional e hierárquica atualizada da Polícia Civil da Paraíba.';
+const DOCUMENT_URL = '/storage/documentos/OrganogramaAcadepol.pdf';
+const DOCUMENT_TITLE = 'Organograma da ACADEPOL';
+const DOCUMENT_FILENAME = 'Organograma_ACADEPOL';
+const DOCUMENT_DESCRIPTION = 'Estrutura organizacional e hierárquica.';
 
 const additionalInfo = [
-  'Este organograma apresenta a estrutura atual da Polícia Civil da Paraíba, conforme a última reestruturação organizacional.',
-  'As unidades especializadas estão destacadas conforme suas respectivas competências.',
+  'Este organograma apresenta a estrutura atual da Academia de Polícia Civil da Paraíba.',
 ];
 </script>
 
 <template>
   <div class="bg-gray-100 min-h-screen">
     <Head>
-      <title>Organograma - Polícia Civil</title>
+      <title>Organograma - ACADEPOL</title>
       <meta name="description" :content="DOCUMENT_DESCRIPTION" />
-      <meta name="keywords" content="organograma, polícia civil, estrutura, hierarquia, paraíba" />
+      <meta name="keywords" content="acadepol, organograma, polícia civil, estrutura, hierarquia, paraíba" />
     </Head>
-    
+
     <SiteNavbar />
     <Header />
-    
+
     <!-- Conteúdo principal -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Breadcrumbs para navegação -->
@@ -47,8 +46,8 @@ const additionalInfo = [
           </li>
         </ol>
       </nav>
-      
-      <ExibirDocumentos 
+
+      <ExibirDocumentos
         :documentUrl="DOCUMENT_URL"
         :documentTitle="DOCUMENT_TITLE"
         documentType="pdf"
@@ -57,21 +56,21 @@ const additionalInfo = [
         :description="DOCUMENT_DESCRIPTION"
         :additionalInfo="additionalInfo"
       />
-      
+
       <!-- Informações adicionais -->
       <div class="mt-8 bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Sobre o Organograma Institucional</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Sobre o Organograma</h2>
         <p class="text-gray-600 mb-4">
-          O organograma institucional é uma representação gráfica da estrutura hierárquica e organizacional da Polícia Civil da Paraíba, 
-          demonstrando as relações entre os diferentes departamentos, divisões e unidades que compõem a instituição.
+          O organograma institucional é uma representação gráfica da estrutura hierárquica e organizacional da Academia de Polícia Civil da Paraíba,
+          demonstrando as relações entre os diferentes departamentos e divisões.
         </p>
         <p class="text-gray-600">
-          Esta representação visual ajuda a compreender o fluxo de autoridade, os níveis de responsabilidade e a distribuição 
-          de competências dentro da organização policial, servindo como guia para servidores e cidadãos.
+          Esta representação visual ajuda a compreender o fluxo de autoridade, os níveis de responsabilidade e a distribuição
+          de competências, servindo como guia para servidores e cidadãos.
         </p>
       </div>
     </main>
-    
+
     <Footer />
   </div>
 </template>
