@@ -1,18 +1,15 @@
 <script setup>
-import { Head, useForm } from "@inertiajs/vue3"
-import {
-  mdiSelectGroup,
-  mdiArrowLeftBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
+import { Head, useForm } from '@inertiajs/vue3';
+import { mdiSelectGroup, mdiArrowLeftBoldOutline } from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
 
 const props = defineProps({
   categoryType: {
@@ -27,8 +24,7 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
-
+});
 
 const form = useForm({
   _method: 'put',
@@ -36,8 +32,8 @@ const form = useForm({
   description: props.item.description,
   enabled: props.item.enabled,
   parent_id: props.item.parent_id,
-  weight: props.item.weight
-})
+  weight: props.item.weight,
+});
 </script>
 
 <template>
@@ -60,12 +56,16 @@ const form = useForm({
       </SectionTitleLineWithButton>
       <CardBox
         form
-        @submit.prevent="form.post(route('admin.category.type.item.update', {type: props.categoryType.id, item:props.item.id}))"
+        @submit.prevent="
+          form.post(
+            route('admin.category.type.item.update', {
+              type: props.categoryType.id,
+              item: props.item.id,
+            })
+          )
+        "
       >
-        <FormField
-          label="Name"
-          :class="{ 'text-red-400': form.errors.name }"
-        >
+        <FormField label="Name" :class="{ 'text-red-400': form.errors.name }">
           <FormControl
             v-model="form.name"
             type="text"
@@ -112,7 +112,9 @@ const form = useForm({
               {{ form.errors.parent_id }}
             </div>
             <div>
-                The maximum depth for a link and all its children is fixed. Some menu links may not be available as parents if selecting them would exceed this limit.
+              The maximum depth for a link and all its children is fixed. Some
+              menu links may not be available as parents if selecting them would
+              exceed this limit.
             </div>
           </FormControl>
         </FormField>

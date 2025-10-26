@@ -1,16 +1,16 @@
 <script setup>
-import BaseIcon from '@/Components/BaseIcon.vue'
+import BaseIcon from '@/Components/BaseIcon.vue';
 
 defineProps({
   icon: {
     type: String,
-    default: null
+    default: null,
   },
   h: {
     type: String,
-    default: null
-  }
-})
+    default: null,
+  },
+});
 </script>
 
 <template>

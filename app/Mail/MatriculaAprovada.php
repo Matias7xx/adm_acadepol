@@ -12,50 +12,48 @@ use Illuminate\Queue\SerializesModels;
 
 class MatriculaAprovada extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+  use Queueable, SerializesModels;
 
-    public $matricula;
+  public $matricula;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(Matricula $matricula)
-    {
-        $this->matricula = $matricula;
-    }
+  /**
+   * Create a new message instance.
+   */
+  public function __construct(Matricula $matricula)
+  {
+    $this->matricula = $matricula;
+  }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Matrícula Aprovada - ACADEPOL',
-        );
-    }
+  /**
+   * Get the message envelope.
+   */
+  public function envelope(): Envelope
+  {
+    return new Envelope(subject: 'Matrícula Aprovada - ACADEPOL');
+  }
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.matricula.aprovada',
-            with: [
-                'matricula' => $this->matricula,
-                'curso' => $this->matricula->curso,
-                'aluno' => $this->matricula->aluno,
-            ],
-        );
-    }
+  /**
+   * Get the message content definition.
+   */
+  public function content(): Content
+  {
+    return new Content(
+      markdown: 'emails.matricula.aprovada',
+      with: [
+        'matricula' => $this->matricula,
+        'curso' => $this->matricula->curso,
+        'aluno' => $this->matricula->aluno,
+      ],
+    );
+  }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
-    }
+  /**
+   * Get the attachments for the message.
+   *
+   * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+   */
+  public function attachments(): array
+  {
+    return [];
+  }
 }

@@ -16,27 +16,32 @@ const appName = import.meta.env.VITE_APP_NAME || 'ACADEPOL';
 const pinia = createPinia();
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
-    setup({ el, App, props, plugin }) {
-        axios.defaults.withCredentials = true;
-        return createApp({ render: () => h(App, props) })
-            .use(plugin)    
-            .use(ZiggyVue, Ziggy)
-            .use(Toast, FlashMessage)
-            .use(CKEditor)
-            .mount(el);
-    },
-    progress: {
-        color: '#0076ff',
-    },
+  title: title => `${title} - ${appName}`,
+  resolve: name =>
+    resolvePageComponent(
+      `./Pages/${name}.vue`,
+      import.meta.glob('./Pages/**/*.vue')
+    ),
+  setup({ el, App, props, plugin }) {
+    axios.defaults.withCredentials = true;
+    return createApp({ render: () => h(App, props) })
+      .use(plugin)
+      .use(ZiggyVue, Ziggy)
+      .use(Toast, FlashMessage)
+      .use(CKEditor)
+      .mount(el);
+  },
+  progress: {
+    color: '#0076ff',
+  },
 });
 
 const darkModeStore = useDarkModeStore(pinia);
 
 if (
-   (!localStorage['darkMode'] && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-   localStorage['darkMode'] === '0'
+  (!localStorage['darkMode'] &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+  localStorage['darkMode'] === '0'
 ) {
-   darkModeStore.set(true);
+  darkModeStore.set(true);
 }

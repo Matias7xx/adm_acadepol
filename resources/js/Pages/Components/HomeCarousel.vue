@@ -1,19 +1,26 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
+import {
+  ref,
+  onMounted,
+  onBeforeUnmount,
+  computed,
+  watch,
+  nextTick,
+} from 'vue';
 
 const props = defineProps({
   autoPlayDuration: {
     type: Number,
-    default: 5000
+    default: 5000,
   },
   maxItems: {
     type: Number,
-    default: 3
+    default: 3,
   },
   lazy: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
 const currentIndex = ref(0);
@@ -32,32 +39,49 @@ const imageStates = ref(new Map()); // Controla estado de cada imagem
 const preloadedImages = ref(new Set()); // Cache de imagens carregadas
 
 const PLACEHOLDER_LOCAL = '/images/placeholder-news2.png';
-const PLACEHOLDER_CDN = 'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=800&h=600&fit=crop&crop=center&auto=format&q=80&cs=tinysrgb';
+const PLACEHOLDER_CDN =
+  'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=800&h=600&fit=crop&crop=center&auto=format&q=80&cs=tinysrgb';
 
 const showSkeleton = computed(() => loading.value && mounted.value);
-const showCarousel = computed(() => !loading.value && !error.value && newsItems.value.length > 0);
-const showEmpty = computed(() => !loading.value && !error.value && newsItems.value.length === 0);
+const showCarousel = computed(
+  () => !loading.value && !error.value && newsItems.value.length > 0
+);
+const showEmpty = computed(
+  () => !loading.value && !error.value && newsItems.value.length === 0
+);
 const hasMultipleItems = computed(() => newsItems.value.length > 1);
 const showControls = computed(() => hasMultipleItems.value && !loading.value);
 
 // verificar se imagem já foi carregada
 const isImageReady = (imageUrl, itemId) => {
-  if (!imageUrl || imageUrl === PLACEHOLDER_LOCAL || imageUrl === PLACEHOLDER_CDN) return true;
-  
+  if (
+    !imageUrl ||
+    imageUrl === PLACEHOLDER_LOCAL ||
+    imageUrl === PLACEHOLDER_CDN
+  )
+    return true;
+
   const cacheKey = `${itemId}-${imageUrl}`;
-  return preloadedImages.value.has(cacheKey) || imageStates.value.get(cacheKey)?.loaded;
+  return (
+    preloadedImages.value.has(cacheKey) ||
+    imageStates.value.get(cacheKey)?.loaded
+  );
 };
 
 // Preload de imagens
 const preloadImage = (imageUrl, itemId) => {
   return new Promise((resolve, reject) => {
-    if (!imageUrl || imageUrl === PLACEHOLDER_LOCAL || imageUrl === PLACEHOLDER_CDN) {
+    if (
+      !imageUrl ||
+      imageUrl === PLACEHOLDER_LOCAL ||
+      imageUrl === PLACEHOLDER_CDN
+    ) {
       resolve();
       return;
     }
 
     const cacheKey = `${itemId}-${imageUrl}`;
-    
+
     // Se já foi carregada, resolve
     if (preloadedImages.value.has(cacheKey)) {
       resolve();
@@ -65,18 +89,18 @@ const preloadImage = (imageUrl, itemId) => {
     }
 
     const img = new Image();
-    
+
     img.onload = () => {
       preloadedImages.value.add(cacheKey);
       imageStates.value.set(cacheKey, { loaded: true, error: false });
       resolve();
     };
-    
+
     img.onerror = () => {
       imageStates.value.set(cacheKey, { loaded: false, error: true });
       reject();
     };
-    
+
     img.src = imageUrl;
   });
 };
@@ -89,35 +113,36 @@ const fetchDestacadas = async (attempt = 1) => {
     } else if (attempt > 1) {
       loading.value = true;
     }
-    
+
     error.value = null;
-    
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
+
     const response = await fetch('/api/ultimas-noticias', {
       signal: controller.signal,
       headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache'
-      }
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+      },
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!Array.isArray(data)) {
       throw new Error('Formato de dados inválido recebido do servidor');
     }
-    
+
     const destacadas = data.filter(item => item?.destaque && item?.id);
-    const finalItems = destacadas.length > 0 ? destacadas : data.filter(item => item?.id);
-    
+    const finalItems =
+      destacadas.length > 0 ? destacadas : data.filter(item => item?.id);
+
     // Formatar dados com hierarquia: Original > Local > CDN
     const formattedItems = finalItems
       .slice(0, props.maxItems)
@@ -127,10 +152,10 @@ const fetchDestacadas = async (attempt = 1) => {
         excerpt: noticia.descricao_curta || '',
         image: noticia.imagem || PLACEHOLDER_LOCAL,
         originalImage: noticia.imagem, // Guardar URL original
-        link: `/noticias/${noticia.id}`
+        link: `/noticias/${noticia.id}`,
       }))
       .filter(item => item.title && item.id);
-    
+
     // Se não há notícias válidas, define array vazio e exibe estado "sem notícias"
     newsItems.value = formattedItems;
 
@@ -138,52 +163,61 @@ const fetchDestacadas = async (attempt = 1) => {
     if (formattedItems.length > 0) {
       // Preload da primeira imagem (slide atual)
       const firstItem = formattedItems[0];
-      if (firstItem.originalImage && firstItem.originalImage !== PLACEHOLDER_LOCAL) {
+      if (
+        firstItem.originalImage &&
+        firstItem.originalImage !== PLACEHOLDER_LOCAL
+      ) {
         try {
           await preloadImage(firstItem.originalImage, firstItem.id);
           firstItem.image = firstItem.originalImage;
         } catch (e) {
-          console.warn('Falha ao carregar primeira imagem, usando placeholder local');
+          console.warn(
+            'Falha ao carregar primeira imagem, usando placeholder local'
+          );
           // Se falhar, verifica se o local existe, senão usa CDN
           firstItem.image = PLACEHOLDER_LOCAL;
         }
       }
 
       // Preload das demais imagens em background
-      formattedItems.slice(1).forEach(async (item) => {
+      formattedItems.slice(1).forEach(async item => {
         if (item.originalImage && item.originalImage !== PLACEHOLDER_LOCAL) {
           try {
             await preloadImage(item.originalImage, item.id);
             // Atualizar a imagem quando carregada
-            const itemIndex = newsItems.value.findIndex(newsItem => newsItem.id === item.id);
+            const itemIndex = newsItems.value.findIndex(
+              newsItem => newsItem.id === item.id
+            );
             if (itemIndex !== -1) {
               newsItems.value[itemIndex].image = item.originalImage;
             }
           } catch (e) {
-            console.warn(`Falha ao carregar imagem do item ${item.id}, mantendo placeholder local`);
+            console.warn(
+              `Falha ao carregar imagem do item ${item.id}, mantendo placeholder local`
+            );
           }
         }
       });
     }
-    
+
     if (currentIndex.value >= newsItems.value.length) {
       currentIndex.value = 0;
     }
-    
+
     await nextTick();
     loading.value = false;
     retryCount.value = 0;
-    
   } catch (err) {
     console.error(`Erro ao carregar notícias (tentativa ${attempt}):`, err);
-    
+
     if (attempt < maxRetries && err.name !== 'AbortError') {
       retryCount.value = attempt;
       setTimeout(() => fetchDestacadas(attempt + 1), 2000 * attempt);
     } else {
-      error.value = err.name === 'AbortError' 
-        ? 'Tempo limite excedido. Verifique sua conexão.' 
-        : `Erro ao carregar notícias: ${err.message}`;
+      error.value =
+        err.name === 'AbortError'
+          ? 'Tempo limite excedido. Verifique sua conexão.'
+          : `Erro ao carregar notícias: ${err.message}`;
       loading.value = false;
     }
   }
@@ -197,10 +231,11 @@ const nextSlide = () => {
 
 const prevSlide = () => {
   if (!hasMultipleItems.value) return;
-  currentIndex.value = (currentIndex.value - 1 + newsItems.value.length) % newsItems.value.length;
+  currentIndex.value =
+    (currentIndex.value - 1 + newsItems.value.length) % newsItems.value.length;
 };
 
-const goToSlide = (index) => {
+const goToSlide = index => {
   if (index >= 0 && index < newsItems.value.length) {
     currentIndex.value = index;
   }
@@ -209,7 +244,7 @@ const goToSlide = (index) => {
 // Auto-play
 const startAutoPlay = () => {
   if (!hasMultipleItems.value || !isPlaying.value) return;
-  
+
   stopAutoPlay();
   autoPlayInterval.value = setInterval(() => {
     if (isPlaying.value && hasMultipleItems.value) {
@@ -235,12 +270,12 @@ const toggleAutoPlay = () => {
 };
 
 // Touch/Swipe support
-const handleTouchStart = (e) => {
+const handleTouchStart = e => {
   touchStartX.value = e.touches[0].clientX;
   stopAutoPlay();
 };
 
-const handleTouchEnd = (e) => {
+const handleTouchEnd = e => {
   touchEndX.value = e.changedTouches[0].clientX;
   handleSwipe();
   if (isPlaying.value) {
@@ -251,7 +286,7 @@ const handleTouchEnd = (e) => {
 const handleSwipe = () => {
   const swipeThreshold = 50;
   const diff = touchStartX.value - touchEndX.value;
-  
+
   if (Math.abs(diff) > swipeThreshold) {
     if (diff > 0) {
       nextSlide();
@@ -262,9 +297,9 @@ const handleSwipe = () => {
 };
 
 // Keyboard navigation
-const handleKeyDown = (e) => {
+const handleKeyDown = e => {
   if (!mounted.value) return;
-  
+
   switch (e.key) {
     case 'ArrowLeft':
       e.preventDefault();
@@ -290,7 +325,7 @@ const handleKeyDown = (e) => {
 };
 
 // imagens com hierarquia correta
-const handleImageLoad = (index) => {
+const handleImageLoad = index => {
   const item = newsItems.value[index];
   if (item) {
     const cacheKey = `${item.id}-${item.image}`;
@@ -302,10 +337,10 @@ const handleImageLoad = (index) => {
 const handleImageError = (event, index) => {
   console.warn(`Erro ao carregar imagem do slide ${index}`);
   const item = newsItems.value[index];
-  
+
   if (item) {
     const currentSrc = event.target.src;
-    
+
     // Hierarquia: Original > Placeholder Local > Placeholder CDN
     if (currentSrc === item.originalImage) {
       // Se falhou a original, tenta o placeholder local
@@ -317,7 +352,7 @@ const handleImageError = (event, index) => {
       event.target.src = PLACEHOLDER_CDN;
     }
     // Se chegou aqui e ainda falhou, mantém o CDN
-    
+
     const cacheKey = `${item.id}-${item.image}`;
     imageStates.value.set(cacheKey, { loaded: true, error: true });
   }
@@ -326,16 +361,18 @@ const handleImageError = (event, index) => {
 // Preload inteligente da próxima imagem
 const preloadNextImage = async () => {
   if (!props.lazy) return;
-  
+
   const nextIndex = (currentIndex.value + 1) % newsItems.value.length;
   const nextItem = newsItems.value[nextIndex];
-  
+
   if (nextItem?.originalImage && nextItem.image === PLACEHOLDER_LOCAL) {
     try {
       await preloadImage(nextItem.originalImage, nextItem.id);
       nextItem.image = nextItem.originalImage;
     } catch (e) {
-      console.warn(`Falha ao preload da próxima imagem: ${nextItem.id}, mantendo placeholder local`);
+      console.warn(
+        `Falha ao preload da próxima imagem: ${nextItem.id}, mantendo placeholder local`
+      );
     }
   }
 };
@@ -345,26 +382,32 @@ watch(currentIndex, () => {
   preloadNextImage();
 });
 
-watch(() => newsItems.value.length, (newLength) => {
-  if (newLength > 0 && isPlaying.value) {
-    startAutoPlay();
+watch(
+  () => newsItems.value.length,
+  newLength => {
+    if (newLength > 0 && isPlaying.value) {
+      startAutoPlay();
+    }
   }
-});
+);
 
 // Observer
 let intersectionObserver = null;
 
 const setupIntersectionObserver = () => {
   if ('IntersectionObserver' in window) {
-    intersectionObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          if (isPlaying.value) startAutoPlay();
-        } else {
-          stopAutoPlay();
-        }
-      });
-    }, { threshold: 0.5 });
+    intersectionObserver = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            if (isPlaying.value) startAutoPlay();
+          } else {
+            stopAutoPlay();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
   }
 };
 
@@ -372,12 +415,12 @@ const setupIntersectionObserver = () => {
 onMounted(async () => {
   mounted.value = true;
   await nextTick();
-  
+
   fetchDestacadas();
   setupIntersectionObserver();
-  
+
   window.addEventListener('keydown', handleKeyDown);
-  
+
   await nextTick();
   if (intersectionObserver) {
     const carousel = document.querySelector('.carousel-container');
@@ -391,11 +434,11 @@ onBeforeUnmount(() => {
   mounted.value = false;
   stopAutoPlay();
   window.removeEventListener('keydown', handleKeyDown);
-  
+
   if (intersectionObserver) {
     intersectionObserver.disconnect();
   }
-  
+
   // Limpar caches
   imageStates.value.clear();
   preloadedImages.value.clear();
@@ -409,16 +452,30 @@ const retry = () => {
 };
 </script>
 
-<template> 
+<template>
   <div class="carousel-wrapper max-w-screen-xl mx-auto px-4 mt-1">
-    
     <!-- Estado de carregamento -->
     <div v-if="showSkeleton" class="carousel-skeleton">
       <div class="skeleton-image">
         <div class="skeleton-spinner">
-          <svg class="animate-spin h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            class="animate-spin h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
         </div>
         <div class="skeleton-text">
@@ -436,37 +493,64 @@ const retry = () => {
     <!-- Estado sem notícias -->
     <div v-else-if="showEmpty" class="carousel-empty">
       <div class="empty-content">
-        <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        <svg
+          class="empty-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+          />
         </svg>
         <h3 class="empty-title">Nenhuma notícia em destaque</h3>
         <p class="empty-message">Não há notícias em destaque no momento.</p>
         <a href="/noticias" class="empty-link">Ver todas as notícias</a>
       </div>
     </div>
-    
+
     <!-- Estado de erro -->
     <div v-else-if="error" class="carousel-error">
       <div class="error-content">
-        <svg class="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="error-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <h3 class="error-title">Ops! Algo deu errado</h3>
         <p class="error-message">{{ error }}</p>
         <button @click="retry" class="error-retry-btn">
-          <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           Tentar novamente
         </button>
       </div>
     </div>
-    
+
     <!-- Carrossel -->
-    <div 
+    <div
       v-if="showCarousel"
       class="carousel-container"
       @mouseenter="stopAutoPlay"
@@ -481,30 +565,33 @@ const retry = () => {
       :aria-live="isPlaying ? 'off' : 'polite'"
     >
       <!-- Slides Container -->
-      <div 
-        class="slides-container" 
+      <div
+        class="slides-container"
         :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
         role="tabpanel"
         :aria-label="`Slide ${currentIndex + 1} de ${newsItems.length}`"
       >
-        <article 
-          v-for="(news, index) in newsItems" 
-          :key="news.id" 
+        <article
+          v-for="(news, index) in newsItems"
+          :key="news.id"
           class="slide-item"
           :class="{ 'slide-active': index === currentIndex }"
           :aria-hidden="index !== currentIndex"
         >
           <!-- Container de imagem -->
           <div class="slide-image-container">
-            <img 
-              :src="news.image" 
-              :alt="news.title" 
+            <img
+              :src="news.image"
+              :alt="news.title"
               class="slide-image"
-              :class="{ 'image-loading': news.image === PLACEHOLDER_LOCAL && news.originalImage }"
+              :class="{
+                'image-loading':
+                  news.image === PLACEHOLDER_LOCAL && news.originalImage,
+              }"
               :loading="index === currentIndex ? 'eager' : 'lazy'"
               @load="handleImageLoad(index)"
-              @error="(e) => handleImageError(e, index)"
-            >
+              @error="e => handleImageError(e, index)"
+            />
             <!-- Overlay gradiente -->
             <div class="slide-overlay"></div>
           </div>
@@ -513,14 +600,24 @@ const retry = () => {
           <div class="slide-content">
             <h2 class="slide-title">{{ news.title }}</h2>
             <p v-if="news.excerpt" class="slide-excerpt">{{ news.excerpt }}</p>
-            <a 
-              :href="news.link" 
+            <a
+              :href="news.link"
               class="slide-link"
               :tabindex="index === currentIndex ? 0 : -1"
             >
               Leia mais
-              <svg class="link-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+                class="link-arrow"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </a>
           </div>
@@ -529,47 +626,91 @@ const retry = () => {
 
       <!-- Controles de Navegação -->
       <template v-if="showControls">
-        <button 
-          @click="prevSlide" 
+        <button
+          @click="prevSlide"
           class="nav-button nav-button-prev"
           aria-label="Slide anterior"
           :disabled="!hasMultipleItems"
         >
-          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <svg
+            class="nav-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
-        
-        <button 
-          @click="nextSlide" 
+
+        <button
+          @click="nextSlide"
           class="nav-button nav-button-next"
           aria-label="Próximo slide"
           :disabled="!hasMultipleItems"
         >
-          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg
+            class="nav-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
 
         <!-- Botão play/pause -->
-        <button 
+        <button
           @click="toggleAutoPlay"
           class="play-pause-button"
-          :aria-label="isPlaying ? 'Pausar apresentação' : 'Iniciar apresentação'"
+          :aria-label="
+            isPlaying ? 'Pausar apresentação' : 'Iniciar apresentação'
+          "
         >
-          <svg v-if="isPlaying" class="play-pause-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6" />
+          <svg
+            v-if="isPlaying"
+            class="play-pause-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 9v6m4-6v6"
+            />
           </svg>
-          <svg v-else class="play-pause-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8" />
+          <svg
+            v-else
+            class="play-pause-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8"
+            />
           </svg>
         </button>
       </template>
 
       <!-- Indicadores -->
       <div v-if="showControls" class="indicators-container" role="tablist">
-        <button 
-          v-for="(_, index) in newsItems" 
+        <button
+          v-for="(_, index) in newsItems"
           :key="`indicator-${index}`"
           @click="goToSlide(index)"
           class="indicator"
@@ -584,7 +725,7 @@ const retry = () => {
 
       <!-- Progress bar -->
       <div v-if="isPlaying && hasMultipleItems" class="progress-bar">
-        <div 
+        <div
           class="progress-fill"
           :style="{ animationDuration: `${autoPlayDuration}ms` }"
           :key="`progress-${currentIndex}`"
@@ -835,19 +976,19 @@ const retry = () => {
   .slide-title {
     @apply text-base leading-snug;
   }
-  
+
   .slide-excerpt {
     @apply text-xs line-clamp-1;
   }
-  
+
   .slide-content {
     @apply p-3;
   }
-  
+
   .nav-button {
     @apply p-2;
   }
-  
+
   .nav-icon {
     @apply w-4 h-4;
   }
@@ -858,11 +999,11 @@ const retry = () => {
   .slide-link:hover .link-arrow {
     @apply translate-x-1;
   }
-  
+
   .nav-button:hover {
     @apply scale-110;
   }
-  
+
   .indicator:hover {
     @apply scale-110;
   }
@@ -879,7 +1020,7 @@ const retry = () => {
     @apply transition-none;
     animation: none !important;
   }
-  
+
   .progress-fill {
     animation: none;
   }
@@ -941,7 +1082,12 @@ const retry = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
   animation: shimmer 3s infinite;
   pointer-events: none;
 }

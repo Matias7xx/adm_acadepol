@@ -9,7 +9,8 @@ import Header from './Components/Header.vue';
 import PowerBIComponent from './Components/PowerBIComponent.vue';
 
 // URL do relatório Power BI
-const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00NDhkLTllNDktZWQ1ZjMwN2ZiMjM5IiwidCI6IjgxYzUyNzVkLTIxMjMtNDU0Yi1iMjEwLTI4MWI0NjVmZGI4YSJ9";
+const powerBIUrl =
+  'https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00NDhkLTllNDktZWQ1ZjMwN2ZiMjM5IiwidCI6IjgxYzUyNzVkLTIxMjMtNDU0Yi1iMjEwLTI4MWI0NjVmZGI4YSJ9';
 </script>
 
 <template>
@@ -17,16 +18,16 @@ const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00N
   <div class="min-h-screen flex flex-col bg-gray-100">
     <!-- Header Section -->
     <header class="w-full">
-     <!--  <Header class="shadow-xl" /> -->
-       <Header />
-       <!-- Barra de Pesquisa -->
+      <!--  <Header class="shadow-xl" /> -->
+      <Header />
+      <!-- Barra de Pesquisa -->
       <!-- <div class="search-bar bg-white shadow-md px-4 py-2">
         <Search />
       </div> -->
       <SiteNavbar />
-      <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->   
-      </header>
-      
+      <!-- <div class="h-1 bg-gradient-to-r from-transparent via-[black] to-transparent"></div> -->
+    </header>
+
     <!-- Hero Section -->
     <section class="w-full">
       <HomeCarousel />
@@ -42,7 +43,7 @@ const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00N
 
         <!-- Seção do Power BI  -->
         <section class="mb-19">
-          <PowerBIComponent 
+          <PowerBIComponent
             :src="powerBIUrl"
             title="Dados e Estatísticas"
             height="650px"
@@ -57,7 +58,9 @@ const powerBIUrl = "https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00N
     </main>
 
     <!-- Footer -->
-    <div class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"></div>   
+    <div
+      class="h-1 bg-gradient-to-r from-transparent via-[#bea55a] to-transparent"
+    ></div>
     <Footer />
   </div>
 </template>

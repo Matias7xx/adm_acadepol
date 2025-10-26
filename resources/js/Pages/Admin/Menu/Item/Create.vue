@@ -1,19 +1,16 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiMenu,
-  mdiArrowLeftBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { mdiMenu, mdiArrowLeftBoldOutline } from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
 
 const props = defineProps({
   menu: {
@@ -28,7 +25,7 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   name: '',
@@ -38,20 +35,15 @@ const form = useForm({
   parent_id: '',
   weight: '',
   icon: '',
-  roles: []
-})
-
+  roles: [],
+});
 </script>
 
 <template>
   <LayoutAuthenticated>
     <Head title="Create menu item" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiMenu"
-        title="Add menu item"
-        main
-      >
+      <SectionTitleLineWithButton :icon="mdiMenu" title="Add menu item" main>
         <BaseButton
           :route-name="route('admin.menu.item.index', menu.id)"
           :icon="mdiArrowLeftBoldOutline"
@@ -65,10 +57,7 @@ const form = useForm({
         form
         @submit.prevent="form.post(route('admin.menu.item.store', menu.id))"
       >
-        <FormField
-          label="Name"
-          :class="{ 'text-red-400': form.errors.name }"
-        >
+        <FormField label="Name" :class="{ 'text-red-400': form.errors.name }">
           <FormControl
             v-model="form.name"
             type="text"
@@ -80,10 +69,7 @@ const form = useForm({
             </div>
           </FormControl>
         </FormField>
-        <FormField
-          label="Link"
-          :class="{ 'text-red-400': form.errors.uri }"
-        >
+        <FormField label="Link" :class="{ 'text-red-400': form.errors.uri }">
           <FormControl
             v-model="form.uri"
             type="text"
@@ -91,8 +77,12 @@ const form = useForm({
             :error="form.errors.name"
           >
             <div class="item-list">
-                You can also enter an internal path such as <em class="placeholder">/home</em> or an external URL such as <em class="placeholder">http://example.com</em>. 
-                Add prefix <em class="placeholder">&lt;admin&gt;</em> to link for admin page. Enter <em class="placeholder">&lt;nolink&gt;</em> to display link text only.
+              You can also enter an internal path such as
+              <em class="placeholder">/home</em> or an external URL such as
+              <em class="placeholder">http://example.com</em>. Add prefix
+              <em class="placeholder">&lt;admin&gt;</em> to link for admin page.
+              Enter <em class="placeholder">&lt;nolink&gt;</em> to display link
+              text only.
             </div>
             <div class="text-red-400 text-sm" v-if="form.errors.uri">
               {{ form.errors.uri }}
@@ -134,7 +124,9 @@ const form = useForm({
               {{ form.errors.parent_id }}
             </div>
             <div>
-                The maximum depth for a link and all its children is fixed. Some menu links may not be available as parents if selecting them would exceed this limit.
+              The maximum depth for a link and all its children is fixed. Some
+              menu links may not be available as parents if selecting them would
+              exceed this limit.
             </div>
           </FormControl>
         </FormField>
@@ -153,10 +145,7 @@ const form = useForm({
             </div>
           </FormControl>
         </FormField>
-        <FormField
-          label="Icon"
-          :class="{ 'text-red-400': form.errors.icon }"
-        >
+        <FormField label="Icon" :class="{ 'text-red-400': form.errors.icon }">
           <FormControl
             v-model="form.icon"
             type="text"
@@ -171,10 +160,7 @@ const form = useForm({
 
         <BaseDivider />
 
-        <FormField
-          label="Roles"
-          wrap-body
-        >
+        <FormField label="Roles" wrap-body>
           <FormCheckRadioGroup
             v-model="form.roles"
             name="roles"

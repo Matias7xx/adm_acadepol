@@ -12,67 +12,67 @@ use Illuminate\Queue\SerializesModels;
 
 class NovoRequerimento extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+  use Queueable, SerializesModels;
 
-    public $requerimento;
+  public $requerimento;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(Requerimento $requerimento)
-    {
-        $this->requerimento = $requerimento;
-    }
+  /**
+   * Create a new message instance.
+   */
+  public function __construct(Requerimento $requerimento)
+  {
+    $this->requerimento = $requerimento;
+  }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Novo Requerimento Recebido - ACADEPOL',
-        );
-    }
+  /**
+   * Get the message envelope.
+   */
+  public function envelope(): Envelope
+  {
+    return new Envelope(subject: 'Novo Requerimento Recebido - ACADEPOL');
+  }
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        // Formatar o tipo de requerimento para exibição
-        $tipoFormatado = $this->getTipoRequerimentoFormatado($this->requerimento->tipo);
-        
-        return new Content(
-            markdown: 'emails.requerimento.novo',
-            with: [
-                'requerimento' => $this->requerimento,
-                'tipo_formatado' => $tipoFormatado,
-                'url' => route('admin.requerimentos.show', $this->requerimento->id),
-            ],
-        );
-    }
+  /**
+   * Get the message content definition.
+   */
+  public function content(): Content
+  {
+    // Formatar o tipo de requerimento para exibição
+    $tipoFormatado = $this->getTipoRequerimentoFormatado(
+      $this->requerimento->tipo,
+    );
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
-    }
-    
-    /**
-     * Formatar o tipo de requerimento para exibição
-     */
-    private function getTipoRequerimentoFormatado($tipo)
-    {
-        $tipos = [
-            'segunda_via_certificado' => '2ª Via de Certificado',
-            'declaracao_participacao' => 'Declaração de Participação em Curso',
-            'outros' => 'Outros'
-        ];
+    return new Content(
+      markdown: 'emails.requerimento.novo',
+      with: [
+        'requerimento' => $this->requerimento,
+        'tipo_formatado' => $tipoFormatado,
+        'url' => route('admin.requerimentos.show', $this->requerimento->id),
+      ],
+    );
+  }
 
-        return $tipos[$tipo] ?? $tipo;
-    }
+  /**
+   * Get the attachments for the message.
+   *
+   * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+   */
+  public function attachments(): array
+  {
+    return [];
+  }
+
+  /**
+   * Formatar o tipo de requerimento para exibição
+   */
+  private function getTipoRequerimentoFormatado($tipo)
+  {
+    $tipos = [
+      'segunda_via_certificado' => '2ª Via de Certificado',
+      'declaracao_participacao' => 'Declaração de Participação em Curso',
+      'outros' => 'Outros',
+    ];
+
+    return $tipos[$tipo] ?? $tipo;
+  }
 }

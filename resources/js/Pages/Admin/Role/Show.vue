@@ -1,14 +1,11 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiAccountKey,
-  mdiArrowLeftBoldOutline,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButton from "@/Components/BaseButton.vue"
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { mdiAccountKey, mdiArrowLeftBoldOutline } from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButton from '@/Components/BaseButton.vue';
 
 const props = defineProps({
   role: {
@@ -22,19 +19,15 @@ const props = defineProps({
   roleHasPermissions: {
     type: Object,
     default: () => ({}),
-  }
-})
+  },
+});
 </script>
 
 <template>
   <LayoutAuthenticated>
     <Head title="View role" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
-        title="View role"
-        main
-      >
+      <SectionTitleLineWithButton :icon="mdiAccountKey" title="View role" main>
         <BaseButton
           :route-name="route('admin.role.index')"
           :icon="mdiArrowLeftBoldOutline"
@@ -49,14 +42,7 @@ const props = defineProps({
           <tbody>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Name
               </td>
@@ -66,14 +52,7 @@ const props = defineProps({
             </tr>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Created
               </td>

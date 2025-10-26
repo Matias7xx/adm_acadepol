@@ -1,5 +1,5 @@
 <script setup>
-import FormControl from '@/Components/FormControl.vue'
+import FormControl from '@/Components/FormControl.vue';
 </script>
 
 <template>

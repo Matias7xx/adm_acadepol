@@ -1,35 +1,37 @@
 <script setup>
-import { useStyleStore } from '@/Stores/style.js'
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
-import { mdiChevronUp, mdiChevronDown } from '@mdi/js'
-import NavBarItem from '@/Components/NavBarItem.vue'
-import BaseIcon from '@/Components/BaseIcon.vue'
+import { useStyleStore } from '@/Stores/style.js';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import { mdiChevronUp, mdiChevronDown } from '@mdi/js';
+import NavBarItem from '@/Components/NavBarItem.vue';
+import BaseIcon from '@/Components/BaseIcon.vue';
 
-const styleStore = useStyleStore()
+const styleStore = useStyleStore();
 
-const isDropdownActive = ref(false)
+const isDropdownActive = ref(false);
 
-const toggleDropdownIcon = computed(() => isDropdownActive.value ? mdiChevronUp : mdiChevronDown)
+const toggleDropdownIcon = computed(() =>
+  isDropdownActive.value ? mdiChevronUp : mdiChevronDown
+);
 
 const toggle = () => {
-  isDropdownActive.value = !isDropdownActive.value
-}
+  isDropdownActive.value = !isDropdownActive.value;
+};
 
-const root = ref(null)
+const root = ref(null);
 
 const forceClose = event => {
   if (!root.value.$el.contains(event.target)) {
-    isDropdownActive.value = false
+    isDropdownActive.value = false;
   }
-}
+};
 
 onMounted(() => {
-  window.addEventListener('click', forceClose)
-})
+  window.addEventListener('click', forceClose);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('click', forceClose)
-})
+  window.removeEventListener('click', forceClose);
+});
 </script>
 
 <template>
@@ -51,10 +53,8 @@ onBeforeUnmount(() => {
       />
     </a>
     <div
-      class="-mx-px text-sm border-b border-gray-100 lg:border lg:bg-white lg:absolute
-          lg:top-full lg:left-0 lg:min-w-full lg:z-20 lg:rounded-b lg:dark:bg-slate-800
-          dark:border-slate-700"
-      :class="{'lg:hidden':!isDropdownActive}"
+      class="-mx-px text-sm border-b border-gray-100 lg:border lg:bg-white lg:absolute lg:top-full lg:left-0 lg:min-w-full lg:z-20 lg:rounded-b lg:dark:bg-slate-800 dark:border-slate-700"
+      :class="{ 'lg:hidden': !isDropdownActive }"
     >
       <slot name="dropdown" />
     </div>

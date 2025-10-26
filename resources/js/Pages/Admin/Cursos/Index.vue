@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiBookshelf,
   mdiPlus,
@@ -8,16 +8,16 @@ import {
   mdiAlertBoxOutline,
   mdiAccountGroup,
   mdiEye,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
+import Sort from '@/Components/Admin/Sort.vue';
 
 const props = defineProps({
   cursos: {
@@ -32,33 +32,33 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   search: props.filters.search,
-})
+});
 
-const formDelete = useForm({})
+const formDelete = useForm({});
 
 function destroy(id) {
-  if (confirm("Tem certeza de que deseja remover o curso?")) {
-    formDelete.delete(route("admin.cursos.destroy", id))
+  if (confirm('Tem certeza de que deseja remover o curso?')) {
+    formDelete.delete(route('admin.cursos.destroy', id));
   }
 }
 
 // formatar data
 function formatDate(date) {
-  if (!date) return '-'
+  if (!date) return '-';
 
   try {
-    const dateObj = new Date(date)
+    const dateObj = new Date(date);
     return dateObj.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
-    })
+      year: 'numeric',
+    });
   } catch (error) {
-    return '-'
+    return '-';
   }
 }
 </script>
@@ -67,13 +67,9 @@ function formatDate(date) {
   <LayoutAuthenticated>
     <Head title="Cursos" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiBookshelf"
-        title="Cursos"
-        main
-      >
-      <div class="flex items-center gap-3">
-        <BaseButton
+      <SectionTitleLineWithButton :icon="mdiBookshelf" title="Cursos" main>
+        <div class="flex items-center gap-3">
+          <BaseButton
             href="/cursos"
             :icon="mdiEye"
             label="Ver Cursos"
@@ -83,16 +79,16 @@ function formatDate(date) {
             target="_blank"
           />
 
-        <BaseButton
-          v-if="can.delete"
-          :route-name="route('admin.cursos.create')"
-          :icon="mdiPlus"
-          label="Novo Curso"
-          color="info"
-          rounded-full
-          small
-        />
-      </div>
+          <BaseButton
+            v-if="can.delete"
+            :route-name="route('admin.cursos.create')"
+            :icon="mdiPlus"
+            label="Novo Curso"
+            color="info"
+            rounded-full
+            small
+          />
+        </div>
       </SectionTitleLineWithButton>
       <NotificationBar
         :key="Date.now()"
@@ -109,16 +105,7 @@ function formatDate(date) {
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  text-gray-900
-                "
+                class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 placeholder="Search"
               />
               <BaseButton
@@ -132,9 +119,8 @@ function formatDate(date) {
         </form>
       </CardBox>
       <CardBox class="mb-6" has-table>
-
         <table>
-            <thead>
+          <thead>
             <tr>
               <th>
                 <Sort label="Curso" attribute="nome" />
@@ -157,15 +143,10 @@ function formatDate(date) {
 
           <tbody>
             <tr v-for="curso in cursos.data" :key="curso.id">
-                <td data-label="nome">
+              <td data-label="nome">
                 <Link
                   :href="route('admin.cursos.show', curso.id)"
-                  class="
-                    no-underline
-                    hover:underline
-                    text-cyan-600
-                    dark:text-cyan-400
-                  "
+                  class="no-underline hover:underline text-cyan-600 dark:text-cyan-400"
                 >
                   {{ curso.nome }}
                 </Link>
@@ -185,11 +166,16 @@ function formatDate(date) {
                 <span
                   :class="{
                     'px-2 py-1 rounded-full text-xs font-medium': true,
-                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': curso.status === 'aberto',
-                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': curso.status === 'em andamento',
-                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': curso.status === 'concluido',
-                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': curso.status === 'cancelado',
-                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': curso.status === 'suspenso',
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                      curso.status === 'aberto',
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200':
+                      curso.status === 'em andamento',
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200':
+                      curso.status === 'concluido',
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
+                      curso.status === 'cancelado',
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
+                      curso.status === 'suspenso',
                   }"
                 >
                   {{ curso.status }}
@@ -223,12 +209,11 @@ function formatDate(date) {
                   />
                 </BaseButtons>
               </td>
-
             </tr>
           </tbody>
         </table>
         <div class="py-4">
-            <Pagination v-if="cursos && cursos.links" :data="cursos" />
+          <Pagination v-if="cursos && cursos.links" :data="cursos" />
         </div>
       </CardBox>
     </SectionMain>

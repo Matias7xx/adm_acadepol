@@ -7,12 +7,7 @@ use Spatie\Permission\Models\Role as OriginalRole;
 
 class Role extends OriginalRole
 {
-    use LaravelCategories;
+  use LaravelCategories;
 
-    protected $fillable = [
-        'name',
-        'guard_name',
-        'updated_at',
-        'created_at',
-    ];
+  protected $fillable = ['name', 'guard_name', 'updated_at', 'created_at'];
 }

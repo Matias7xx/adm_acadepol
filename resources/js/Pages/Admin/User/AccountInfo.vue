@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiAccount,
   mdiAccountCircle,
@@ -14,25 +14,25 @@ import {
   mdiOfficeBuilding,
   mdiPhone,
   mdiCalendar,
-} from "@mdi/js"
-import SectionMain from "@/Components/SectionMain.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseDivider from "@/Components/BaseDivider.vue"
-import FormField from "@/Components/FormField.vue"
-import FormControl from "@/Components/FormControl.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import InputMask from "@/Components/InputMask.vue"
+} from '@mdi/js';
+import SectionMain from '@/Components/SectionMain.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import InputMask from '@/Components/InputMask.vue';
 
 const props = defineProps({
   user: {
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const profileForm = useForm({
   name: props.user.name,
@@ -43,14 +43,16 @@ const profileForm = useForm({
   orgao: props.user.orgao || '',
   lotacao: props.user.lotacao || '',
   telefone: props.user.telefone || '',
-  data_nascimento: props.user.data_nascimento ? props.user.data_nascimento.split('T')[0] : '',
-})
+  data_nascimento: props.user.data_nascimento
+    ? props.user.data_nascimento.split('T')[0]
+    : '',
+});
 
 const passwordForm = useForm({
   old_password: null,
   new_password: null,
   confirm_password: null,
-})
+});
 </script>
 
 <template>
@@ -98,7 +100,7 @@ const passwordForm = useForm({
               </div>
             </FormControl>
           </FormField>
-          
+
           <FormField
             label="E-mail"
             help="Obrigatório. Seu e-mail"
@@ -130,7 +132,10 @@ const passwordForm = useForm({
               required
               :error="profileForm.errors.matricula"
             >
-              <div class="text-red-400 text-sm" v-if="profileForm.errors.matricula">
+              <div
+                class="text-red-400 text-sm"
+                v-if="profileForm.errors.matricula"
+              >
                 {{ profileForm.errors.matricula }}
               </div>
             </FormControl>
@@ -141,10 +146,20 @@ const passwordForm = useForm({
             :class="{ 'text-red-400': profileForm.errors.cpf }"
           >
             <div class="relative rounded-md shadow-sm">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
                 <span class="text-gray-500 sm:text-sm">
-                  <svg viewBox="0 0 24 24" width="16" height="16" class="inline-block">
-                    <path fill="currentColor" d="M2,3H22C23.05,3 24,3.95 24,5V19C24,20.05 23.05,21 22,21H2C0.95,21 0,20.05 0,19V5C0,3.95 0.95,3 2,3M14,6V7H22V6H14M14,8V9H21.5L22,9V8H14M14,10V11H21V10H14M8,13.91C6,13.91 2,15 2,17V18H14V17C14,15 10,13.91 8,13.91M8,6A3,3 0 0,0 5,9A3,3 0 0,0 8,12A3,3 0 0,0 11,9A3,3 0 0,0 8,6Z"></path>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    class="inline-block"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M2,3H22C23.05,3 24,3.95 24,5V19C24,20.05 23.05,21 22,21H2C0.95,21 0,20.05 0,19V5C0,3.95 0.95,3 2,3M14,6V7H22V6H14M14,8V9H21.5L22,9V8H14M14,10V11H21V10H14M8,13.91C6,13.91 2,15 2,17V18H14V17C14,15 10,13.91 8,13.91M8,6A3,3 0 0,0 5,9A3,3 0 0,0 8,12A3,3 0 0,0 11,9A3,3 0 0,0 8,6Z"
+                    ></path>
                   </svg>
                 </span>
               </div>
@@ -203,7 +218,10 @@ const passwordForm = useForm({
               name="lotacao"
               :error="profileForm.errors.lotacao"
             >
-              <div class="text-red-400 text-sm" v-if="profileForm.errors.lotacao">
+              <div
+                class="text-red-400 text-sm"
+                v-if="profileForm.errors.lotacao"
+              >
                 {{ profileForm.errors.lotacao }}
               </div>
             </FormControl>
@@ -214,10 +232,20 @@ const passwordForm = useForm({
             :class="{ 'text-red-400': profileForm.errors.telefone }"
           >
             <div class="relative rounded-md shadow-sm">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
                 <span class="text-gray-500 sm:text-sm">
-                  <svg viewBox="0 0 24 24" width="16" height="16" class="inline-block">
-                    <path fill="currentColor" d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"></path>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    class="inline-block"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"
+                    ></path>
                   </svg>
                 </span>
               </div>
@@ -229,7 +257,10 @@ const passwordForm = useForm({
                 name="telefone"
               />
             </div>
-            <div class="text-red-400 text-sm" v-if="profileForm.errors.telefone">
+            <div
+              class="text-red-400 text-sm"
+              v-if="profileForm.errors.telefone"
+            >
               {{ profileForm.errors.telefone }}
             </div>
           </FormField>
@@ -245,7 +276,10 @@ const passwordForm = useForm({
               name="data_nascimento"
               :error="profileForm.errors.data_nascimento"
             >
-              <div class="text-red-400 text-sm" v-if="profileForm.errors.data_nascimento">
+              <div
+                class="text-red-400 text-sm"
+                v-if="profileForm.errors.data_nascimento"
+              >
                 {{ profileForm.errors.data_nascimento }}
               </div>
             </FormControl>

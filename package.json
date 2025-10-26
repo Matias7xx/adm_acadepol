@@ -3,28 +3,31 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "format": "prettier --write \"resources/**/*.{js,vue,css}\" \"app/**/*\""
     },
     "devDependencies": {
-        "@inertiajs/vue3": "^1.0.0",
+        "@inertiajs/vue3": "^2.2.11",
         "@mdi/js": "^7.0.96",
+        "@prettier/plugin-php": "^0.24.0",
         "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/line-clamp": "^0.4.0",
-        "@vitejs/plugin-vue": "^5.0.0",
+        "@vitejs/plugin-vue": "^5.0.4",
         "autoprefixer": "^10.4.12",
         "axios": "^1.6.4",
         "chart.js": "^3.9.1",
-        "laravel-vite-plugin": "^1.0",
+        "laravel-vite-plugin": "^1.0.0",
         "lodash": "^4.17.19",
         "numeral": "^2.0.6",
         "pinia": "^2.0.17",
         "postcss": "^8.4.31",
+        "prettier": "^3.6.2",
         "tailwindcss": "^3.2.1",
-        "vite": "^5.0",
-        "vue": "^3.4.0"
+        "vite": "^5.0.12",
+        "vue": "^3.5.22"
     },
     "dependencies": {
-        "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+        "@ckeditor/ckeditor5-build-classic": "^39.0.2",
         "@ckeditor/ckeditor5-upload": "^45.1.0",
         "@ckeditor/ckeditor5-vue": "^4.0.1",
         "@headlessui/vue": "^1.7.23",

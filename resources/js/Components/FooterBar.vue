@@ -1,9 +1,9 @@
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 import { containerMaxW } from '@/config.js';
-import BaseLevel from '@/Components/BaseLevel.vue'
+import BaseLevel from '@/Components/BaseLevel.vue';
 
-const year = computed(() => new Date().getFullYear())
+const year = computed(() => new Date().getFullYear());
 </script>
 
 <template>

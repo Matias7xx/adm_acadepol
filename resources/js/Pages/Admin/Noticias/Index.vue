@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiNewspaper,
   mdiPlus,
@@ -7,17 +7,17 @@ import {
   mdiTrashCan,
   mdiAlertBoxOutline,
   mdiStar,
-  mdiStarOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+  mdiStarOutline,
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
+import Sort from '@/Components/Admin/Sort.vue';
 
 const props = defineProps({
   noticias: {
@@ -32,25 +32,25 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   search: props.filters.search,
   status: props.filters.status || '',
   destaque: props.filters.destaque || '',
-})
+});
 
-const formDelete = useForm({})
-const formDestaque = useForm({})
+const formDelete = useForm({});
+const formDestaque = useForm({});
 
 function destroy(id) {
-  if (confirm("Tem certeza de que deseja remover esta notícia?")) {
-    formDelete.delete(route("admin.noticias.destroy", id))
+  if (confirm('Tem certeza de que deseja remover esta notícia?')) {
+    formDelete.delete(route('admin.noticias.destroy', id));
   }
 }
 
 function toggleDestaque(id) {
-  formDestaque.patch(route("admin.noticias.toggle-destaque", id))
+  formDestaque.patch(route('admin.noticias.toggle-destaque', id));
 }
 
 const statusOptions = [
@@ -58,20 +58,24 @@ const statusOptions = [
   { value: 'rascunho', label: 'Rascunho' },
   { value: 'publicado', label: 'Publicado' },
   { value: 'arquivado', label: 'Arquivado' },
-]
+];
 
 const destaqueOptions = [
   { value: '', label: 'Todos' },
   { value: 'true', label: 'Em destaque' },
   { value: 'false', label: 'Sem destaque' },
-]
+];
 
 function getStatusClass(status) {
   switch (status) {
-    case 'publicado': return 'bg-green-100 text-green-800'
-    case 'rascunho': return 'bg-gray-100 text-gray-800'
-    case 'arquivado': return 'bg-orange-100 text-orange-800'
-    default: return 'bg-gray-100 text-gray-800'
+    case 'publicado':
+      return 'bg-green-100 text-green-800';
+    case 'rascunho':
+      return 'bg-gray-100 text-gray-800';
+    case 'arquivado':
+      return 'bg-orange-100 text-orange-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
   }
 }
 </script>
@@ -80,13 +84,9 @@ function getStatusClass(status) {
   <LayoutAuthenticated>
     <Head title="Notícias" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiNewspaper"
-        title="Notícias"
-        main
-      >
-      <div class="flex items-center gap-3">
-        <BaseButton
+      <SectionTitleLineWithButton :icon="mdiNewspaper" title="Notícias" main>
+        <div class="flex items-center gap-3">
+          <BaseButton
             href="/noticias"
             :icon="mdiEye"
             label="Ver Notícias"
@@ -96,16 +96,16 @@ function getStatusClass(status) {
             target="_blank"
           />
 
-        <BaseButton
-          v-if="can.create"
-          :route-name="route('admin.noticias.create')"
-          :icon="mdiPlus"
-          label="Cadastrar Notícia"
-          color="info"
-          rounded-full
-          small
-        />
-      </div>
+          <BaseButton
+            v-if="can.create"
+            :route-name="route('admin.noticias.create')"
+            :icon="mdiPlus"
+            label="Cadastrar Notícia"
+            color="info"
+            rounded-full
+            small
+          />
+        </div>
       </SectionTitleLineWithButton>
       <NotificationBar
         :key="Date.now()"
@@ -122,17 +122,7 @@ function getStatusClass(status) {
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  text-gray-900
-                  flex-grow
-                "
+                class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 flex-grow"
                 placeholder="Buscar notícias..."
               />
               <BaseButton
@@ -143,22 +133,30 @@ function getStatusClass(status) {
               />
             </div>
             <div class="flex gap-2 pl-4">
-              <select 
+              <select
                 v-model="form.status"
                 class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 @change="form.get(route('admin.noticias.index'))"
               >
-                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+                <option
+                  v-for="option in statusOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
 
-              <select 
+              <select
                 v-model="form.destaque"
                 class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 @change="form.get(route('admin.noticias.index'))"
               >
-                <option v-for="option in destaqueOptions" :key="option.value" :value="option.value">
+                <option
+                  v-for="option in destaqueOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -194,12 +192,7 @@ function getStatusClass(status) {
               <td data-label="titulo">
                 <Link
                   :href="route('admin.noticias.show', noticia.id)"
-                  class="
-                    no-underline
-                    hover:underline
-                    text-cyan-600
-                    dark:text-cyan-400
-                  "
+                  class="no-underline hover:underline text-cyan-600 dark:text-cyan-400"
                 >
                   {{ noticia.titulo }}
                 </Link>
@@ -208,8 +201,8 @@ function getStatusClass(status) {
                 {{ new Date(noticia.data_publicacao).toLocaleDateString() }}
               </td>
               <td data-label="status">
-                <span 
-                  class="px-2 py-1 text-xs font-medium rounded" 
+                <span
+                  class="px-2 py-1 text-xs font-medium rounded"
                   :class="getStatusClass(noticia.status)"
                 >
                   {{ noticia.status }}

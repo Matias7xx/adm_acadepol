@@ -1,74 +1,76 @@
 <script setup>
-import { computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { getButtonColor } from '@/colors.js'
-import BaseIcon from '@/Components/BaseIcon.vue'
+import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { getButtonColor } from '@/colors.js';
+import BaseIcon from '@/Components/BaseIcon.vue';
 
 const props = defineProps({
   label: {
     type: [String, Number],
-    default: null
+    default: null,
   },
   icon: {
     type: String,
-    default: null
+    default: null,
   },
   href: {
     type: String,
-    default: null
+    default: null,
   },
   target: {
     type: String,
-    default: null
+    default: null,
   },
   routeName: {
     type: String,
-    default: null
+    default: null,
   },
   type: {
     type: String,
-    default: null
+    default: null,
   },
   color: {
     type: String,
-    default: 'white'
+    default: 'white',
   },
   as: {
     type: String,
-    default: null
+    default: null,
   },
   small: Boolean,
   outline: Boolean,
   active: Boolean,
   disabled: Boolean,
-  roundedFull: Boolean
-})
+  roundedFull: Boolean,
+});
 
 const is = computed(() => {
   if (props.as) {
-    return props.as
+    return props.as;
   }
 
   if (props.routeName) {
-    return Link
+    return Link;
   }
 
   if (props.href) {
-    return 'a'
+    return 'a';
   }
 
-  return 'button'
-})
+  return 'button';
+});
 
 const computedType = computed(() => {
   if (is.value === 'button') {
-    return props.type ?? 'button'
+    return props.type ?? 'button';
   }
 
-  return null
-})
+  return null;
+});
 
-const labelClass = computed(() => props.small && props.icon ? 'px-1' : 'px-2')
+const labelClass = computed(() =>
+  props.small && props.icon ? 'px-1' : 'px-2'
+);
 
 const componentClass = computed(() => {
   const base = [
@@ -84,28 +86,24 @@ const componentClass = computed(() => {
     'border',
     props.roundedFull ? 'rounded-full' : 'rounded',
     props.active ? 'ring ring-black dark:ring-white' : 'ring-blue-700',
-    getButtonColor(props.color, props.outline, !props.disabled)
-  ]
+    getButtonColor(props.color, props.outline, !props.disabled),
+  ];
 
   if (props.small) {
-    base.push(
-      'text-sm',
-      props.roundedFull ? 'px-3 py-1' : 'p-1'
-    )
+    base.push('text-sm', props.roundedFull ? 'px-3 py-1' : 'p-1');
   } else {
-    base.push(
-      'py-2',
-      props.roundedFull ? 'px-6' : 'px-3'
-    )
+    base.push('py-2', props.roundedFull ? 'px-6' : 'px-3');
   }
-
 
   if (props.disabled) {
-    base.push('cursor-not-allowed', props.outline ? 'opacity-50' : 'opacity-70')
+    base.push(
+      'cursor-not-allowed',
+      props.outline ? 'opacity-50' : 'opacity-70'
+    );
   }
 
-  return base
-})
+  return base;
+});
 </script>
 
 <template>
@@ -117,13 +115,7 @@ const componentClass = computed(() => {
     :target="target"
     :disabled="disabled"
   >
-    <BaseIcon
-      v-if="icon"
-      :path="icon"
-    />
-    <span
-      v-if="label"
-      :class="labelClass"
-    >{{ label }}</span>
+    <BaseIcon v-if="icon" :path="icon" />
+    <span v-if="label" :class="labelClass">{{ label }}</span>
   </component>
 </template>

@@ -1,36 +1,36 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiAccountKey,
   mdiArrowLeftBoldOutline,
   mdiFileDocument,
   mdiSchool,
   mdiMapMarker,
-  mdiCalendarRange
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import { ref } from 'vue'
+  mdiCalendarRange,
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import { ref } from 'vue';
 
 const modalidadeOptions = {
-  'presencial': 'presencial',
-  'online': 'online', 
-  'híbrido': 'híbrido'
+  presencial: 'presencial',
+  online: 'online',
+  híbrido: 'híbrido',
 };
 
 const statusOptions = {
-  'aberto': 'aberto',
+  aberto: 'aberto',
   'em andamento': 'em andamento',
-  'concluído': 'concluído',
-  'cancelado': 'cancelado'
+  concluído: 'concluído',
+  cancelado: 'cancelado',
 };
 
 const form = useForm({
@@ -50,7 +50,7 @@ const form = useForm({
   certificacao_modelo: '',
   status: 'aberto',
   imagem_file: null,
-})
+});
 
 // Para gerenciar campos de array
 const novoPreRequisito = ref('');
@@ -64,7 +64,7 @@ const adicionarPreRequisito = () => {
   }
 };
 
-const removerPreRequisito = (index) => {
+const removerPreRequisito = index => {
   form.pre_requisitos.splice(index, 1);
 };
 
@@ -75,11 +75,11 @@ const adicionarItemEnxoval = () => {
   }
 };
 
-const removerItemEnxoval = (index) => {
+const removerItemEnxoval = index => {
   form.enxoval.splice(index, 1);
 };
 
-const handleImageUpload = (event) => {
+const handleImageUpload = event => {
   const file = event.target.files[0];
   if (file) {
     form.imagem_file = file;
@@ -112,13 +112,11 @@ const submit = () => {
           small
         />
       </SectionTitleLineWithButton>
-      <CardBox
-        form
-      >
+      <CardBox form>
         <!-- Informações Básicas -->
         <div class="p-4 rounded-lg mb-6">
           <h3 class="font-semibold text-lg mb-4">Informações Básicas</h3>
-          
+
           <FormField
             label="Nome do Curso"
             :class="{ 'text-red-400': form.errors.nome }"
@@ -150,7 +148,7 @@ const submit = () => {
               </div>
             </FormControl>
           </FormField>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Data de Início"
@@ -162,7 +160,10 @@ const submit = () => {
                 type="date"
                 :error="form.errors.data_inicio"
               >
-                <div class="text-red-400 text-sm" v-if="form.errors.data_inicio">
+                <div
+                  class="text-red-400 text-sm"
+                  v-if="form.errors.data_inicio"
+                >
                   {{ form.errors.data_inicio }}
                 </div>
               </FormControl>
@@ -185,11 +186,11 @@ const submit = () => {
             </FormField>
           </div>
         </div>
-        
+
         <!-- Detalhes do Curso -->
         <div class="p-4 rounded-lg mb-6">
           <h3 class="font-semibold text-lg mb-4">Detalhes do Curso</h3>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Carga Horária (horas)"
@@ -202,7 +203,10 @@ const submit = () => {
                 placeholder="Ex: 40"
                 :error="form.errors.carga_horaria"
               >
-                <div class="text-red-400 text-sm" v-if="form.errors.carga_horaria">
+                <div
+                  class="text-red-400 text-sm"
+                  v-if="form.errors.carga_horaria"
+                >
                   {{ form.errors.carga_horaria }}
                 </div>
               </FormControl>
@@ -219,24 +223,27 @@ const submit = () => {
                 placeholder="Ex: 30"
                 :error="form.errors.capacidade_maxima"
               >
-                <div class="text-red-400 text-sm" v-if="form.errors.capacidade_maxima">
+                <div
+                  class="text-red-400 text-sm"
+                  v-if="form.errors.capacidade_maxima"
+                >
                   {{ form.errors.capacidade_maxima }}
                 </div>
               </FormControl>
             </FormField>
           </div>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Modalidade do Curso"
               :class="{ 'text-red-400': form.errors.modalidade }"
             >
-            <FormControl
-            v-model="form.modalidade"
-            type="select"
-            :options="modalidadeOptions"
-            :error="form.errors.modalidade"
-            >
+              <FormControl
+                v-model="form.modalidade"
+                type="select"
+                :options="modalidadeOptions"
+                :error="form.errors.modalidade"
+              >
                 <div class="text-red-400 text-sm" v-if="form.errors.modalidade">
                   {{ form.errors.modalidade }}
                 </div>
@@ -259,7 +266,7 @@ const submit = () => {
               </FormControl>
             </FormField>
           </div>
-          
+
           <FormField
             label="Localização"
             :class="{ 'text-red-400': form.errors.localizacao }"
@@ -276,7 +283,7 @@ const submit = () => {
               </div>
             </FormControl>
           </FormField>
-          
+
           <FormField
             label="Certificação"
             :class="{ 'text-red-400': form.errors.certificacao }"
@@ -294,16 +301,14 @@ const submit = () => {
             </div>
           </FormField>
         </div>
-        
+
         <!-- Recursos e Requisitos -->
         <div class="p-4 rounded-lg mb-6">
           <h3 class="font-semibold text-lg mb-4">Recursos e Requisitos</h3>
-          
+
           <!-- Pré-requisitos (lista) -->
           <div class="mb-6">
-            <FormField
-              label="Pré-requisitos"
-            >
+            <FormField label="Pré-requisitos">
               <div class="flex mb-2">
                 <FormControl
                   v-model="novoPreRequisito"
@@ -318,11 +323,22 @@ const submit = () => {
                   @click="adicionarPreRequisito"
                 />
               </div>
-              <div v-if="form.pre_requisitos && form.pre_requisitos.length > 0" class="mt-2">
+              <div
+                v-if="form.pre_requisitos && form.pre_requisitos.length > 0"
+                class="mt-2"
+              >
                 <ul class="list-disc pl-5">
-                  <li v-for="(item, index) in form.pre_requisitos" :key="index" class="mb-1 flex items-center">
+                  <li
+                    v-for="(item, index) in form.pre_requisitos"
+                    :key="index"
+                    class="mb-1 flex items-center"
+                  >
                     <span class="flex-grow">{{ item }}</span>
-                    <button type="button" @click="removerPreRequisito(index)" class="text-red-500 hover:text-red-700">
+                    <button
+                      type="button"
+                      @click="removerPreRequisito(index)"
+                      class="text-red-500 hover:text-red-700"
+                    >
                       <span>Remover</span>
                     </button>
                   </li>
@@ -331,7 +347,10 @@ const submit = () => {
               <div v-else class="text-gray-500 mt-2">
                 Nenhum pré-requisito adicionado.
               </div>
-              <div class="text-red-400 text-sm" v-if="form.errors.pre_requisitos">
+              <div
+                class="text-red-400 text-sm"
+                v-if="form.errors.pre_requisitos"
+              >
                 {{ form.errors.pre_requisitos }}
               </div>
             </FormField>
@@ -339,9 +358,7 @@ const submit = () => {
 
           <!-- Enxoval (lista) -->
           <div class="mb-6">
-            <FormField
-              label="Enxoval (itens necessários)"
-            >
+            <FormField label="Enxoval (itens necessários)">
               <div class="flex mb-2">
                 <FormControl
                   v-model="novoItemEnxoval"
@@ -358,9 +375,17 @@ const submit = () => {
               </div>
               <div v-if="form.enxoval && form.enxoval.length > 0" class="mt-2">
                 <ul class="list-disc pl-5">
-                  <li v-for="(item, index) in form.enxoval" :key="index" class="mb-1 flex items-center">
+                  <li
+                    v-for="(item, index) in form.enxoval"
+                    :key="index"
+                    class="mb-1 flex items-center"
+                  >
                     <span class="flex-grow">{{ item }}</span>
-                    <button type="button" @click="removerItemEnxoval(index)" class="text-red-500 hover:text-red-700">
+                    <button
+                      type="button"
+                      @click="removerItemEnxoval(index)"
+                      class="text-red-500 hover:text-red-700"
+                    >
                       <span>Remover</span>
                     </button>
                   </li>
@@ -375,14 +400,12 @@ const submit = () => {
             </FormField>
           </div>
         </div>
-        
+
         <!-- Imagem do Curso -->
         <div class="p-4 rounded-lg mb-6">
           <h3 class="font-semibold text-lg mb-4">Imagem do Curso</h3>
-          
-          <FormField
-            label="Upload de Imagem"
-          >
+
+          <FormField label="Upload de Imagem">
             <FormControl
               type="file"
               accept="image/*"
@@ -393,7 +416,9 @@ const submit = () => {
                 {{ form.errors.imagem_file }}
               </div>
             </FormControl>
-            <p class="text-sm text-gray-500 mt-1">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Formatos aceitos: JPG, PNG, GIF (máx. 2MB)
+            </p>
           </FormField>
         </div>
 

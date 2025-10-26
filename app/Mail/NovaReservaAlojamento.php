@@ -12,52 +12,49 @@ use Illuminate\Queue\SerializesModels;
 
 class NovaReservaAlojamento extends Mailable implements ShouldQueue
 {
+  //A classe Mailable referencia o template Blade, e o Controller acessa as configurações do arquivo de configuração.
 
-    //A classe Mailable referencia o template Blade, e o Controller acessa as configurações do arquivo de configuração.
+  use Queueable, SerializesModels;
 
-    use Queueable, SerializesModels;
+  public $alojamento;
 
-    public $alojamento;
+  /**
+   * Create a new message instance.
+   */
+  public function __construct(Alojamento $alojamento)
+  {
+    $this->alojamento = $alojamento;
+  }
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct(Alojamento $alojamento)
-    {
-        $this->alojamento = $alojamento;
-    }
+  /**
+   * Get the message envelope.
+   */
+  public function envelope(): Envelope
+  {
+    return new Envelope(subject: 'Nova Solicitação de Reserva de Alojamento');
+  }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Nova Solicitação de Reserva de Alojamento',
-        );
-    }
+  /**
+   * Get the message content definition.
+   */
+  public function content(): Content
+  {
+    return new Content(
+      markdown: 'emails.alojamento.nova-reserva',
+      with: [
+        'alojamento' => $this->alojamento,
+        'url' => route('admin.alojamento.show', $this->alojamento->id),
+      ],
+    );
+  }
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.alojamento.nova-reserva',
-            with: [
-                'alojamento' => $this->alojamento,
-                'url' => route('admin.alojamento.show', $this->alojamento->id),
-            ],
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
-    }
+  /**
+   * Get the attachments for the message.
+   *
+   * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+   */
+  public function attachments(): array
+  {
+    return [];
+  }
 }

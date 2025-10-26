@@ -1,41 +1,34 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiMenu,
-  mdiArrowLeftBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { mdiMenu, mdiArrowLeftBoldOutline } from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
 
 const props = defineProps({
   menu: {
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   _method: 'put',
   name: props.menu.name,
-  description: props.menu.description
-})
+  description: props.menu.description,
+});
 </script>
 
 <template>
   <LayoutAuthenticated>
     <Head title="Update menu" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiMenu"
-        title="Update menu"
-        main
-      >
+      <SectionTitleLineWithButton :icon="mdiMenu" title="Update menu" main>
         <BaseButton
           :route-name="route('admin.menu.index')"
           :icon="mdiArrowLeftBoldOutline"
@@ -49,10 +42,7 @@ const form = useForm({
         form
         @submit.prevent="form.post(route('admin.menu.update', props.menu.id))"
       >
-        <FormField
-          label="Name"
-          :class="{ 'text-red-400': form.errors.name }"
-        >
+        <FormField label="Name" :class="{ 'text-red-400': form.errors.name }">
           <FormControl
             v-model="form.name"
             type="text"
@@ -64,10 +54,8 @@ const form = useForm({
             </div>
           </FormControl>
         </FormField>
-        <FormField
-          label="Machine Name"
-        >
-        <div>{{ props.menu.machine_name }}</div>
+        <FormField label="Machine Name">
+          <div>{{ props.menu.machine_name }}</div>
         </FormField>
         <FormField
           label="Description"

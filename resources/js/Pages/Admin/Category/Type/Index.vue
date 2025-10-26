@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiSelectGroup,
   mdiPlus,
@@ -7,16 +7,16 @@ import {
   mdiSquareEditOutline,
   mdiTrashCan,
   mdiAlertBoxOutline,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
+import Sort from '@/Components/Admin/Sort.vue';
 
 const props = defineProps({
   categoryTypes: {
@@ -31,17 +31,17 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   search: props.filters.search,
-})
+});
 
-const formDelete = useForm({})
+const formDelete = useForm({});
 
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
-    formDelete.delete(route("admin.category.type.destroy", id))
+  if (confirm('Are you sure you want to delete?')) {
+    formDelete.delete(route('admin.category.type.destroy', id));
   }
 }
 </script>
@@ -80,16 +80,7 @@ function destroy(id) {
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  text-gray-900
-                "
+                class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 placeholder="Search"
               />
               <BaseButton
@@ -109,20 +100,21 @@ function destroy(id) {
               <th>
                 <Sort label="Name" attribute="name" />
               </th>
-              <th>
-                Description
-              </th>
+              <th>Description</th>
               <th v-if="can.edit || can.delete || can.manage">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="categoryType in categoryTypes.data" :key="categoryType.id">
+            <tr
+              v-for="categoryType in categoryTypes.data"
+              :key="categoryType.id"
+            >
               <td data-label="Name">
-                  {{ categoryType.name }}
+                {{ categoryType.name }}
               </td>
-               <td data-label="Description">
-                  {{ categoryType.description }}
+              <td data-label="Description">
+                {{ categoryType.description }}
               </td>
               <td
                 v-if="can.edit || can.delete || can.manage"
@@ -131,14 +123,18 @@ function destroy(id) {
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
                     v-if="can.manage"
-                    :route-name="route('admin.category.type.item.index', categoryType.id)"
+                    :route-name="
+                      route('admin.category.type.item.index', categoryType.id)
+                    "
                     color="warning"
-                    :icon="mdiCogOutline "
+                    :icon="mdiCogOutline"
                     small
                   />
                   <BaseButton
                     v-if="can.edit"
-                    :route-name="route('admin.category.type.edit', categoryType.id)"
+                    :route-name="
+                      route('admin.category.type.edit', categoryType.id)
+                    "
                     color="info"
                     :icon="mdiSquareEditOutline"
                     small

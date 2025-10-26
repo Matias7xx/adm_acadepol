@@ -1,21 +1,21 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiAccountKey,
   mdiPlus,
   mdiSquareEditOutline,
   mdiTrashCan,
   mdiAlertBoxOutline,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
+import Sort from '@/Components/Admin/Sort.vue';
 
 const props = defineProps({
   permissions: {
@@ -30,17 +30,17 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   search: props.filters.search,
-})
+});
 
-const formDelete = useForm({})
+const formDelete = useForm({});
 
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
-    formDelete.delete(route("admin.permission.destroy", id))
+  if (confirm('Are you sure you want to delete?')) {
+    formDelete.delete(route('admin.permission.destroy', id));
   }
 }
 </script>
@@ -79,16 +79,7 @@ function destroy(id) {
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  text-gray-900
-                "
+                class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 placeholder="Search"
               />
               <BaseButton
@@ -117,12 +108,7 @@ function destroy(id) {
               <td data-label="Name">
                 <Link
                   :href="route('admin.permission.show', permission.id)"
-                  class="
-                    no-underline
-                    hover:underline
-                    text-cyan-600
-                    dark:text-cyan-400
-                  "
+                  class="no-underline hover:underline text-cyan-600 dark:text-cyan-400"
                 >
                   {{ permission.name }}
                 </Link>

@@ -1,21 +1,21 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiAccountKey,
   mdiPlus,
   mdiSquareEditOutline,
   mdiTrashCan,
   mdiAlertBoxOutline,
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import Pagination from "@/Components/Admin/Pagination.vue"
-import Sort from "@/Components/Admin/Sort.vue"
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
+import Sort from '@/Components/Admin/Sort.vue';
 
 const props = defineProps({
   users: {
@@ -30,34 +30,34 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   search: props.filters.search,
-})
+});
 
-const formDelete = useForm({})
+const formDelete = useForm({});
 
 function destroy(id) {
-  if (confirm("Tem certeza de que deseja remover o usuário?")) {
-    formDelete.delete(route("admin.user.destroy", id))
+  if (confirm('Tem certeza de que deseja remover o usuário?')) {
+    formDelete.delete(route('admin.user.destroy', id));
   }
 }
 
 // Formatar data se disponível
-const formatDate = (dateString) => {
+const formatDate = dateString => {
   if (!dateString) return '-';
-  
+
   const date = new Date(dateString);
   return date.toLocaleDateString('pt-BR');
-}
+};
 
-const formatPhone = (phone) => {
+const formatPhone = phone => {
   if (!phone) return '-';
-  
+
   // Remove caracteres não numéricos
   const cleanPhone = phone.replace(/\D/g, '');
-  
+
   if (cleanPhone.length === 11) {
     // Formata como (XX) XXXXX-XXXX
     return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
@@ -65,21 +65,16 @@ const formatPhone = (phone) => {
     // Formata como (XX) XXXX-XXXX
     return cleanPhone.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
-  
-  return phone;
-}
 
+  return phone;
+};
 </script>
 
 <template>
   <LayoutAuthenticated>
     <Head title="Usuários" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiAccountKey"
-        title="Usuários"
-        main
-      >
+      <SectionTitleLineWithButton :icon="mdiAccountKey" title="Usuários" main>
         <BaseButton
           v-if="can.create"
           :route-name="route('admin.user.create')"
@@ -105,16 +100,7 @@ const formatPhone = (phone) => {
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  text-gray-900
-                "
+                class="rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900"
                 placeholder="Pesquisar por nome, matrícula ou email"
               />
               <BaseButton
@@ -152,12 +138,7 @@ const formatPhone = (phone) => {
               <td data-label="Nome">
                 <Link
                   :href="route('admin.user.show', user.id)"
-                  class="
-                    no-underline
-                    hover:underline
-                    text-cyan-600
-                    dark:text-cyan-400
-                  "
+                  class="no-underline hover:underline text-cyan-600 dark:text-cyan-400"
                 >
                   {{ user.name }}
                 </Link>

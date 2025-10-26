@@ -1,21 +1,21 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiArrowLeft,
   mdiContentSave,
   mdiAccountKey,
   mdiAlertBoxOutline, // Adicionar importação faltante
-} from "@mdi/js";
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue";
-import SectionMain from "@/Components/SectionMain.vue";
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue";
-import CardBox from "@/Components/CardBox.vue";
-import BaseButton from "@/Components/BaseButton.vue";
-import FormField from "@/Components/FormField.vue";
-import FormControl from "@/Components/FormControl.vue";
-import FormFilePicker from "@/Components/FormFilePicker.vue";
-import BaseButtons from "@/Components/BaseButtons.vue";
-import NotificationBar from "@/Components/NotificationBar.vue";
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormFilePicker from '@/Components/FormFilePicker.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -30,13 +30,21 @@ const props = defineProps({
 });
 
 // Converter as strings JSON para objetos JavaScript
-const preRequisitos = ref(props.curso.pre_requisitos ? 
-  (typeof props.curso.pre_requisitos === 'string' ? 
-    JSON.parse(props.curso.pre_requisitos) : props.curso.pre_requisitos) : []);
+const preRequisitos = ref(
+  props.curso.pre_requisitos
+    ? typeof props.curso.pre_requisitos === 'string'
+      ? JSON.parse(props.curso.pre_requisitos)
+      : props.curso.pre_requisitos
+    : []
+);
 
-const enxoval = ref(props.curso.enxoval ? 
-  (typeof props.curso.enxoval === 'string' ? 
-    JSON.parse(props.curso.enxoval) : props.curso.enxoval) : []);
+const enxoval = ref(
+  props.curso.enxoval
+    ? typeof props.curso.enxoval === 'string'
+      ? JSON.parse(props.curso.enxoval)
+      : props.curso.enxoval
+    : []
+);
 
 const form = useForm({
   nome: props.curso.nome,
@@ -56,19 +64,19 @@ const form = useForm({
   status: props.curso.status,
 });
 
-console.log("Formulário inicializado:", form);
+console.log('Formulário inicializado:', form);
 
 const modalidadeOptions = {
-  'presencial': 'presencial',
-  'online': 'online', 
-  'híbrido': 'híbrido'
+  presencial: 'presencial',
+  online: 'online',
+  híbrido: 'híbrido',
 };
 
 const statusOptions = {
-  'aberto': 'aberto',
+  aberto: 'aberto',
   'em andamento': 'em andamento',
-  'concluído': 'concluído',
-  'cancelado': 'cancelado'
+  concluído: 'concluído',
+  cancelado: 'cancelado',
 };
 
 // Para gerenciar campos de array
@@ -82,7 +90,7 @@ const adicionarPreRequisito = () => {
   }
 };
 
-const removerPreRequisito = (index) => {
+const removerPreRequisito = index => {
   form.pre_requisitos.splice(index, 1);
 };
 
@@ -93,11 +101,11 @@ const adicionarItemEnxoval = () => {
   }
 };
 
-const removerItemEnxoval = (index) => {
+const removerItemEnxoval = index => {
   form.enxoval.splice(index, 1);
 };
 
-const onFileChange = (e) => {
+const onFileChange = e => {
   const file = e.target.files[0];
   if (file) {
     form.imagem_file = file;
@@ -105,25 +113,29 @@ const onFileChange = (e) => {
 };
 
 const submit = () => {
-  console.log("Enviando formulário:", form);
-  
-  form.transform((data) => ({
-    ...data,
-    _method: 'PUT', // Simular método PUT para Laravel
-  })).post(route('admin.cursos.update', props.curso.id), {
-    preserveScroll: true,
-    forceFormData: true, // Importante para upload de arquivos
-    onError: (errors) => {
-      console.error("Erros no envio:", errors);
-    },
-    onSuccess: () => {
-      console.log("Formulário enviado com sucesso");
-    },
-  });
+  console.log('Enviando formulário:', form);
+
+  form
+    .transform(data => ({
+      ...data,
+      _method: 'PUT', // Simular método PUT para Laravel
+    }))
+    .post(route('admin.cursos.update', props.curso.id), {
+      preserveScroll: true,
+      forceFormData: true, // Importante para upload de arquivos
+      onError: errors => {
+        console.error('Erros no envio:', errors);
+      },
+      onSuccess: () => {
+        console.log('Formulário enviado com sucesso');
+      },
+    });
 };
 
 const previewImagem = computed(() => {
-  return form.imagem_file ? URL.createObjectURL(form.imagem_file) : props.curso.imagem;
+  return form.imagem_file
+    ? URL.createObjectURL(form.imagem_file)
+    : props.curso.imagem;
 });
 </script>
 
@@ -157,10 +169,7 @@ const previewImagem = computed(() => {
       <CardBox is-form @submit.prevent="submit">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Nome do Curso -->
-          <FormField
-            label="Nome do Curso"
-            :error="errors.nome"
-          >
+          <FormField label="Nome do Curso" :error="errors.nome">
             <FormControl
               v-model="form.nome"
               :error="errors.nome"
@@ -184,10 +193,7 @@ const previewImagem = computed(() => {
           </FormField>
 
           <!-- Data Início -->
-          <FormField
-            label="Data de Início"
-            :error="errors.data_inicio"
-          >
+          <FormField label="Data de Início" :error="errors.data_inicio">
             <FormControl
               v-model="form.data_inicio"
               type="date"
@@ -197,10 +203,7 @@ const previewImagem = computed(() => {
           </FormField>
 
           <!-- Data Fim -->
-          <FormField
-            label="Data de Término"
-            :error="errors.data_fim"
-          >
+          <FormField label="Data de Término" :error="errors.data_fim">
             <FormControl
               v-model="form.data_fim"
               type="date"
@@ -210,10 +213,7 @@ const previewImagem = computed(() => {
           </FormField>
 
           <!-- Localização -->
-          <FormField
-            label="Localização"
-            :error="errors.localizacao"
-          >
+          <FormField label="Localização" :error="errors.localizacao">
             <FormControl
               v-model="form.localizacao"
               :error="errors.localizacao"
@@ -237,10 +237,7 @@ const previewImagem = computed(() => {
           </FormField>
 
           <!-- Modalidade -->
-          <FormField
-            label="Modalidade"
-            :error="errors.modalidade"
-          >
+          <FormField label="Modalidade" :error="errors.modalidade">
             <FormControl
               v-model="form.modalidade"
               type="select"
@@ -251,10 +248,7 @@ const previewImagem = computed(() => {
           </FormField>
 
           <!-- Status -->
-          <FormField
-            label="Status"
-            :error="errors.status"
-          >
+          <FormField label="Status" :error="errors.status">
             <FormControl
               v-model="form.status"
               type="select"
@@ -272,7 +266,11 @@ const previewImagem = computed(() => {
           >
             <div v-if="previewImagem" class="mb-4">
               <p class="text-sm text-gray-500 mb-2">Imagem atual:</p>
-              <img :src="previewImagem" alt="Preview" class="max-h-40 rounded">
+              <img
+                :src="previewImagem"
+                alt="Preview"
+                class="max-h-40 rounded"
+              />
             </div>
             <FormFilePicker
               v-model="form.imagem_file"
@@ -325,9 +323,7 @@ const previewImagem = computed(() => {
 
           <!-- Pré-requisitos (lista) -->
           <div class="col-span-1 md:col-span-2">
-            <FormField
-              label="Pré-requisitos"
-            >
+            <FormField label="Pré-requisitos">
               <div class="flex mb-2">
                 <FormControl
                   v-model="novoPreRequisito"
@@ -341,11 +337,22 @@ const previewImagem = computed(() => {
                   @click="adicionarPreRequisito"
                 />
               </div>
-              <div v-if="form.pre_requisitos && form.pre_requisitos.length > 0" class="mt-2">
+              <div
+                v-if="form.pre_requisitos && form.pre_requisitos.length > 0"
+                class="mt-2"
+              >
                 <ul class="list-disc pl-5">
-                  <li v-for="(item, index) in form.pre_requisitos" :key="index" class="mb-1 flex items-center">
+                  <li
+                    v-for="(item, index) in form.pre_requisitos"
+                    :key="index"
+                    class="mb-1 flex items-center"
+                  >
                     <span class="flex-grow">{{ item }}</span>
-                    <button type="button" @click="removerPreRequisito(index)" class="text-red-500 hover:text-red-700">
+                    <button
+                      type="button"
+                      @click="removerPreRequisito(index)"
+                      class="text-red-500 hover:text-red-700"
+                    >
                       <span>Remover</span>
                     </button>
                   </li>
@@ -359,9 +366,7 @@ const previewImagem = computed(() => {
 
           <!-- Enxoval (lista) -->
           <div class="col-span-1 md:col-span-2">
-            <FormField
-              label="Enxoval (itens necessários)"
-            >
+            <FormField label="Enxoval (itens necessários)">
               <div class="flex mb-2">
                 <FormControl
                   v-model="novoItemEnxoval"
@@ -377,9 +382,17 @@ const previewImagem = computed(() => {
               </div>
               <div v-if="form.enxoval && form.enxoval.length > 0" class="mt-2">
                 <ul class="list-disc pl-5">
-                  <li v-for="(item, index) in form.enxoval" :key="index" class="mb-1 flex items-center">
+                  <li
+                    v-for="(item, index) in form.enxoval"
+                    :key="index"
+                    class="mb-1 flex items-center"
+                  >
                     <span class="flex-grow">{{ item }}</span>
-                    <button type="button" @click="removerItemEnxoval(index)" class="text-red-500 hover:text-red-700">
+                    <button
+                      type="button"
+                      @click="removerItemEnxoval(index)"
+                      class="text-red-500 hover:text-red-700"
+                    >
                       <span>Remover</span>
                     </button>
                   </li>

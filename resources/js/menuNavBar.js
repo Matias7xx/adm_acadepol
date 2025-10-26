@@ -1,25 +1,25 @@
 import {
-    mdiMenu,
-    mdiClockOutline,
-    mdiCloud,
-    mdiCrop,
-    mdiAccount,
-    mdiCogOutline,
-    mdiEmail,
-    mdiLogout,
-    mdiThemeLightDark,
-    mdiGithub,
-    mdiHome
-  } from '@mdi/js'
-  
-  export default [
-    {
-      icon: mdiHome,
-      label: 'Voltar ao Site',
-      to: '/',
-      isDesktopNoLabel: false
-    },
-    /* {
+  mdiMenu,
+  mdiClockOutline,
+  mdiCloud,
+  mdiCrop,
+  mdiAccount,
+  mdiCogOutline,
+  mdiEmail,
+  mdiLogout,
+  mdiThemeLightDark,
+  mdiGithub,
+  mdiHome,
+} from '@mdi/js';
+
+export default [
+  {
+    icon: mdiHome,
+    label: 'Voltar ao Site',
+    to: '/',
+    isDesktopNoLabel: false,
+  },
+  /* {
       icon: mdiMenu,
       label: 'Menu',
       menu: [
@@ -40,15 +40,15 @@ import {
         }
       ]
     }, */
-    {
-      isCurrentUser: true,
-      menu: [
-        {
-          icon: mdiAccount,
-          label: 'Meu Perfil',
-          to: '/admin/edit-account-info'
-        },
-        /* {
+  {
+    isCurrentUser: true,
+    menu: [
+      {
+        icon: mdiAccount,
+        label: 'Meu Perfil',
+        to: '/admin/edit-account-info',
+      },
+      /* {
           icon: mdiCogOutline,
           label: 'Configurações'
         },
@@ -56,33 +56,33 @@ import {
           icon: mdiEmail,
           label: 'Mensagens'
         }, */
-        {
-          isDivider: true
-        },
-        {
-          icon: mdiLogout,
-          label: 'Log Out',
-          isLogout: true
-        }
-      ]
-    },
-    {
-      icon: mdiThemeLightDark,
-      label: 'Light/Dark',
-      isDesktopNoLabel: true,
-      isToggleLightDark: true
-    },
-    /*{
+      {
+        isDivider: true,
+      },
+      {
+        icon: mdiLogout,
+        label: 'Log Out',
+        isLogout: true,
+      },
+    ],
+  },
+  {
+    icon: mdiThemeLightDark,
+    label: 'Light/Dark',
+    isDesktopNoLabel: true,
+    isToggleLightDark: true,
+  },
+  /*{
       icon: mdiGithub,
       label: 'GitHub',
       isDesktopNoLabel: true,
       href: 'https://github.com/balajidharma/laravel-vue-admin-panel',
       target: '_blank'
     },*/
-    {
-      icon: mdiLogout,
-      label: 'Log out',
-      isDesktopNoLabel: true,
-      isLogout: true
-    }
-  ]
+  {
+    icon: mdiLogout,
+    label: 'Log out',
+    isDesktopNoLabel: true,
+    isLogout: true,
+  },
+];

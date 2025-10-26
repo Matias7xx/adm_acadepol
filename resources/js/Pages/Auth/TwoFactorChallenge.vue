@@ -1,68 +1,63 @@
 <script setup>
-import { useForm, Head } from '@inertiajs/vue3'
-import { nextTick, ref } from 'vue'
-import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
-import SectionFullScreen from '@/Components/SectionFullScreen.vue'
-import CardBox from '@/Components/CardBox.vue'
-import FormControl from '@/Components/FormControl.vue'
-import FormField from '@/Components/FormField.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import FormValidationErrors from '@/Components/FormValidationErrors.vue'
-import BaseLevel from '@/Components/BaseLevel.vue'
+import { useForm, Head } from '@inertiajs/vue3';
+import { nextTick, ref } from 'vue';
+import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue';
+import SectionFullScreen from '@/Components/SectionFullScreen.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormField from '@/Components/FormField.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import FormValidationErrors from '@/Components/FormValidationErrors.vue';
+import BaseLevel from '@/Components/BaseLevel.vue';
 
 const recovery = ref(false);
 
 const form = useForm({
   code: '',
-  recovery_code: ''
-})
+  recovery_code: '',
+});
 
-const recoveryCodeInput = ref(null)
-const codeInput = ref(null)
+const recoveryCodeInput = ref(null);
+const codeInput = ref(null);
 
 const toggleRecovery = async () => {
-  recovery.value ^= true
+  recovery.value ^= true;
 
-  await nextTick()
+  await nextTick();
 
   if (recovery.value) {
-    recoveryCodeInput.value?.focus()
-    form.code = ''
+    recoveryCodeInput.value?.focus();
+    form.code = '';
   } else {
-    codeInput.value?.focus()
-    form.recovery_code = ''
+    codeInput.value?.focus();
+    form.recovery_code = '';
   }
-}
+};
 
 const submit = () => {
-  form.post(route('two-factor.login'))
-}
+  form.post(route('two-factor.login'));
+};
 </script>
 
 <template>
   <LayoutGuest>
     <Head title="Two-factor Confirmation" />
 
-    <SectionFullScreen
-      v-slot="{ cardClass }"
-      bg="white"
-    >
-      <CardBox
-        :class="cardClass"
-        form
-        @submit.prevent="submit"
-      >
+    <SectionFullScreen v-slot="{ cardClass }" bg="white">
+      <CardBox :class="cardClass" form @submit.prevent="submit">
         <FormValidationErrors />
 
         <FormField>
           <div class="mb-4 text-sm text-gray-600">
-            <template v-if="! recovery">
-              Please confirm access to your account by entering the authentication code provided by your authenticator application.
+            <template v-if="!recovery">
+              Please confirm access to your account by entering the
+              authentication code provided by your authenticator application.
             </template>
 
             <template v-else>
-              Please confirm access to your account by entering one of your emergency recovery codes.
+              Please confirm access to your account by entering one of your
+              emergency recovery codes.
             </template>
           </div>
         </FormField>
@@ -111,13 +106,9 @@ const submit = () => {
             :disabled="form.processing"
           />
           <button @click.prevent="toggleRecovery">
-            <template v-if="!recovery">
-              Use a recovery code
-            </template>
+            <template v-if="!recovery"> Use a recovery code </template>
 
-            <template v-else>
-              Use an authentication code
-            </template>
+            <template v-else> Use an authentication code </template>
           </button>
         </BaseLevel>
       </CardBox>

@@ -1,19 +1,19 @@
 <script setup>
-import { Head } from "@inertiajs/vue3"
+import { Head } from '@inertiajs/vue3';
 import {
   mdiLink,
   mdiPlus,
   mdiAlertBoxOutline,
-  mdiArrowLeftBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
-import NotificationBar from "@/Components/NotificationBar.vue"
-import MenuItemList from "@/Components/Admin/MenuItemList.vue"
+  mdiArrowLeftBoldOutline,
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import NotificationBar from '@/Components/NotificationBar.vue';
+import MenuItemList from '@/Components/Admin/MenuItemList.vue';
 
 const props = defineProps({
   items: {
@@ -28,19 +28,14 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-})
-
+});
 </script>
 
 <template>
   <LayoutAuthenticated>
     <Head title="Menu Items" />
     <SectionMain>
-      <SectionTitleLineWithButton
-        :icon="mdiLink"
-        title="Menu Items"
-        main
-      >
+      <SectionTitleLineWithButton :icon="mdiLink" title="Menu Items" main>
         <BaseButtons type="justify-start lg:justify-end" no-wrap>
           <BaseButton
             :route-name="route('admin.menu.index')"
@@ -70,18 +65,13 @@ const props = defineProps({
         {{ $page.props.flash.message }}
       </NotificationBar>
       <CardBox class="mb-6" has-table>
-        <table class="border-collapse w-full border border-slate-400 dark:border-slate-500 bg-white dark:bg-slate-800 text-sm shadow-sm">
+        <table
+          class="border-collapse w-full border border-slate-400 dark:border-slate-500 bg-white dark:bg-slate-800 text-sm shadow-sm"
+        >
           <tbody>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Name
               </td>
@@ -91,14 +81,7 @@ const props = defineProps({
             </tr>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Machine name
               </td>
@@ -111,22 +94,16 @@ const props = defineProps({
         <table>
           <thead>
             <tr>
-              <th>
-                Name
-              </th>
-              <th>
-                Description
-              </th>
-              <th>
-                Enable
-              </th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Enable</th>
               <th v-if="can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             <template v-for="item in items">
-              <MenuItemList :item="item" :menu="menu" :can="can" :level=0 />
+              <MenuItemList :item="item" :menu="menu" :can="can" :level="0" />
             </template>
           </tbody>
         </table>

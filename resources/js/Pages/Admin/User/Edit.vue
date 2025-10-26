@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiAccountKey,
   mdiArrowLeftBoldOutline,
@@ -11,19 +11,19 @@ import {
   mdiBriefcase,
   mdiCalendar,
   mdiPhone,
-  mdiKey
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import InputMask from '@/Components/InputMask.vue'
+  mdiKey,
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import InputMask from '@/Components/InputMask.vue';
 
 const props = defineProps({
   user: {
@@ -37,8 +37,8 @@ const props = defineProps({
   userHasRoles: {
     type: Object,
     default: () => ({}),
-  }
-})
+  },
+});
 
 const form = useForm({
   _method: 'put',
@@ -50,23 +50,24 @@ const form = useForm({
   orgao: props.user.orgao || '',
   lotacao: props.user.lotacao || '',
   telefone: props.user.telefone || '',
-  data_nascimento: props.user.data_nascimento ? props.user.data_nascimento.split('T')[0] : '',
+  data_nascimento: props.user.data_nascimento
+    ? props.user.data_nascimento.split('T')[0]
+    : '',
   password: '',
   password_confirmation: '',
-  roles: props.userHasRoles
-})
+  roles: props.userHasRoles,
+});
 
 const submitEdit = () => {
   // Remove caracteres não numéricos do CPF
   form.cpf = form.cpf ? form.cpf.replace(/\D/g, '') : '';
-  
+
   // Remove caracteres não numéricos do telefone
   form.telefone = form.telefone ? form.telefone.replace(/\D/g, '') : '';
-  
+
   // Enviar formulário - Correto: usando props.user.id em vez de user.id
   form.put(route('admin.user.update', props.user.id));
-}
-
+};
 </script>
 
 <template>
@@ -87,14 +88,8 @@ const submitEdit = () => {
           small
         />
       </SectionTitleLineWithButton>
-      <CardBox
-        form
-        @submit.prevent="submitEdit"
-      >
-        <FormField
-          label="Nome"
-          :class="{ 'text-red-400': form.errors.name }"
-        >
+      <CardBox form @submit.prevent="submitEdit">
+        <FormField label="Nome" :class="{ 'text-red-400': form.errors.name }">
           <FormControl
             v-model="form.name"
             :icon="mdiAccount"
@@ -153,10 +148,7 @@ const submitEdit = () => {
           </div>
         </FormField>
 
-        <FormField
-          label="CPF"
-          :class="{ 'text-red-400': form.errors.cpf }"
-        >
+        <FormField label="CPF" :class="{ 'text-red-400': form.errors.cpf }">
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
               <svg
@@ -181,10 +173,7 @@ const submitEdit = () => {
           </div>
         </FormField>
 
-        <FormField
-          label="Cargo"
-          :class="{ 'text-red-400': form.errors.cargo }"
-        >
+        <FormField label="Cargo" :class="{ 'text-red-400': form.errors.cargo }">
           <FormControl
             v-model="form.cargo"
             :icon="mdiBriefcase"
@@ -198,10 +187,7 @@ const submitEdit = () => {
           </FormControl>
         </FormField>
 
-        <FormField
-          label="Órgão"
-          :class="{ 'text-red-400': form.errors.orgao }"
-        >
+        <FormField label="Órgão" :class="{ 'text-red-400': form.errors.orgao }">
           <FormControl
             v-model="form.orgao"
             :icon="mdiOfficeBuilding"
@@ -271,7 +257,10 @@ const submitEdit = () => {
             placeholder="Informe a Data de Nascimento"
             :error="form.errors.data_nascimento"
           >
-            <div class="text-red-400 text-sm" v-if="form.errors.data_nascimento">
+            <div
+              class="text-red-400 text-sm"
+              v-if="form.errors.data_nascimento"
+            >
               {{ form.errors.data_nascimento }}
             </div>
           </FormControl>
@@ -315,10 +304,7 @@ const submitEdit = () => {
 
         <BaseDivider />
 
-        <FormField
-          label="Função"
-          wrap-body
-        >
+        <FormField label="Função" wrap-body>
           <FormCheckRadioGroup
             v-model="form.roles"
             name="roles"

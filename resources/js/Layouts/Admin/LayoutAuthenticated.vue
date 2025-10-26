@@ -1,62 +1,71 @@
 <script setup>
-import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js'
-import { computed, reactive, ref } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
-import menuNavBar from '@/menuNavBar.js'
-import { useDarkModeStore } from '@/Stores/darkMode.js'
-import BaseIcon from '@/Components/BaseIcon.vue'
-import Breadcrumb from '@/Components/Admin/Breadcrumb.vue'
-import NavBar from '@/Components/NavBar.vue'
-import NavBarItemPlain from '@/Components/NavBarItemPlain.vue'
-import AsideMenu from '@/Components/AsideMenu.vue'
-import FooterBar from '@/Components/FooterBar.vue'
-import Toast from '@/Pages/Components/Toast.vue'
+import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js';
+import { computed, reactive, ref } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
+import menuNavBar from '@/menuNavBar.js';
+import { useDarkModeStore } from '@/Stores/darkMode.js';
+import BaseIcon from '@/Components/BaseIcon.vue';
+import Breadcrumb from '@/Components/Admin/Breadcrumb.vue';
+import NavBar from '@/Components/NavBar.vue';
+import NavBarItemPlain from '@/Components/NavBarItemPlain.vue';
+import AsideMenu from '@/Components/AsideMenu.vue';
+import FooterBar from '@/Components/FooterBar.vue';
+import Toast from '@/Pages/Components/Toast.vue';
 
-const layoutAsidePadding = 'xl:pl-64'
+const layoutAsidePadding = 'xl:pl-64';
 
-const darkModeStore = useDarkModeStore()
+const darkModeStore = useDarkModeStore();
 
-const isAsideMobileExpanded = ref(false)
-const isAsideLgActive = ref(false)
+const isAsideMobileExpanded = ref(false);
+const isAsideLgActive = ref(false);
 
-let menuAside = reactive({})
-menuAside = computed(() => usePage().props.navigation.menu)
+let menuAside = reactive({});
+menuAside = computed(() => usePage().props.navigation.menu);
 
 const menuClick = (event, item) => {
   if (item.isToggleLightDark) {
-    darkModeStore.set()
+    darkModeStore.set();
   }
 
   if (item.isLogout) {
-    router.post(route('logout'))
+    router.post(route('logout'));
   }
-}
+};
 </script>
 
 <template>
   <div
     class="style-pcpb-dark"
     :class="{
-      'overflow-hidden lg:overflow-visible': isAsideMobileExpanded
+      'overflow-hidden lg:overflow-visible': isAsideMobileExpanded,
     }"
   >
     <div
       :class="[layoutAsidePadding, { 'ml-64 lg:ml-0': isAsideMobileExpanded }]"
       class="pt-14 min-h-screen w-screen transition-position lg:w-auto bg-gray-50 dark:bg-slate-800 dark:text-slate-100"
     >
-    <Toast />
+      <Toast />
       <NavBar
         :menu="menuNavBar"
-        :class="[layoutAsidePadding, { 'ml-64 lg:ml-0': isAsideMobileExpanded }]"
+        :class="[
+          layoutAsidePadding,
+          { 'ml-64 lg:ml-0': isAsideMobileExpanded },
+        ]"
         @menu-click="menuClick"
       >
         <NavBarItemPlain
           display="flex lg:hidden"
           @click.prevent="isAsideMobileExpanded = !isAsideMobileExpanded"
         >
-          <BaseIcon :path="isAsideMobileExpanded ? mdiBackburger : mdiForwardburger" size="24" />
+          <BaseIcon
+            :path="isAsideMobileExpanded ? mdiBackburger : mdiForwardburger"
+            size="24"
+          />
         </NavBarItemPlain>
-        <NavBarItemPlain display="hidden lg:flex xl:hidden" @click.prevent="isAsideLgActive = true">
+        <NavBarItemPlain
+          display="hidden lg:flex xl:hidden"
+          @click.prevent="isAsideLgActive = true"
+        >
           <BaseIcon :path="mdiMenu" size="24" />
         </NavBarItemPlain>
       </NavBar>

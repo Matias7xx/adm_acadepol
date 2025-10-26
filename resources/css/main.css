@@ -1,12 +1,12 @@
-@import "tailwind/_base.css";
-@import "tailwind/_components.css";
-@import "tailwind/_utilities.css";
+@import 'tailwind/_base.css';
+@import 'tailwind/_components.css';
+@import 'tailwind/_utilities.css';
 
-@import "_checkbox-radio-switch.css";
-@import "_progress.css";
-@import "_scrollbars.css";
-@import "_table.css";
-@import "styles/_pcpb-dark.css";
+@import '_checkbox-radio-switch.css';
+@import '_progress.css';
+@import '_scrollbars.css';
+@import '_table.css';
+@import 'styles/_pcpb-dark.css';
 
 /* Sidebar/Aside - sempre preto */
 .aside {
@@ -107,7 +107,11 @@ nav {
 
 /* Overlay */
 .overlay {
-  background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(26,26,26,0.8)) !important;
+  background: linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.8),
+    rgba(26, 26, 26, 0.8)
+  ) !important;
 }
 
 .aside-menu-item svg {
@@ -119,11 +123,11 @@ nav {
 }
 
 /* Ajustar texto do botão de logout */
-.aside-menu-item[class*="info"] {
+.aside-menu-item[class*='info'] {
   color: #d1d5db !important;
 }
 
-.aside-menu-item[class*="info"]:hover {
+.aside-menu-item[class*='info']:hover {
   color: #bea55a !important;
   background: rgba(190, 165, 90, 0.1) !important;
 }

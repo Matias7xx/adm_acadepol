@@ -1,22 +1,22 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
   mdiInformationOutline,
   mdiArrowLeftBoldOutline,
-  mdiArrowRightBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import BaseButton from "@/Components/BaseButton.vue"
+  mdiArrowRightBoldOutline,
+} from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import BaseButton from '@/Components/BaseButton.vue';
 
 const props = defineProps({
   curso: {
     type: Object,
     default: () => ({}),
-  }
-})
+  },
+});
 </script>
 
 <template>
@@ -42,14 +42,7 @@ const props = defineProps({
           <tbody>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Nome
               </td>
@@ -59,14 +52,7 @@ const props = defineProps({
             </tr>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Descrição
               </td>
@@ -76,32 +62,18 @@ const props = defineProps({
             </tr>
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Início do Curso
               </td>
               <td data-label="Data Inicio">
-                {{new Date(curso.data_inicio).toLocaleString()}}
+                {{ new Date(curso.data_inicio).toLocaleString() }}
               </td>
             </tr>
 
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Fim do Curso
               </td>
@@ -112,14 +84,7 @@ const props = defineProps({
 
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Carga Horária
               </td>
@@ -130,14 +95,7 @@ const props = defineProps({
 
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Capacidade de Alunos
               </td>
@@ -148,14 +106,7 @@ const props = defineProps({
 
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Modalidade
               </td>
@@ -166,14 +117,7 @@ const props = defineProps({
 
             <tr>
               <td
-                class="
-                  p-4
-                  pl-8
-                  text-slate-500
-                  dark:text-slate-400
-                  hidden
-                  lg:block
-                "
+                class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block"
               >
                 Localização
               </td>
@@ -185,14 +129,14 @@ const props = defineProps({
         </table>
       </CardBox>
       <BaseButton
-          :route-name="route('admin.matriculas.curso', curso.id)"
-          :icon="mdiArrowRightBoldOutline"
-          :id="curso.id"
-          label="Matrículas"
-          color="white"
-          rounded-full
-          small
-        />
+        :route-name="route('admin.matriculas.curso', curso.id)"
+        :icon="mdiArrowRightBoldOutline"
+        :id="curso.id"
+        label="Matrículas"
+        color="white"
+        rounded-full
+        small
+      />
     </SectionMain>
   </LayoutAuthenticated>
 </template>

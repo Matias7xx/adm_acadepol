@@ -1,17 +1,22 @@
 <script setup>
-import { useForm, usePage, Head } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { mdiAccount, mdiEmail, mdiFormTextboxPassword, mdiAccountTieHat } from '@mdi/js'
-import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
-import SectionFullScreen from '@/Components/SectionFullScreen.vue'
-import CardBox from '@/Components/CardBox.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import BaseDivider from '@/Components/BaseDivider.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import FormValidationErrors from '@/Components/FormValidationErrors.vue'
+import { useForm, usePage, Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import {
+  mdiAccount,
+  mdiEmail,
+  mdiFormTextboxPassword,
+  mdiAccountTieHat,
+} from '@mdi/js';
+import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue';
+import SectionFullScreen from '@/Components/SectionFullScreen.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import BaseDivider from '@/Components/BaseDivider.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import FormValidationErrors from '@/Components/FormValidationErrors.vue';
 
 const form = useForm({
   name: '',
@@ -20,36 +25,30 @@ const form = useForm({
   password: '',
   password_confirmation: '',
   terms: [],
-})
+});
 
-const hasTermsAndPrivacyPolicyFeature = computed(() => usePage().props.value?.jetstream?.hasTermsAndPrivacyPolicyFeature )
+const hasTermsAndPrivacyPolicyFeature = computed(
+  () => usePage().props.value?.jetstream?.hasTermsAndPrivacyPolicyFeature
+);
 
 const submit = () => {
   form
     .transform(data => ({
-      ... data,
-      terms: form.terms && form.terms.length
+      ...data,
+      terms: form.terms && form.terms.length,
     }))
     .post(route('register'), {
       onFinish: () => form.reset('password', 'password_confirmation'),
-    })
-}
+    });
+};
 </script>
 
 <template>
   <LayoutGuest>
     <Head title="Register" />
 
-    <SectionFullScreen
-      v-slot="{ cardClass }"
-      bg="white"
-    >
-      <CardBox
-        :class="cardClass"
-        class="my-24"
-        form
-        @submit.prevent="submit"
-      >
+    <SectionFullScreen v-slot="{ cardClass }" bg="white">
+      <CardBox :class="cardClass" class="my-24" form @submit.prevent="submit">
         <FormValidationErrors />
 
         <FormField

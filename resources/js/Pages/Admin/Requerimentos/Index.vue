@@ -2,24 +2,24 @@
 import { ref, computed } from 'vue';
 import { Link, useForm, Head } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import BaseButton from "@/Components/BaseButton.vue"
-import CardBox from "@/Components/CardBox.vue"
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import CardBox from '@/Components/CardBox.vue';
 import {
   mdiArrowLeftBoldOutline,
   mdiFileDocumentOutline,
   mdiMagnify,
   mdiEye,
-} from "@mdi/js"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import FormField from "@/Components/FormField.vue"
-import BaseButtons from "@/Components/BaseButtons.vue"
+} from '@mdi/js';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import FormField from '@/Components/FormField.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
 
 // Props
 const props = defineProps({
   requerimentos: Object,
-  filters: Object
+  filters: Object,
 });
 
 // Toast
@@ -33,39 +33,39 @@ const statusFilter = ref(props.filters?.status || '');
 const statusLabels = {
   pendente: 'Pendente',
   deferido: 'Deferido',
-  indeferido: 'Indeferido'
+  indeferido: 'Indeferido',
 };
 
 const statusColors = {
   pendente: 'warning',
   deferido: 'success',
-  indeferido: 'danger'
+  indeferido: 'danger',
 };
 
 // Formatação de data
-const formatDate = (dateString) => {
+const formatDate = dateString => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   }).format(date);
 };
 
 const tipoRequerimentoFormatado = {
-    'segunda_via_certificado': '2ª Via de Certificado',
-    'declaracao_participacao': 'Declaração de Participação em Curso',
-    'outros': 'Outros'
+  segunda_via_certificado: '2ª Via de Certificado',
+  declaracao_participacao: 'Declaração de Participação em Curso',
+  outros: 'Outros',
 };
 
 // Enviar formulário de busca
 const submitSearch = () => {
   useForm({
     search: search.value,
-    status: statusFilter.value
+    status: statusFilter.value,
   }).get(route('admin.requerimentos.index'), {
     preserveState: true,
-    replace: true
+    replace: true,
   });
 };
 
@@ -108,7 +108,7 @@ const clearFilters = () => {
               @keyup.enter="submitSearch"
             />
           </FormField>
-          
+
           <!-- Filtro de status -->
           <FormField label="Status">
             <select
@@ -122,7 +122,7 @@ const clearFilters = () => {
               <option value="indeferido">Indeferido</option>
             </select>
           </FormField>
-          
+
           <!-- Botões de ação -->
           <div class="flex items-end justify-end">
             <BaseButton
@@ -131,11 +131,7 @@ const clearFilters = () => {
               color="info"
               class="mr-2"
             />
-            <BaseButton
-              @click="clearFilters"
-              label="Limpar"
-              color="white"
-            />
+            <BaseButton @click="clearFilters" label="Limpar" color="white" />
           </div>
         </div>
       </CardBox>
@@ -154,14 +150,22 @@ const clearFilters = () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="requerimento in props.requerimentos.data" :key="requerimento.id">
+            <tr
+              v-for="requerimento in props.requerimentos.data"
+              :key="requerimento.id"
+            >
               <td data-label="ID">{{ requerimento.id }}</td>
               <td data-label="Solicitante">
                 <div>{{ requerimento.nome }}</div>
-                <small class="text-gray-500 dark:text-gray-400">{{ requerimento.matricula }}</small>
+                <small class="text-gray-500 dark:text-gray-400">{{
+                  requerimento.matricula
+                }}</small>
               </td>
               <td data-label="Tipo">
-                {{ tipoRequerimentoFormatado[requerimento.tipo] || requerimento.tipo }}
+                {{
+                  tipoRequerimentoFormatado[requerimento.tipo] ||
+                  requerimento.tipo
+                }}
               </td>
               <td data-label="Data">
                 {{ formatDate(requerimento.created_at) }}
@@ -177,7 +181,9 @@ const clearFilters = () => {
               <td data-label="Ações" class="lg:w-1 whitespace-nowrap">
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
-                    :route-name="route('admin.requerimentos.show', requerimento.id)"
+                    :route-name="
+                      route('admin.requerimentos.show', requerimento.id)
+                    "
                     :icon="mdiEye"
                     small
                     color="info"
@@ -187,7 +193,7 @@ const clearFilters = () => {
                 </BaseButtons>
               </td>
             </tr>
-            
+
             <!-- Mensagem de "Sem resultados" -->
             <tr v-if="props.requerimentos.data.length === 0">
               <td colspan="7" class="text-center py-4">
@@ -197,12 +203,19 @@ const clearFilters = () => {
           </tbody>
         </table>
       </CardBox>
-      
+
       <!-- Paginação -->
-      <div class="mt-6" v-if="props.requerimentos.links && props.requerimentos.links.length > 3">
+      <div
+        class="mt-6"
+        v-if="props.requerimentos.links && props.requerimentos.links.length > 3"
+      >
         <CardBox>
           <div class="flex items-center justify-between">
-            <small>Mostrando {{ props.requerimentos.from }} a {{ props.requerimentos.to }} de {{ props.requerimentos.total }} resultados</small>
+            <small
+              >Mostrando {{ props.requerimentos.from }} a
+              {{ props.requerimentos.to }} de
+              {{ props.requerimentos.total }} resultados</small
+            >
             <div class="flex">
               <Link
                 v-for="(link, i) in props.requerimentos.links"
@@ -211,8 +224,10 @@ const clearFilters = () => {
                 v-html="link.label"
                 class="px-3 py-1 border rounded text-sm mx-1"
                 :class="[
-                  link.active ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' : 'border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300',
-                  { 'opacity-50 cursor-not-allowed': !link.url }
+                  link.active
+                    ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400'
+                    : 'border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300',
+                  { 'opacity-50 cursor-not-allowed': !link.url },
                 ]"
               ></Link>
             </div>

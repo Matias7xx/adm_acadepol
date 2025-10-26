@@ -1,29 +1,26 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
-import {
-  mdiAccountKey,
-  mdiArrowLeftBoldOutline
-} from "@mdi/js"
-import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
-import SectionMain from "@/Components/SectionMain.vue"
-import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
-import CardBox from "@/Components/CardBox.vue"
-import FormField from '@/Components/FormField.vue'
-import FormControl from '@/Components/FormControl.vue'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { mdiAccountKey, mdiArrowLeftBoldOutline } from '@mdi/js';
+import LayoutAuthenticated from '@/Layouts/Admin/LayoutAuthenticated.vue';
+import SectionMain from '@/Components/SectionMain.vue';
+import SectionTitleLineWithButton from '@/Components/SectionTitleLineWithButton.vue';
+import CardBox from '@/Components/CardBox.vue';
+import FormField from '@/Components/FormField.vue';
+import FormControl from '@/Components/FormControl.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
 
 const props = defineProps({
   permission: {
     type: Object,
     default: () => ({}),
   },
-})
+});
 
 const form = useForm({
   _method: 'put',
   name: props.permission.name,
-})
+});
 </script>
 
 <template>
@@ -46,12 +43,11 @@ const form = useForm({
       </SectionTitleLineWithButton>
       <CardBox
         form
-        @submit.prevent="form.post(route('admin.permission.update', props.permission.id))"
+        @submit.prevent="
+          form.post(route('admin.permission.update', props.permission.id))
+        "
       >
-        <FormField
-          label="Name"
-          :class="{ 'text-red-400': form.errors.name }"
-        >
+        <FormField label="Name" :class="{ 'text-red-400': form.errors.name }">
           <FormControl
             v-model="form.name"
             type="text"

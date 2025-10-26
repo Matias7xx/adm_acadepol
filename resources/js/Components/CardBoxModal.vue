@@ -1,57 +1,54 @@
 <script setup>
-import { computed } from 'vue'
-import { mdiClose } from '@mdi/js'
-import BaseButton from '@/Components/BaseButton.vue'
-import BaseButtons from '@/Components/BaseButtons.vue'
-import CardBox from '@/Components/CardBox.vue'
-import OverlayLayer from '@/Components/OverlayLayer.vue'
+import { computed } from 'vue';
+import { mdiClose } from '@mdi/js';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseButtons from '@/Components/BaseButtons.vue';
+import CardBox from '@/Components/CardBox.vue';
+import OverlayLayer from '@/Components/OverlayLayer.vue';
 
 const props = defineProps({
   title: {
     type: String,
-    default: null
+    default: null,
   },
   largeTitle: {
     type: String,
-    default: null
+    default: null,
   },
   button: {
     type: String,
-    default: 'info'
+    default: 'info',
   },
   buttonLabel: {
     type: String,
-    default: 'Done'
+    default: 'Done',
   },
   hasCancel: Boolean,
   modelValue: {
     type: [String, Number, Boolean],
-    default: null
-  }
-})
+    default: null,
+  },
+});
 
-const emit = defineEmits(['update:modelValue', 'cancel', 'confirm'])
+const emit = defineEmits(['update:modelValue', 'cancel', 'confirm']);
 
 const value = computed({
   get: () => props.modelValue,
-  set: value => emit('update:modelValue', value)
-})
+  set: value => emit('update:modelValue', value),
+});
 
 const confirmCancel = mode => {
-  value.value = false
-  emit(mode)
-}
+  value.value = false;
+  emit(mode);
+};
 
-const confirm = () => confirmCancel('confirm')
+const confirm = () => confirmCancel('confirm');
 
-const cancel = () => confirmCancel('cancel')
+const cancel = () => confirmCancel('cancel');
 </script>
 
 <template>
-  <OverlayLayer
-    v-show="value"
-    @overlay-click="cancel"
-  >
+  <OverlayLayer v-show="value" @overlay-click="cancel">
     <CardBox
       v-show="value"
       :title="title"
@@ -61,10 +58,7 @@ const cancel = () => confirmCancel('cancel')
       @header-icon-click="cancel"
     >
       <div class="space-y-3">
-        <h1
-          v-if="largeTitle"
-          class="text-2xl"
-        >
+        <h1 v-if="largeTitle" class="text-2xl">
           {{ largeTitle }}
         </h1>
         <slot />
@@ -72,11 +66,7 @@ const cancel = () => confirmCancel('cancel')
 
       <template #footer>
         <BaseButtons>
-          <BaseButton
-            :label="buttonLabel"
-            :color="button"
-            @click="confirm"
-          />
+          <BaseButton :label="buttonLabel" :color="button" @click="confirm" />
           <BaseButton
             v-if="hasCancel"
             label="Cancel"
