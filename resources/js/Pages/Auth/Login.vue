@@ -118,9 +118,9 @@ const submit = () => {
         <div
           class="w-full mt-2 px-1 py-1 overflow-hidden text-center flex justify-center"
         >
-          <p class="text-gray-400 mb-3 text-sm sm:text-base px-2">
+          <!-- <p class="text-gray-400 mb-3 text-sm sm:text-base px-2">
             {{ loginDescription }}
-          </p>
+          </p> -->
         </div>
         <FormField
           label="Matrícula"

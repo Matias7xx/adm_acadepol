@@ -29,7 +29,7 @@ const powerBIUrl =
     </header>
 
     <!-- Hero Section -->
-    <section class="w-full">
+    <section class="w-full mt-2">
       <HomeCarousel />
     </section>
 

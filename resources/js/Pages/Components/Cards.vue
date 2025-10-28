@@ -6,7 +6,7 @@
     >
       <!-- Seção Cursos de Capacitação -->
       <div>
-        <div class="bg-gray-50 py-4 px-6 border-l-4 border-[#bea55a]">
+        <div class="bg-gray-50 py-4 px-6">
           <h2 class="text-gray-800 font-bold text-lg tracking-wide">
             CURSOS DE CAPACITAÇÃO
           </h2>
@@ -69,7 +69,7 @@
       <!-- Seção Curso de Formação -->
       <div>
         <div
-          class="bg-gray-50 py-4 px-6 border-l-4 border-[#bea55a] border-t border-gray-100"
+          class="bg-gray-50 py-4 px-6 border-t border-gray-100"
         >
           <h2 class="text-gray-800 font-bold text-lg tracking-wide">
             CURSO DE FORMAÇÃO POLICIAL
@@ -110,7 +110,7 @@
     <div
       class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100"
     >
-      <div class="bg-gray-50 py-4 px-6 border-l-4 border-[#bea55a]">
+      <div class="bg-gray-50 py-4 px-6">
         <h2 class="text-gray-800 font-bold text-lg tracking-wide">
           UTILIDADES
         </h2>

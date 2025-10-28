@@ -172,7 +172,7 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="w-full bg-gradient-to-br bg-gray-100 py-8 sm:py-12 lg:py-16"
+    class="w-full bg-gradient-to-br bg-gray-100 py-8 sm:py-8 lg:py-10"
     aria-labelledby="noticias-titulo"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -180,11 +180,11 @@ onUnmounted(() => {
       <div class="text-center mb-8 lg:mb-12">
         <h2
           id="noticias-titulo"
-          class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 relative inline-block"
+          class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block"
         >
           Últimas Notícias
           <span
-            class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-[#bea55a] rounded-full"
+            class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gray-700 rounded-full"
             aria-hidden="true"
           ></span>
         </h2>
@@ -314,13 +314,7 @@ onUnmounted(() => {
             <article
               v-for="(noticia, index) in noticias"
               :key="noticia.id"
-              class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[#bea55a]/30"
-              :class="[
-                noticia.destaque
-                  ? 'ring-1 ring-[#bea55a]/30 border-[#bea55a]/30'
-                  : '',
-                'transform hover:-translate-y-0.5',
-              ]"
+              class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
             >
               <div class="flex h-32 sm:h-36">
                 <!-- Container da imagem compacta -->
@@ -381,17 +375,24 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Título compacto -->
-                    <h3
-                      class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300"
-                    >
-                      {{ noticia.titulo }}
-                    </h3>
+                    <Link :href="`/noticias/${noticia.id}`">
+                      <h3
+                        class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300"
+                      >
+                        {{ noticia.titulo }}
+                      </h3>
+                    </Link>
 
                     <!-- Descrição compacta -->
                     <p
                       class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2"
                     >
-                      {{ truncateText(noticia.descricao_curta, 100) }}
+                      <span class="sm:hidden">{{
+                        truncateText(noticia.descricao_curta, 52)
+                      }}</span>
+                      <span class="hidden sm:inline">{{
+                        truncateText(noticia.descricao_curta, 181)
+                      }}</span>
                     </p>
                   </div>
 
@@ -399,7 +400,7 @@ onUnmounted(() => {
                   <div class="">
                     <Link
                       :href="`/noticias/${noticia.id}`"
-                      class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-sm group-hover:gap-2 gap-1 transition-all duration-300"
+                      class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-md group-hover:gap-2 gap-1 transition-all duration-300"
                       :aria-label="`Leia a notícia completa: ${noticia.titulo}`"
                     >
                       Leia mais
@@ -427,23 +428,9 @@ onUnmounted(() => {
           <div class="text-center pt-6" v-if="noticias.length > 0">
             <Link
               href="/noticias"
-              class="inline-flex items-center px-6 py-2.5 bg-[#1a1a1a] text-white font-medium rounded-lg hover:from-yellow-600 hover:to-[#bea55a] focus:outline-none transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              class="inline-flex w-40 h-14 items-center px-7 py-2.5 bg-gray-100 text-gray-800 font-bold rounded-full hover:from-yellow-600 hover:to-[#bea55a] border border-gray-800 focus:outline-none transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              Ver todas as notícias
-              <svg
-                class="h-4 w-4 ml-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              Mais Notícias
             </Link>
           </div>
         </main>

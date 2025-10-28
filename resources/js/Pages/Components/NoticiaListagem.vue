@@ -327,7 +327,7 @@ onUnmounted(() => {
       <!-- Breadcrumb/Voltar -->
       <Link
         href="/"
-        class="inline-flex items-center text-sm text-gray-600 hover:text-[#bea55a] mb-6 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bea55a] focus:ring-offset-2 rounded-md"
+        class="inline-flex items-center text-sm text-gray-600 hover:text-[#bea55a] mb-6 transition-colors focus:outline-none"
       >
         <svg
           class="h-4 w-4 mr-2"
@@ -574,13 +574,7 @@ onUnmounted(() => {
           <article
             v-for="(noticia, index) in noticias"
             :key="noticia.id"
-            class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-[#bea55a]/30"
-            :class="[
-              noticia.destaque
-                ? 'ring-1 ring-[#bea55a]/30 border-[#bea55a]/30'
-                : '',
-              'transform hover:-translate-y-0.5',
-            ]"
+            class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
           >
             <div class="flex h-32 sm:h-36">
               <!-- Imagem compacta -->
@@ -641,17 +635,24 @@ onUnmounted(() => {
                   </div>
 
                   <!-- Título -->
-                  <h2
-                    class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300"
-                  >
-                    {{ noticia.titulo }}
-                  </h2>
+                  <Link :href="`/noticias/${noticia.id}`">
+                    <h2
+                      class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300"
+                    >
+                      {{ noticia.titulo }}
+                    </h2>
+                  </Link>
 
                   <!-- Descrição -->
                   <p
                     class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2"
                   >
-                    {{ truncateText(noticia.descricao_curta, 181) }}
+                    <span class="sm:hidden">{{
+                      truncateText(noticia.descricao_curta, 52)
+                    }}</span>
+                    <span class="hidden sm:inline">{{
+                      truncateText(noticia.descricao_curta, 181)
+                    }}</span>
                   </p>
                 </div>
 
@@ -659,7 +660,7 @@ onUnmounted(() => {
                 <div class="">
                   <Link
                     :href="`/noticias/${noticia.id}`"
-                    class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-sm group-hover:gap-2 gap-1 transition-all duration-300"
+                    class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-md group-hover:gap-2 gap-1 transition-all duration-300"
                     :aria-label="`Leia a notícia completa: ${noticia.titulo}`"
                   >
                     Leia mais
@@ -699,9 +700,9 @@ onUnmounted(() => {
             <span class="font-medium">{{
               Math.min(currentPage * itemsPerPage, totalItems)
             }}</span>
-            de <span class="font-medium">{{ totalItems }}</span> resultado{{
-              totalItems !== 1 ? 's' : ''
-            }}
+            de
+            <span class="font-medium">{{ totalItems }}</span>
+            resultado{{ totalItems !== 1 ? 's' : '' }}
           </div>
 
           <!-- Controles de paginação -->
@@ -869,10 +870,6 @@ onUnmounted(() => {
 /* Efeitos de hover */
 .group:hover .group-hover\:scale-105 {
   transform: scale(1.05);
-}
-
-.group:hover .group-hover\:translate-x-0.5 {
-  transform: translateX(0.125rem);
 }
 
 .group:hover .group-hover\:gap-2 {
