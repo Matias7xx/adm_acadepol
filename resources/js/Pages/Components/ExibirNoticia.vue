@@ -283,9 +283,9 @@ const navegarComScroll = url => {
         <!-- Imagem principal -->
         <!-- <div v-if="noticia.imagem && imagemCarregada" class="relative">
           <div class="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] overflow-hidden">
-            <img 
-              :src="noticia.imagem" 
-              :alt="noticia.titulo" 
+            <img
+              :src="noticia.imagem"
+              :alt="noticia.titulo"
               class="w-full h-full object-cover"
               @error="handleImageError"
             />
@@ -675,7 +675,6 @@ const navegarComScroll = url => {
 }
 
 .prose p {
-  margin-bottom: 1.25rem;
   line-height: 1.7;
   font-size: 0.95rem;
 }
