@@ -21,7 +21,7 @@ class CategoryTypeController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', CategoryType::class);
-    $categoryTypes = (new CategoryType())->newQuery();
+    $categoryTypes = new CategoryType()->newQuery();
 
     if (request()->has('search')) {
       $categoryTypes->where(

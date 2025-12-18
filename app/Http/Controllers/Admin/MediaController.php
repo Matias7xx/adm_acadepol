@@ -22,7 +22,7 @@ class MediaController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Media::class);
-    $mediaItems = (new Media())->newQuery();
+    $mediaItems = new Media()->newQuery();
     $mediaItems->whereIsOriginal();
     if (request()->has('search')) {
       $mediaItems->where(

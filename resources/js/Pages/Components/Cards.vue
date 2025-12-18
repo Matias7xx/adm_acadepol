@@ -6,12 +6,12 @@
     >
       <!-- Seção Cursos de Capacitação -->
       <div>
-        <div class="bg-gray-50 py-4 px-6">
+        <div class="bg-gray-50 py-4 px-10">
           <h2 class="text-gray-800 font-bold text-lg tracking-wide">
             CURSOS DE CAPACITAÇÃO
           </h2>
         </div>
-        <div class="divide-y divide-gray-100">
+        <div class="divide-y divide-gray-100 px-8">
           <div
             v-for="item in capacitacao"
             :key="item.id"
@@ -23,20 +23,6 @@
               :href="item.link"
               class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors"
             >
-              <span class="mr-3 text-[#bea55a]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </span>
               {{ item.titulo }}
             </Link>
 
@@ -46,20 +32,6 @@
               :href="item.link"
               class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors"
             >
-              <span class="mr-3 text-[#bea55a]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </span>
               {{ item.titulo }}
             </a>
           </div>
@@ -68,14 +40,12 @@
 
       <!-- Seção Curso de Formação -->
       <div>
-        <div
-          class="bg-gray-50 py-4 px-6 border-t border-gray-100"
-        >
+        <div class="bg-gray-50 py-4 px-10 border-t border-gray-100">
           <h2 class="text-gray-800 font-bold text-lg tracking-wide">
             CURSO DE FORMAÇÃO POLICIAL
           </h2>
         </div>
-        <div class="divide-y divide-gray-100">
+        <div class="divide-y divide-gray-100 px-8">
           <div
             v-for="item in formacao"
             :key="item.id"
@@ -85,20 +55,6 @@
               :href="item.link"
               class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors"
             >
-              <span class="mr-3 text-[#bea55a]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </span>
               {{ item.titulo }}
             </Link>
           </div>
@@ -110,12 +66,12 @@
     <div
       class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100"
     >
-      <div class="bg-gray-50 py-4 px-6">
+      <div class="bg-gray-50 py-4 px-10">
         <h2 class="text-gray-800 font-bold text-lg tracking-wide">
           UTILIDADES
         </h2>
       </div>
-      <div class="divide-y divide-gray-100">
+      <div class="divide-y divide-gray-100 px-8">
         <div
           v-for="item in utilidade"
           :key="item.id"
@@ -127,20 +83,6 @@
             rel="noopener noreferrer"
             class="flex items-center py-4 px-6 text-gray-700 font-medium hover:text-[#bea55a] transition-colors"
           >
-            <span class="mr-3 text-[#bea55a]">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </span>
             {{ item.titulo }}
             <span
               v-if="item.novo"

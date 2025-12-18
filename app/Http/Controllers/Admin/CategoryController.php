@@ -22,7 +22,7 @@ class CategoryController extends Controller
   public function index(CategoryType $type)
   {
     $this->authorize('adminViewAny', Category::class);
-    $items = (new Category())->toTree($type->id, true);
+    $items = new Category()->toTree($type->id, true);
 
     return Inertia::render('Admin/Category/Item/Index', [
       'categoryType' => $type,

@@ -23,7 +23,7 @@ class MenuItemController extends Controller
   public function index(Menu $menu)
   {
     $this->authorize('adminViewAny', MenuItem::class);
-    $items = (new MenuItem())->toTree($menu->id, true);
+    $items = new MenuItem()->toTree($menu->id, true);
 
     return Inertia::render('Admin/Menu/Item/Index', [
       'menu' => $menu,

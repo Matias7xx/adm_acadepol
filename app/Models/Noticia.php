@@ -18,6 +18,7 @@ class Noticia extends Model
     'descricao_curta',
     'conteudo',
     'imagem',
+    'carousel_images',
     'destaque',
     'data_publicacao',
     'status',
@@ -28,6 +29,7 @@ class Noticia extends Model
     'destaque' => 'boolean',
     'data_publicacao' => 'date',
     'visualizacoes' => 'integer',
+    'carousel_images' => 'array',
   ];
 
   /**

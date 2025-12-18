@@ -35,6 +35,7 @@ const form = useForm({
   data_publicacao: new Date().toISOString().substring(0, 10), // Data atual como padrão
   status: 'publicado', // Status padrão
   imagem: null,
+  carousel_images: [],
 });
 
 // Estado
@@ -529,6 +530,7 @@ const isProcessing = computed(() => {
         <div class="mb-6">
           <NoticiasEditor
             v-model="form.conteudo"
+            v-model:carousel-images="form.carousel_images"
             :error="form.errors.conteudo"
             @word-count-change="handleWordCountChange"
           />

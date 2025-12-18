@@ -135,8 +135,88 @@ const formatDateTime = isoString => {
   }
 };
 
-// Computed para a URL da imagem
+// Computed para a URL da imagem de capa
 const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
+
+// ====== NOVO: Funções para extrair e gerenciar imagens do carrossel ======
+
+// Extrair imagens do conteúdo HTML
+const extractImages = htmlContent => {
+  if (!htmlContent) return [];
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlContent;
+
+  const images = tempDiv.querySelectorAll('img');
+  const imageUrls = [];
+
+  images.forEach(img => {
+    const src = img.getAttribute('src');
+    if (src && !src.startsWith('data:')) {
+      imageUrls.push(src);
+    }
+  });
+
+  return imageUrls;
+};
+
+// Remover imagens do conteúdo HTML
+const removeImagesFromContent = htmlContent => {
+  if (!htmlContent) return '';
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlContent;
+
+  const images = tempDiv.querySelectorAll('img');
+  images.forEach(img => img.remove());
+
+  return tempDiv.innerHTML;
+};
+
+// Computed para as URLs das imagens do carrossel
+const carouselImages = computed(() => {
+  // Priorizar imagens do campo carousel_images se existir (SOLUÇÃO 2)
+  if (
+    props.noticia.carousel_images &&
+    props.noticia.carousel_images.length > 0
+  ) {
+    return props.noticia.carousel_images.map(img => img.url);
+  }
+
+  // Fallback: extrair do conteúdo (SOLUÇÃO 1 / notícias antigas)
+  return extractImages(props.noticia.conteudo);
+});
+
+// Conteúdo sem imagens
+const conteudoSemImagens = computed(() =>
+  removeImagesFromContent(props.noticia.conteudo)
+);
+
+// Estado do carrossel
+const currentImageIndex = ref(0);
+
+// Navegar para imagem anterior
+const previousImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--;
+  } else {
+    currentImageIndex.value = carouselImages.value.length - 1;
+  }
+};
+
+// Navegar para próxima imagem
+const nextImage = () => {
+  if (currentImageIndex.value < carouselImages.value.length - 1) {
+    currentImageIndex.value++;
+  } else {
+    currentImageIndex.value = 0;
+  }
+};
+
+// Ir para imagem específica
+const goToImage = index => {
+  currentImageIndex.value = index;
+};
 </script>
 
 <template>
@@ -250,33 +330,157 @@ const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
           </div>
         </div>
 
-        <!-- Imagem da notícia -->
+        <!-- Imagem de capa (se existir) -->
         <div v-if="imagemUrl" class="mb-6">
+          <div class="flex items-center mb-2">
+            <span class="icon w-5 h-5 mr-2 text-[#bea55a]">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"
+                />
+              </svg>
+            </span>
+            <span class="text-sm font-medium text-gray-700"
+              >Imagem de Capa</span
+            >
+          </div>
           <img
             :src="imagemUrl"
             :alt="noticia.titulo"
-            class="rounded-lg max-h-48 object-contain w-full"
+            class="rounded-lg max-h-64 object-cover w-full border border-gray-200"
           />
         </div>
-        <div
-          v-else
-          class="mb-6 flex items-center justify-center border rounded-lg p-4 bg-gray-50 border-dashed text-gray-400"
-        >
-          <div class="text-center">
+
+        <!-- NOVO: Carrossel de Imagens -->
+        <div v-if="carouselImages.length > 0" class="mb-6">
+          <div class="flex items-center mb-3">
+            <span class="icon w-5 h-5 mr-2 text-[#bea55a]">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M13,19C13,19.7 13.13,20.37 13.35,21H5C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H19C20.1,3 21,3.89 21,5V13.35C20.37,13.13 19.7,13 19,13V5H5V19H13M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H13.35C13.75,15.88 14.47,14.91 15.4,14.21L13.96,12.29M20,18V15H18V18H15V20H18V23H20V20H23V18H20Z"
+                />
+              </svg>
+            </span>
+            <span class="text-sm font-medium text-gray-700">
+              Imagens da Notícia ({{ carouselImages.length }})
+            </span>
+          </div>
+
+          <!-- Carrossel -->
+          <div
+            class="relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200"
+          >
+            <!-- Imagem principal -->
+            <div class="relative aspect-video bg-gray-900">
+              <img
+                :src="carouselImages[currentImageIndex]"
+                :alt="`Imagem ${currentImageIndex + 1}`"
+                class="w-full h-full object-contain"
+              />
+
+              <!-- Contador -->
+              <div
+                class="absolute top-3 right-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium"
+              >
+                {{ currentImageIndex + 1 }} / {{ carouselImages.length }}
+              </div>
+
+              <!-- Botões de navegação (apenas se houver mais de 1 imagem) -->
+              <template v-if="carouselImages.length > 1">
+                <!-- Anterior -->
+                <button
+                  @click="previousImage"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                  aria-label="Imagem anterior"
+                >
+                  <svg
+                    class="w-6 h-6 text-gray-800"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+
+                <!-- Próxima -->
+                <button
+                  @click="nextImage"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                  aria-label="Próxima imagem"
+                >
+                  <svg
+                    class="w-6 h-6 text-gray-800"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </template>
+            </div>
+
+            <!-- Miniaturas (apenas se houver mais de 1 imagem) -->
+            <div
+              v-if="carouselImages.length > 1"
+              class="p-3 bg-white border-t border-gray-200"
+            >
+              <div class="flex gap-2 overflow-x-auto pb-2">
+                <button
+                  v-for="(image, index) in carouselImages"
+                  :key="index"
+                  @click="goToImage(index)"
+                  :class="[
+                    'flex-shrink-0 w-20 h-16 rounded-md border-2 overflow-hidden transition-all',
+                    currentImageIndex === index
+                      ? 'border-[#bea55a] ring-2 ring-[#bea55a]/30'
+                      : 'border-gray-300 hover:border-gray-400',
+                  ]"
+                >
+                  <img
+                    :src="image"
+                    :alt="`Miniatura ${index + 1}`"
+                    class="w-full h-full object-cover"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info sobre as imagens -->
+          <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
             <svg
-              class="mx-auto h-12 w-12"
+              class="w-4 h-4"
               fill="none"
-              viewBox="0 0 24 24"
               stroke="currentColor"
+              viewBox="0 0 24 24"
             >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                stroke-width="1"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p class="mt-1">Nenhuma imagem disponível</p>
+            <span>
+              {{
+                carouselImages.length === 1
+                  ? '1 imagem encontrada'
+                  : `${carouselImages.length} imagens encontradas`
+              }}
+              no conteúdo da notícia
+            </span>
           </div>
         </div>
 
@@ -292,14 +496,14 @@ const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
             </span>
             Descrição Curta
           </h3>
-          <div class="p-4 rounded-lg border border-gray-200">
+          <div class="p-4 rounded-lg border border-gray-200 bg-gray-50">
             {{
               noticia.descricao_curta || 'Nenhuma descrição curta disponível.'
             }}
           </div>
         </div>
 
-        <!-- Conteúdo completo -->
+        <!-- Conteúdo completo (SEM imagens) -->
         <div>
           <h3 class="font-semibold text-lg mb-2 flex items-center">
             <span class="icon w-6 h-6 mr-2 text-[#bea55a]">
@@ -310,9 +514,15 @@ const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
               </svg>
             </span>
             Conteúdo Completo
+            <span
+              v-if="carouselImages.length > 0"
+              class="ml-2 text-xs text-gray-500 font-normal"
+            >
+              (imagens exibidas no carrossel acima)
+            </span>
           </h3>
           <div class="prose max-w-none">
-            <div v-if="noticia.conteudo" v-html="noticia.conteudo"></div>
+            <div v-if="conteudoSemImagens" v-html="conteudoSemImagens"></div>
             <div v-else class="text-gray-500 italic">
               Sem conteúdo detalhado.
             </div>
@@ -488,5 +698,29 @@ const imagemUrl = computed(() => getImageUrl(props.noticia.imagem));
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 300ms;
+}
+
+/* Scroll suave para miniaturas */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #bea55a #f3f4f6;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #bea55a;
+  border-radius: 3px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: #a08d47;
 }
 </style>

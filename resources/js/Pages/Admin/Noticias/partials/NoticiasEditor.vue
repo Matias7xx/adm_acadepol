@@ -9,6 +9,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  carouselImages: {
+    type: Array,
+    default: () => [],
+  },
   error: {
     type: String,
     default: '',
@@ -20,10 +24,15 @@ const props = defineProps({
 });
 
 // Emits
-const emit = defineEmits(['update:modelValue', 'wordCountChange']);
+const emit = defineEmits([
+  'update:modelValue',
+  'update:carouselImages',
+  'wordCountChange',
+]);
 
 // Estado local
 const content = ref(props.modelValue);
+const carouselImagesLocal = ref([...props.carouselImages]);
 const editor = ref(ClassicEditor);
 const editorInstance = ref(null);
 const isPreviewMode = ref(false);
@@ -34,7 +43,18 @@ const editorContainer = ref(null);
 const showDocumentUpload = ref(false);
 const documentUploadProgress = ref(0);
 const isUploadingDocument = ref(false);
+const isUploadingCarouselImage = ref(false);
+const carouselImageUploadProgress = ref(0);
 let autoSaveTimer = null;
+
+// Watch para sincronizar com prop externa
+watch(
+  () => props.carouselImages,
+  newVal => {
+    carouselImagesLocal.value = [...newVal];
+  },
+  { deep: true }
+);
 
 // Classe adaptadora para upload de imagens usando servidor Laravel
 class LaravelUploadAdapter {
@@ -129,7 +149,130 @@ function LaravelUploadAdapterPlugin(editor) {
   };
 }
 
-// Função para upload de documentos
+// Upload de imagens para o carrossel
+const handleCarouselImageUpload = async event => {
+  const files = Array.from(event.target.files);
+
+  for (const file of files) {
+    try {
+      // Validar tamanho (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('A imagem deve ter no máximo 5MB');
+        continue;
+      }
+
+      // Validar tipo
+      const validTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+      ];
+      if (!validTypes.includes(file.type)) {
+        alert('Formato de imagem não suportado. Use JPEG, PNG, GIF ou WebP');
+        continue;
+      }
+
+      // Criar FormData
+      const formData = new FormData();
+      formData.append('upload', file);
+
+      // Obter token CSRF
+      const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+      isUploadingCarouselImage.value = true;
+      carouselImageUploadProgress.value = 0;
+
+      // Simular progresso
+      const progressInterval = setInterval(() => {
+        if (carouselImageUploadProgress.value < 90) {
+          carouselImageUploadProgress.value += 10;
+        }
+      }, 100);
+
+      // Fazer upload via fetch
+      const response = await fetch('/api/upload-ckeditor-images', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      clearInterval(progressInterval);
+      carouselImageUploadProgress.value = 100;
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.uploaded && data.url) {
+        console.log('✅ Imagem do carrossel enviada:', data.url);
+
+        // Adicionar à lista de imagens do carrossel
+        carouselImagesLocal.value.push({
+          url: data.url,
+          id: Date.now() + Math.random(),
+        });
+
+        // Emitir atualização
+        emit('update:carouselImages', carouselImagesLocal.value);
+
+        setTimeout(() => {
+          isUploadingCarouselImage.value = false;
+          carouselImageUploadProgress.value = 0;
+        }, 500);
+      } else {
+        throw new Error(data.error?.message || 'Upload falhou');
+      }
+    } catch (error) {
+      isUploadingCarouselImage.value = false;
+      carouselImageUploadProgress.value = 0;
+      console.error('❌ Erro no upload de imagem do carrossel:', error);
+      alert(`Erro no upload: ${error.message}`);
+    }
+  }
+
+  // Limpar input
+  event.target.value = '';
+};
+
+// Remover imagem do carrossel
+const removeCarouselImage = index => {
+  if (confirm('Deseja realmente remover esta imagem do carrossel?')) {
+    carouselImagesLocal.value.splice(index, 1);
+    emit('update:carouselImages', carouselImagesLocal.value);
+  }
+};
+
+// Mover imagem para cima
+const moveImageUp = index => {
+  if (index > 0) {
+    const temp = carouselImagesLocal.value[index];
+    carouselImagesLocal.value[index] = carouselImagesLocal.value[index - 1];
+    carouselImagesLocal.value[index - 1] = temp;
+    emit('update:carouselImages', carouselImagesLocal.value);
+  }
+};
+
+// Mover imagem para baixo
+const moveImageDown = index => {
+  if (index < carouselImagesLocal.value.length - 1) {
+    const temp = carouselImagesLocal.value[index];
+    carouselImagesLocal.value[index] = carouselImagesLocal.value[index + 1];
+    carouselImagesLocal.value[index + 1] = temp;
+    emit('update:carouselImages', carouselImagesLocal.value);
+  }
+};
+
+// Função para upload de documentos (mantida do original)
 const uploadDocument = async file => {
   return new Promise((resolve, reject) => {
     // Validar tamanho (10MB)
@@ -225,7 +368,7 @@ const uploadDocument = async file => {
   });
 };
 
-// Função para inserir documento no editor
+// Função para inserir documento no editor (mantida do original)
 const insertDocumentInEditor = documentData => {
   if (!editorInstance.value) return;
 
@@ -265,18 +408,18 @@ const insertDocumentInEditor = documentData => {
   // HTML do documento com dois botões: visualizar e baixar
   const documentHtml = `
     <div class="document-attachment" style="
-      border: 1px solid #e2e8f0; 
-      border-radius: 6px; 
-      padding: 8px 12px; 
-      margin: 8px 0; 
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 8px 0;
       background: #fafbfc;
       display: flex !important;
       align-items: center !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     ">
-      
+
       <span style="
-        color: #334155; 
+        color: #334155;
         font-weight: 500;
         font-size: 14px;
         margin-right: 16px;
@@ -286,9 +429,9 @@ const insertDocumentInEditor = documentData => {
         flex: 1 1 auto !important;
         min-width: 0 !important;
       ">${fileName} - </span>
-      
-      <a href="${viewUrl}" 
-         target="_blank" 
+
+      <a href="${viewUrl}"
+         target="_blank"
          rel="noopener noreferrer"
          style="
            color: #475569;
@@ -301,19 +444,18 @@ const insertDocumentInEditor = documentData => {
            display: inline-block;
            cursor: pointer;
            border: none;
-           user-select: none;
-           margin-right: 6px;
-           flex-shrink: 0 !important;
+           margin-right: 8px;
+           transition: all 0.2s;
          "
-         onmouseover="this.style.background='#e2e8f0'; this.style.color='#334155'"
-         onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'"
-         title="Visualizar documento">Visualizar |</a>
-         
-      <a href="${downloadUrl}" 
-         download
+         onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b';"
+         onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569';"
+      >👁️ Visualizar</a>
+
+      <a href="${downloadUrl}"
+         download="${fileName}"
          style="
-           color: #475569;
-           background: #f1f5f9;
+           color: #ffffff;
+           background: #bea55a;
            padding: 4px 8px;
            border-radius: 4px;
            font-size: 12px;
@@ -322,25 +464,21 @@ const insertDocumentInEditor = documentData => {
            display: inline-block;
            cursor: pointer;
            border: none;
-           user-select: none;
-           flex-shrink: 0 !important;
+           transition: all 0.2s;
          "
-         onmouseover="this.style.background='#e2e8f0'; this.style.color='#334155'"
-         onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'"
-         title="Baixar documento">Download</a>
+         onmouseover="this.style.background='#a08d47';"
+         onmouseout="this.style.background='#bea55a';"
+      >⬇️ Baixar</a>
     </div>
   `;
 
   // Inserir no editor
-  editorInstance.value.model.change(writer => {
-    const viewFragment =
-      editorInstance.value.data.processor.toView(documentHtml);
-    const modelFragment = editorInstance.value.data.toModel(viewFragment);
-    editorInstance.value.model.insertContent(modelFragment);
-  });
+  const viewFragment = editorInstance.value.data.processor.toView(documentHtml);
+  const modelFragment = editorInstance.value.data.toModel(viewFragment);
+  editorInstance.value.model.insertContent(modelFragment);
 };
 
-// Handler para seleção de documento
+// Handler para seleção de arquivo de documento
 const handleDocumentSelect = async event => {
   const file = event.target.files[0];
   if (!file) return;
@@ -363,7 +501,7 @@ const showDocumentUploadModal = () => {
   showDocumentUpload.value = true;
 };
 
-// Configuração do editor
+// Configuração do editor (mantida do original, mas SEM imageUpload na toolbar)
 const editorConfig = {
   toolbar: {
     shouldNotGroupWhenFull: true,
@@ -379,7 +517,6 @@ const editorConfig = {
       'indent',
       'outdent',
       '|',
-      'imageUpload',
       'blockQuote',
       'insertTable',
       'mediaEmbed',
@@ -411,19 +548,6 @@ const editorConfig = {
       },
     ],
   },
-  image: {
-    toolbar: [
-      'imageStyle:inline',
-      'imageStyle:block',
-      'imageStyle:side',
-      '|',
-      'toggleImageCaption',
-      'imageTextAlternative',
-    ],
-    upload: {
-      types: ['jpeg', 'png', 'gif', 'jpg', 'webp'],
-    },
-  },
   table: {
     contentToolbar: [
       'tableColumn',
@@ -440,106 +564,80 @@ const editorConfig = {
         name: 'youtube',
         url: [
           /^(?:m\.)?youtube\.com\/watch\?v=([\w-]+)/,
-          /^(?:m\.)?youtube\.com\/v\/([\w-]+)/,
-          /^youtube\.com\/embed\/([\w-]+)/,
-          /^youtu\.be\/([\w-]+)/,
+          /^(?:m\.)?youtube\.com\/embed\/([\w-]+)/,
+          /^(?:m\.)?youtu\.be\/([\w-]+)/,
         ],
         html: match => {
           const id = match[1];
           return (
-            '<div style="position: relative; padding-bottom: 100%; height: 0; padding-bottom: 56.2493%;">' +
+            '<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;margin: 16px 0;">' +
             `<iframe src="https://www.youtube.com/embed/${id}" ` +
-            'style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;" ' +
-            'frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>' +
-            '</iframe>' +
+            'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" ' +
+            'frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
+            '</div>'
+          );
+        },
+      },
+      {
+        name: 'vimeo',
+        url: [
+          /^vimeo\.com\/(\d+)/,
+          /^(?:www\.)?vimeo\.com\/(\d+)/,
+          /^player\.vimeo\.com\/video\/(\d+)/,
+        ],
+        html: match => {
+          const id = match[1];
+          return (
+            '<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;margin: 16px 0;">' +
+            `<iframe src="https://player.vimeo.com/video/${id}" ` +
+            'style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" ' +
+            'frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>' +
             '</div>'
           );
         },
       },
     ],
   },
-  placeholder: 'Comece a escrever seu conteúdo aqui...',
   extraPlugins: [LaravelUploadAdapterPlugin],
   language: 'pt-br',
+  placeholder: 'Digite o conteúdo da notícia aqui...',
 };
 
-// Watch para sincronizar com o v-model
-watch(
-  () => props.modelValue,
-  newValue => {
-    if (newValue !== content.value) {
-      content.value = newValue;
+const onReady = editorInst => {
+  editorInstance.value = editorInst;
+
+  // Definir conteúdo inicial
+  editorInst.setData(content.value);
+  updateWordCount();
+
+  // Listener para mudanças no conteúdo - COM DEBOUNCE
+  let updateTimeout = null;
+  editorInst.model.document.on('change:data', () => {
+    const newData = editorInst.getData();
+
+    // Limpar timeout anterior
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
     }
-  }
-);
 
-watch(content, newValue => {
-  emit('update:modelValue', newValue);
-  calculateWordCount(newValue);
-});
-
-// Computed para verificar se há imagens em base64
-const hasBase64Images = computed(() => {
-  return content.value && content.value.includes('data:image/');
-});
-
-// Computed para contar imagens em base64
-const base64ImageCount = computed(() => {
-  if (!content.value) return 0;
-  const matches = content.value.match(/data:image\/[^"']*/g);
-  return matches ? matches.length : 0;
-});
-
-// Computed para contar documentos
-const documentCount = computed(() => {
-  if (!content.value) return 0;
-  const matches = content.value.match(/class="document-download"/g);
-  return matches ? matches.length : 0;
-});
-
-// Métodos
-const onEditorReady = editor => {
-  editorInstance.value = editor;
-  calculateWordCount(editor.getData());
-
-  // Log para verificar se os plugins foram carregados
-  try {
-    const fileRepository = editor.plugins.get('FileRepository');
-    console.log(
-      '✅ Plugin FileRepository carregado - upload direto para Laravel'
-    );
-
-    // Listener para uploads
-    fileRepository.on('uploadComplete', (evt, data) => {
-      console.log('✅ Upload completo:', data);
-    });
-  } catch (error) {
-    console.error('❌ Erro ao configurar plugin de upload:', error);
-  }
-
-  // Configurar auto-save
-  setupAutoSave();
+    // Agendar atualização
+    updateTimeout = setTimeout(() => {
+      content.value = newData;
+      emit('update:modelValue', newData);
+      updateWordCount();
+    }, 300); // 300ms de delay
+  });
 };
 
-const onEditorChange = () => {
-  if (editorInstance.value) {
-    const data = editorInstance.value.getData();
-    content.value = data;
-    calculateWordCount(data);
-  }
-};
+const updateWordCount = () => {
+  if (!editorInstance.value) return;
 
-const calculateWordCount = text => {
-  if (!text) {
-    wordCount.value = 0;
-    emit('wordCountChange', 0);
-    return;
-  }
-
-  // Remove HTML tags
-  const plainText = text.replace(/<[^>]*>/g, ' ');
-  // Split por espaços e filtra strings vazias
-  const words = plainText.split(/\s+/).filter(word => word.length > 0);
+  const data = editorInstance.value.getData();
+  const text = data.replace(/<[^>]*>/g, '');
+  const words = text
+    .trim()
+    .split(/\s+/)
+    .filter(word => word.length > 0);
   wordCount.value = words.length;
   emit('wordCountChange', wordCount.value);
 };
@@ -552,355 +650,500 @@ const toggleFullScreen = async () => {
   isFullScreen.value = !isFullScreen.value;
 
   if (isFullScreen.value) {
-    // Entrar em tela cheia
     document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
   } else {
-    // Sair da tela cheia
     document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
   }
 
-  // Aguardar o DOM atualizar e reconfigurar o editor
   await nextTick();
-
   if (editorInstance.value) {
-    // Forçar refresh do editor
-    editorInstance.value.editing.view.change(() => {
-      // Força o editor a recalcular suas dimensões
-    });
+    editorInstance.value.editing.view.focus();
   }
 };
 
-// Handler para ESC key
-const handleEscKey = event => {
-  if (event.key === 'Escape') {
-    if (showDocumentUpload.value) {
-      showDocumentUpload.value = false;
-      event.preventDefault();
-    } else if (isFullScreen.value) {
-      event.preventDefault();
-      toggleFullScreen();
-    }
-  }
-};
-
-// Cleanup
-onUnmounted(() => {
-  if (autoSaveTimer) {
-    clearInterval(autoSaveTimer);
-  }
-
-  // Restaurar overflow do body
-  document.body.style.overflow = '';
-  document.documentElement.style.overflow = '';
-
-  // Remover listener de ESC
-  document.removeEventListener('keydown', handleEscKey);
-
-  // Resetar estado
-  isFullScreen.value = false;
-  showDocumentUpload.value = false;
+const documentCount = computed(() => {
+  if (!content.value) return 0;
+  const matches = content.value.match(/class="document-download"/g);
+  return matches ? matches.length : 0;
 });
 
-// Inicialização
-onMounted(() => {
-  // Adicionar listener para ESC
-  document.addEventListener('keydown', handleEscKey);
-
-  // Verificar se há meta tag CSRF
-  if (!document.querySelector('meta[name="csrf-token"]')) {
-    console.warn(
-      '⚠️ Meta tag CSRF não encontrada. Adicione no layout: <meta name="csrf-token" content="{{ csrf_token() }}">'
-    );
+watch(
+  () => props.modelValue,
+  newVal => {
+    if (newVal !== content.value) {
+      content.value = newVal;
+    }
   }
+);
+
+onMounted(() => {
+  const handleEsc = e => {
+    if (e.key === 'Escape' && isFullScreen.value) {
+      toggleFullScreen();
+    }
+  };
+  document.addEventListener('keydown', handleEsc);
+
+  onUnmounted(() => {
+    document.removeEventListener('keydown', handleEsc);
+    document.body.style.overflow = '';
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+  });
 });
 </script>
 
 <template>
-  <div class="content-editor-container" ref="editorContainer">
-    <!-- Modal para upload de documentos -->
+  <div class="content-editor-container">
+    <!-- Seção de Imagens do Carrossel -->
     <div
-      v-if="showDocumentUpload"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border-2 border-blue-200"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <svg
-            class="w-6 h-6 mr-2 text-blue-600"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path
-              d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
-            />
-          </svg>
-          Inserir Documento
-        </h3>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="bg-blue-500 p-2 rounded-lg">
+            <svg
+              class="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Imagens da Notícia</h3>
+            <p class="text-sm text-gray-600">
+              Adicione imagens que aparecerão no carrossel da notícia (opcional)
+            </p>
+          </div>
+        </div>
 
-        <div class="mb-4">
+        <label class="cursor-pointer">
           <input
             type="file"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-            @change="handleDocumentSelect"
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            accept="image/*"
+            multiple
+            @change="handleCarouselImageUpload"
+            class="hidden"
+            :disabled="isUploadingCarouselImage"
           />
-          <p class="text-sm text-gray-500 mt-2">
-            Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, ZIP,
-            RAR (máx. 10MB)
-          </p>
-        </div>
+          <div
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <span>Adicionar Imagens</span>
+          </div>
+        </label>
+      </div>
 
-        <!-- Progresso de upload -->
-        <div v-if="isUploadingDocument" class="mb-4">
-          <div class="w-full bg-gray-200 rounded-full h-2.5">
+      <!-- Progress bar durante upload -->
+      <div v-if="isUploadingCarouselImage" class="mb-4">
+        <div class="bg-white rounded-lg p-3 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <svg
+              class="w-5 h-5 text-blue-500 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <span class="text-sm font-medium text-gray-700"
+              >Enviando imagem...</span
+            >
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
             <div
-              class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-              :style="{ width: `${documentUploadProgress}%` }"
+              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${carouselImageUploadProgress}%` }"
             ></div>
           </div>
-          <p class="text-xs text-gray-500 mt-1 text-center">
-            Fazendo upload... {{ documentUploadProgress }}%
-          </p>
+        </div>
+      </div>
+
+      <!-- Lista de imagens -->
+      <div v-if="carouselImagesLocal.length > 0" class="space-y-3">
+        <div
+          v-for="(image, index) in carouselImagesLocal"
+          :key="image.id"
+          class="bg-white rounded-lg p-3 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <!-- Miniatura -->
+          <img
+            :src="image.url"
+            alt="Imagem do carrossel"
+            class="w-20 h-20 object-cover rounded-md border-2 border-gray-200"
+          />
+
+          <!-- Informações -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-700 truncate">
+              Imagem {{ index + 1 }}
+            </p>
+            <p class="text-xs text-gray-500">
+              {{ image.url.split('/').pop() }}
+            </p>
+          </div>
+
+          <!-- Botões de ação -->
+          <div class="flex items-center gap-2">
+            <!-- Mover para cima -->
+            <button
+              type="button"
+              @click="moveImageUp(index)"
+              :disabled="index === 0"
+              :class="[
+                'p-2 rounded-lg transition-colors',
+                index === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              ]"
+              title="Mover para cima"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 15l7-7 7 7"
+                />
+              </svg>
+            </button>
+
+            <!-- Mover para baixo -->
+            <button
+              type="button"
+              @click="moveImageDown(index)"
+              :disabled="index === carouselImagesLocal.length - 1"
+              :class="[
+                'p-2 rounded-lg transition-colors',
+                index === carouselImagesLocal.length - 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+              ]"
+              title="Mover para baixo"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            <!-- Remover -->
+            <button
+              type="button"
+              @click="removeCarouselImage(index)"
+              class="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+              title="Remover imagem"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="showDocumentUpload = false"
-            :disabled="isUploadingDocument"
-            class="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+        <!-- Preview do Carrossel -->
+        <div class="mt-4 bg-white rounded-lg p-4 border-2 border-blue-200">
+          <p
+            class="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2"
           >
-            Cancelar
-          </button>
+            <svg
+              class="w-5 h-5 text-blue-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            Pré-visualização do Carrossel
+          </p>
+          <div class="grid grid-cols-3 gap-2">
+            <img
+              v-for="(image, index) in carouselImagesLocal.slice(0, 6)"
+              :key="image.id"
+              :src="image.url"
+              :alt="`Preview ${index + 1}`"
+              class="w-full h-24 object-cover rounded border border-gray-200"
+            />
+            <div
+              v-if="carouselImagesLocal.length > 6"
+              class="w-full h-24 bg-gray-100 rounded border border-gray-200 flex items-center justify-center"
+            >
+              <span class="text-gray-500 text-sm font-medium"
+                >+{{ carouselImagesLocal.length - 6 }}</span
+              >
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Estado vazio -->
+      <div
+        v-else
+        class="bg-white rounded-lg p-8 text-center border-2 border-dashed border-gray-300"
+      >
+        <svg
+          class="w-16 h-16 text-gray-400 mx-auto mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        <p class="text-gray-500 text-sm">
+          Nenhuma imagem adicionada ao carrossel
+        </p>
+        <p class="text-gray-400 text-xs mt-1">
+          Clique no botão "Adicionar Imagens" para começar
+        </p>
       </div>
     </div>
 
-    <!-- Container do editor -->
+    <!-- Editor de Conteúdo (mantido o restante do código original) -->
     <div
-      class="editor-wrapper border border-gray-300 overflow-hidden shadow-lg"
-      :class="{
-        'editor-fullscreen': isFullScreen,
-        'rounded-lg': !isFullScreen,
-        'rounded-b-lg': !isFullScreen,
-      }"
+      ref="editorContainer"
+      :class="[
+        'editor-wrapper',
+        'border',
+        'border-gray-300',
+        'rounded-lg',
+        'overflow-hidden',
+        { 'editor-fullscreen': isFullScreen },
+        error ? 'border-red-500' : '',
+      ]"
     >
-      <!-- Cabeçalho do Editor -->
+      <!-- Toolbar customizada -->
       <div
-        class="flex justify-between items-center bg-slate-800 text-white p-4"
-        :class="{ 'rounded-t-lg': !isFullScreen }"
+        class="bg-gray-50 border-b border-gray-300 p-3 flex flex-wrap items-center justify-between gap-2"
       >
-        <h3 class="font-semibold text-lg flex items-center">
-          <span class="icon w-6 h-6 mr-2 text-yellow-400">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19.03 6.03L20 7L18.15 8.85L19.03 9.03L19.4 12.41L18.21 13.6L19 15L16.3 17.7L15 17L13.6 18.21L13.03 19.97L10.03 19.97L8.3 18.3L6 19L5 16.5L3.41 14.91L6.83 12.3H7.33L9 13L10.03 13.03V15L12.5 13.5L14 12L12.5 10.5L11 9.1H9.03L5.83 7.5L7.5 5.8L10 5L11 7L14 7L15.56 5.44L19.03 6.03Z"
-              />
-            </svg>
-          </span>
-          Conteúdo da Notícia
-        </h3>
-
-        <div class="flex items-center space-x-3">
-          <!-- Botão para inserir documentos -->
+        <div class="flex items-center gap-2 flex-wrap">
           <button
-            type="button"
             @click="showDocumentUploadModal"
-            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center text-sm shadow transition"
+            type="button"
+            class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm font-medium"
           >
-            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
-                d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
               />
             </svg>
             Inserir Documento
           </button>
 
-          <!-- Badge informativo sobre imagens -->
-          <div
-            v-if="hasBase64Images"
-            class="text-xs bg-amber-600 px-2 py-1 rounded-md flex items-center"
-          >
-            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M13,9H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
-              />
-            </svg>
-            {{ base64ImageCount }} imagem(s) temporária(s)
-          </div>
-
-          <!-- Badge para documentos -->
-          <div
-            v-if="documentCount > 0"
-            class="text-xs bg-blue-600 px-2 py-1 rounded-md flex items-center"
-          >
-            <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
-              />
-            </svg>
-            {{ documentCount }} documento(s)
-          </div>
-
           <button
-            type="button"
-            class="px-3 py-1.5 rounded-md flex items-center text-sm shadow transition"
-            :class="
-              isFullScreen
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-            "
             @click="toggleFullScreen"
+            type="button"
+            class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm font-medium"
           >
-            <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
-                v-if="isFullScreen"
-                d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"
+                v-if="!isFullScreen"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
               />
               <path
                 v-else
-                d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
               />
             </svg>
-            {{ isFullScreen ? 'Sair da Tela Cheia (ESC)' : 'Tela Cheia' }}
+            {{ isFullScreen ? 'Sair da Tela Cheia' : 'Tela Cheia' }}
           </button>
         </div>
+
+        <div class="text-sm text-gray-600">
+          <span class="font-medium">{{ wordCount }}</span> palavra{{
+            wordCount !== 1 ? 's' : ''
+          }}
+        </div>
       </div>
 
-      <!-- Modo Preview -->
-      <div
-        v-if="isPreviewMode"
-        class="preview-container bg-white p-6 prose prose-slate max-w-none overflow-y-auto editor-content"
-        :style="{
-          minHeight: isFullScreen ? 'calc(100vh - 200px)' : editorHeight,
-          maxHeight: isFullScreen ? 'calc(100vh - 200px)' : editorHeight,
-        }"
-        v-html="content"
-      ></div>
-
-      <!-- Modo Edição com CKEditor -->
-      <div v-else class="editor-content">
+      <!-- Conteúdo do Editor -->
+      <div class="editor-content">
         <ckeditor
-          :editor="editor"
+          v-if="!isPreviewMode"
           v-model="content"
+          :editor="editor"
           :config="editorConfig"
-          @ready="onEditorReady"
-          @change="onEditorChange"
-        ></ckeditor>
+          @ready="onReady"
+        />
 
-        <!-- Barra de status -->
+        <!-- Preview -->
         <div
-          class="flex justify-between items-center px-4 py-2 bg-gray-50 border-t text-sm text-gray-700"
-        >
-          <div class="flex items-center space-x-4">
-            <span class="flex items-center font-medium">
-              <svg
-                class="w-4 h-4 mr-1.5 text-gray-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M14,17H7V15H14M17,13H7V11H17M17,9H7V7H17M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3Z"
-                />
-              </svg>
-              {{ wordCount }} palavras
-            </span>
-
-            <span class="flex items-center font-medium">
-              <svg
-                class="w-4 h-4 mr-1.5 text-gray-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"
-                />
-              </svg>
-              Tempo de leitura:
-              {{ Math.max(1, Math.ceil(wordCount / 230)) }} min
-            </span>
-
-            <span
-              v-if="documentCount > 0"
-              class="flex items-center font-medium"
-            >
-              <svg
-                class="w-4 h-4 mr-1.5 text-gray-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
-                />
-              </svg>
-              {{ documentCount }} documento(s)
-            </span>
-          </div>
-
-          <div class="flex items-center space-x-4">
-            <!-- Indicador de imagens base64 -->
-            <span
-              v-if="hasBase64Images"
-              class="text-xs text-amber-600 font-medium flex items-center"
-            >
-              <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M5,3A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H14.09C14.03,20.67 14,20.34 14,20C14,19.32 14.12,18.64 14.35,18H5L8.5,13.5L11,16.5L14.5,12L16.73,14.97C17.7,14.34 18.84,14 20,14C20.34,14 20.67,14.03 21,14.09V5C21,3.89 20.1,3 19,3H5M19,16V19H16V21H19V24H21V21H24V19H21V16H19Z"
-                />
-              </svg>
-              {{ base64ImageCount }} temporária(s)
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mensagens de ajuda e dicas -->
-    <div v-if="!isFullScreen" class="mt-4 space-y-3">
-      <!-- Mensagem de erro se houver -->
-      <div
-        v-if="error"
-        class="bg-red-50 border-l-4 border-red-500 p-4 text-red-700"
-      >
-        <div class="flex items-center">
-          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
-            />
-          </svg>
-          <span class="font-medium">{{ error }}</span>
-        </div>
+          v-else
+          class="preview-container p-6 overflow-y-auto"
+          :style="{ minHeight: editorHeight, maxHeight: '800px' }"
+          v-html="content"
+        ></div>
       </div>
 
-      <!-- Dica sobre imagens -->
+      <!-- Modal de Upload de Documento -->
       <div
-        v-if="hasBase64Images"
-        class="bg-amber-50 border-l-4 border-amber-400 p-4"
+        v-if="showDocumentUpload"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="showDocumentUpload = false"
       >
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="h-5 w-5 text-amber-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 class="text-lg font-bold mb-4">Inserir Documento</h3>
+
+          <div v-if="!isUploadingDocument">
+            <label
+              class="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              <path
-                fill-rule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
+              <input
+                type="file"
+                class="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                @change="handleDocumentSelect"
               />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm text-amber-700">
-              <strong
-                >{{ base64ImageCount }} imagem(s) serão processadas ao salvar a
-                notícia.</strong
+              <svg
+                class="w-12 h-12 text-gray-400 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-              As imagens são temporariamente armazenadas no editor e serão
-              organizadas adequadamente quando você salvar.
-            </p>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <p class="text-sm text-gray-600 mb-1">
+                Clique para selecionar um arquivo
+              </p>
+              <p class="text-xs text-gray-400">
+                PDF, DOC, XLS, PPT, TXT, ZIP ou RAR (máx. 10MB)
+              </p>
+            </label>
+          </div>
+
+          <div v-else class="text-center py-8">
+            <svg
+              class="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <p class="text-sm text-gray-600 mb-2">Enviando documento...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2 max-w-xs mx-auto">
+              <div
+                class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                :style="{ width: `${documentUploadProgress}%` }"
+              ></div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <button
+              @click="showDocumentUpload = false"
+              type="button"
+              class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+              :disabled="isUploadingDocument"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
@@ -938,7 +1181,7 @@ onMounted(() => {
       </div>
 
       <!-- Instruções para usar o editor -->
-      <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
+      <div class="bg-gray-50 border-l-4 border-t-2 border-gray-400 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
             <svg
@@ -958,33 +1201,36 @@ onMounted(() => {
               <strong>Dicas do Editor:</strong>
             </p>
             <ul class="mt-2 text-sm text-gray-600 space-y-1">
+              <li>• Use a seção acima para adicionar imagens ao carrossel</li>
               <li>
                 • Use o botão "Inserir Documento" para adicionar arquivos (PDF,
                 DOC, XLS, etc.)
               </li>
-              <li>• Arraste e solte imagens diretamente no editor</li>
               <li>• Use Ctrl+K para inserir links rapidamente</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Mensagem de erro -->
+    <p v-if="error" class="mt-2 text-sm text-red-600">
+      {{ error }}
+    </p>
   </div>
 </template>
 
 <style scoped>
-/* Container principal */
+/* Mantidos todos os estilos originais */
 .content-editor-container {
   position: relative;
 }
 
-/* Estilos para o editor */
 .editor-wrapper {
   transition: all 0.3s ease-in-out;
   background: white;
 }
 
-/* Tela cheia - posicionamento fixo */
 .editor-fullscreen {
   position: fixed !important;
   top: 0 !important;
@@ -1003,14 +1249,12 @@ onMounted(() => {
   flex-direction: column !important;
 }
 
-/* Conteúdo do editor */
 .editor-content {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* Preview com texto bem escuro */
 .preview-container {
   color: #111827 !important;
   line-height: 1.7;
@@ -1066,7 +1310,6 @@ onMounted(() => {
   margin: 1.5em 0;
 }
 
-/* Estilos para documentos no preview */
 .preview-container .document-download {
   border: 2px solid #e5e7eb !important;
   border-radius: 8px !important;
@@ -1085,7 +1328,7 @@ onMounted(() => {
 </style>
 
 <style>
-/* Estilos globais para CKEditor */
+/* Estilos globais mantidos do original */
 .ck.ck-editor {
   width: 100% !important;
 }
@@ -1104,13 +1347,11 @@ onMounted(() => {
   padding: 20px !important;
 }
 
-/* Tela cheia - altura específica */
 .editor-fullscreen .ck.ck-editor__editable {
   min-height: calc(100vh - 250px) !important;
   max-height: calc(100vh - 250px) !important;
 }
 
-/* Texto escuro em todos os elementos do editor */
 .ck.ck-editor__editable p,
 .ck.ck-editor__editable h1,
 .ck.ck-editor__editable h2,
@@ -1125,12 +1366,10 @@ onMounted(() => {
   color: #111827 !important;
 }
 
-/* Placeholder com cor mais suave */
 .ck.ck-editor__editable.ck-placeholder::before {
   color: #9ca3af !important;
 }
 
-/* Toolbar styling */
 .ck.ck-toolbar {
   border-color: #e5e7eb !important;
   background: #f9fafb !important;
@@ -1142,13 +1381,11 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
 }
 
-/* Garantir que listas tenham texto escuro */
 .ck.ck-editor__editable ul li,
 .ck.ck-editor__editable ol li {
   color: #111827 !important;
 }
 
-/* Tabelas com texto escuro */
 .ck.ck-editor__editable table {
   color: #111827 !important;
 }
@@ -1159,28 +1396,6 @@ onMounted(() => {
   border: 1px solid #d1d5db !important;
 }
 
-/* Imagens temporárias com indicador visual */
-.ck.ck-editor__editable img[src^='data:image'] {
-  border: 2px dashed #f59e0b !important;
-  background-color: #fef3c7 !important;
-  padding: 4px !important;
-  position: relative;
-}
-
-.ck.ck-editor__editable img[src^='data:image']::after {
-  content: '📸 Temporária';
-  position: absolute;
-  top: -25px;
-  left: 0;
-  background: #f59e0b;
-  color: white;
-  padding: 2px 6px;
-  font-size: 10px;
-  border-radius: 3px;
-  font-family: sans-serif;
-}
-
-/* Estilos para documentos inseridos no editor */
 .ck.ck-editor__editable .document-download {
   border: 2px solid #e5e7eb !important;
   border-radius: 8px !important;

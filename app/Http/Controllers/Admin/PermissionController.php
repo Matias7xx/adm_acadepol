@@ -21,7 +21,7 @@ class PermissionController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Permission::class);
-    $permissions = (new Permission())->newQuery();
+    $permissions = new Permission()->newQuery();
 
     if (request()->has('search')) {
       $permissions->where(

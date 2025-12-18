@@ -15,7 +15,7 @@ class DirectorController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Director::class);
-    $diretores = (new Director())->newQuery();
+    $diretores = new Director()->newQuery();
 
     if (request()->has('search')) {
       $diretores->where('nome', 'Like', '%' . request()->input('search') . '%');

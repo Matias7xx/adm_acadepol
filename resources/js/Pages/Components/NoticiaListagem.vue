@@ -576,10 +576,10 @@ onUnmounted(() => {
             :key="noticia.id"
             class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
           >
-            <div class="flex h-32 sm:h-36">
+            <div class="flex h-36 sm:h-40">
               <!-- Imagem compacta -->
               <div
-                class="w-32 sm:w-48 relative overflow-hidden flex-shrink-0"
+                class="w-32 sm:w-40 relative overflow-hidden flex-shrink-0"
                 v-if="noticia.imagem"
               >
                 <img
@@ -604,7 +604,7 @@ onUnmounted(() => {
               <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
                 <div>
                   <!-- Metadados -->
-                  <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center justify-between mb-1">
                     <div class="flex items-center text-xs text-gray-500">
                       <svg
                         class="h-3 w-3 mr-1 text-[#bea55a]"
@@ -648,10 +648,10 @@ onUnmounted(() => {
                     class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2"
                   >
                     <span class="sm:hidden">{{
-                      truncateText(noticia.descricao_curta, 52)
+                      truncateText(noticia.descricao_curta, 90)
                     }}</span>
                     <span class="hidden sm:inline">{{
-                      truncateText(noticia.descricao_curta, 181)
+                      truncateText(noticia.descricao_curta, 210)
                     }}</span>
                   </p>
                 </div>

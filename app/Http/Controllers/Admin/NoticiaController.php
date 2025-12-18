@@ -82,6 +82,8 @@ class NoticiaController extends Controller
       'descricao_curta' => 'required|string|max:500',
       'conteudo' => 'nullable|string',
       'imagem' => 'nullable|image|max:2048',
+      'carousel_images' => 'nullable|array',
+      'carousel_images.*.url' => 'nullable|string',
       'destaque' => 'boolean',
       'data_publicacao' => 'required|date',
       'status' => 'required|in:rascunho,publicado,arquivado',
@@ -123,6 +125,16 @@ class NoticiaController extends Controller
       }
     }
 
+    // Processar imagens do carrossel (VISUALIZAÇÃO DA NOTÍCIA)
+    if (
+      isset($validated['carousel_images']) &&
+      is_array($validated['carousel_images'])
+    ) {
+      $validated['carousel_images'] = array_values(
+        $validated['carousel_images'],
+      );
+    }
+
     Noticia::create($validated);
 
     \Cache::forget('noticias_destaque_banner');
@@ -148,6 +160,7 @@ class NoticiaController extends Controller
         'imagem' => $noticia->imagem
           ? UploadHelper::getPublicUrl($noticia->imagem)
           : null,
+        'carousel_images' => $noticia->carousel_images ?? [],
         'destaque' => $noticia->destaque,
         'data_publicacao' => $noticia->data_publicacao->format('Y-m-d'),
         'data_formatada' => $noticia->data_formatada,
@@ -176,6 +189,7 @@ class NoticiaController extends Controller
         'imagem' => $noticia->imagem
           ? UploadHelper::getPublicUrl($noticia->imagem)
           : null,
+        'carousel_images' => $noticia->carousel_images ?? [],
         'destaque' => $noticia->destaque,
         'data_publicacao' => $noticia->data_publicacao->format('Y-m-d'),
         'status' => $noticia->status,
@@ -197,6 +211,8 @@ class NoticiaController extends Controller
       'descricao_curta' => 'required|string|max:500',
       'conteudo' => 'nullable|string',
       'imagem' => 'nullable|image|max:2048',
+      'carousel_images' => 'nullable|array',
+      'carousel_images.*.url' => 'nullable|string',
       'remover_imagem' => 'nullable|boolean',
       'destaque' => 'boolean',
       'data_publicacao' => 'required|date',
@@ -254,22 +270,27 @@ class NoticiaController extends Controller
       if ($imagePath) {
         $validated['imagem'] = $imagePath;
       }
-    } elseif ($tituloMudou && $noticia->imagem) {
-      // Se o título mudou mas não há nova imagem, mover a imagem existente
-      $novaImagemPath = UploadHelper::moveImage(
-        $noticia->imagem,
-        'noticias',
-        $validated['titulo'],
-        'capa',
-      );
-      if ($novaImagemPath) {
-        $validated['imagem'] = $novaImagemPath;
+    } else {
+      // Se não há novo upload E não mudou título E não é para remover
+      // então mantém a imagem atual removendo o campo do $validated
+      if (!$request->input('remover_imagem')) {
+        unset($validated['imagem']);
       }
     }
 
     // Remover campo remover_imagem antes de atualizar
     if (isset($validated['remover_imagem'])) {
       unset($validated['remover_imagem']);
+    }
+
+    // Processar imagens do carrossel
+    if (
+      isset($validated['carousel_images']) &&
+      is_array($validated['carousel_images'])
+    ) {
+      $validated['carousel_images'] = array_values(
+        $validated['carousel_images'],
+      );
     }
 
     // Atualizar notícia

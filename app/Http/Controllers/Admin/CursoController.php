@@ -15,7 +15,7 @@ class CursoController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Curso::class);
-    $cursos = (new Curso())->newQuery();
+    $cursos = new Curso()->newQuery();
 
     if (request()->has('search')) {
       $searchTerm = trim(request()->input('search'));

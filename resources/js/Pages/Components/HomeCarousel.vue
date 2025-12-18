@@ -761,7 +761,7 @@ const retry = () => {
 
 /* Container principal */
 .carousel-container {
-  @apply relative shadow-xl overflow-hidden w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply relative shadow-xl overflow-hidden w-full rounded-lg focus:outline-none;
   animation: fadeInUp 0.6s ease-out;
 }
 
@@ -844,7 +844,7 @@ const retry = () => {
   @apply relative w-full;
 }
 
-/* ✨ MELHORADO: Imagem sem flicker */
+/* Imagem sem flicker */
 .slide-image {
   @apply w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover transition-opacity duration-300;
   opacity: 1;

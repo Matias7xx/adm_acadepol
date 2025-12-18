@@ -40,6 +40,7 @@ const form = useForm({
   descricao_curta: props.noticia.descricao_curta || '',
   conteudo: props.noticia.conteudo || '',
   imagem: null,
+  carousel_images: props.noticia.carousel_images || [],
   remover_imagem: false,
   destaque: Boolean(props.noticia.destaque),
   data_publicacao: props.noticia.data_publicacao,
@@ -654,6 +655,7 @@ const currentImagePreview = computed(() => {
           <NoticiasEditor
             v-if="!isPreviewMode"
             v-model="form.conteudo"
+            v-model:carousel-images="form.carousel_images"
             :error="form.errors.conteudo"
             @word-count-change="handleWordCountChange"
           />

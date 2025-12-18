@@ -98,7 +98,7 @@ const form = useForm({
           :options="{ enabled: 'Enabled' }"
         />
         <FormField
-        v-if="!categoryType.is_flat"
+          v-if="!categoryType.is_flat"
           label="Parent Item"
           :class="{ 'text-red-400': form.errors.parent_id }"
         >

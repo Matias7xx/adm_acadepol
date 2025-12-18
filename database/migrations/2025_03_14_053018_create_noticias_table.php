@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('descricao_curta');
             $table->longText('conteudo')->nullable()->default('');
             $table->string('imagem')->nullable();
+            $table->json('carousel_images')->nullable();
             $table->boolean('destaque')->default(false);
             $table->date('data_publicacao');
             $table->enum('status', ['rascunho', 'publicado', 'arquivado'])->default('rascunho');

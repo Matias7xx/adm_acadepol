@@ -248,10 +248,8 @@ class MatriculaController extends Controller
         'detalhes_matricula' => [
           'nome' => $user->name,
           'curso' => $curso->nome,
-          'data_inicio' => (new \DateTime($curso->data_inicio))->format(
-            'd/m/Y',
-          ),
-          'data_fim' => (new \DateTime($curso->data_fim))->format('d/m/Y'),
+          'data_inicio' => new \DateTime($curso->data_inicio)->format('d/m/Y'),
+          'data_fim' => new \DateTime($curso->data_fim)->format('d/m/Y'),
           'id' => $matricula->id,
           'created_at' => now()->format('d/m/Y H:i'),
         ],

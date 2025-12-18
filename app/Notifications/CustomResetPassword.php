@@ -31,7 +31,7 @@ class CustomResetPassword extends ResetPasswordNotification implements
       ),
     );
 
-    return (new MailMessage())
+    return new MailMessage()
       ->subject('Redefinição de Senha - ACADEPOL')
       ->markdown('emails.auth.reset-password', [
         'user' => $notifiable,

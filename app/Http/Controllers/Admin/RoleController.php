@@ -22,7 +22,7 @@ class RoleController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Role::class);
-    $roles = (new Role())->newQuery();
+    $roles = new Role()->newQuery();
 
     if (request()->has('search')) {
       $roles->where('name', 'Like', '%' . request()->input('search') . '%');

@@ -21,7 +21,7 @@ class MenuController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', Menu::class);
-    $menus = (new Menu())->newQuery();
+    $menus = new Menu()->newQuery();
 
     if (request()->has('search')) {
       $menus->where('name', 'Like', '%' . request()->input('search') . '%');

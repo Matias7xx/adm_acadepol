@@ -33,7 +33,7 @@ class UserController extends Controller
   public function index()
   {
     $this->authorize('adminViewAny', User::class);
-    $users = (new User())->newQuery();
+    $users = new User()->newQuery();
 
     if (request()->has('search')) {
       $users

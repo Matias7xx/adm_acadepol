@@ -99,6 +99,7 @@ class NoticiaController extends Controller
         'imagem' => $noticia->imagem
           ? UploadHelper::getPublicUrl($noticia->imagem)
           : null,
+        'carousel_images' => $noticia->carousel_images ?? [],
         'destaque' => $noticia->destaque,
         'data_publicacao' => $noticia->data_formatada,
         'data_publicacao_iso' => $noticia->data_publicacao->toIso8601String(),
