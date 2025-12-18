@@ -151,19 +151,21 @@ const validarCPF = cpf => {
           :href="route('home')"
           class="flex items-center text-amber-400 hover:text-amber-300 transition"
         >
-          <span>Voltar</span>
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 ml-1"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-              clip-rule="evenodd"
-            />
-          </svg>
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+          <span>Voltar</span>
         </Link>
       </div>
     </div>
