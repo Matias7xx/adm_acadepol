@@ -30,6 +30,7 @@ class ProfileUpdateRequest extends FormRequest
       'cargo' => ['sometimes', 'string', 'max:255'],
       'lotacao' => ['nullable', 'string', 'max:255'],
       'documento' => ['sometimes', 'string', 'max:20'],
+      'data_nascimento' => ['nullable', 'date', 'before:today'],
     ];
   }
 
@@ -49,6 +50,10 @@ class ProfileUpdateRequest extends FormRequest
       'email.unique' => 'Este e-mail já está em uso.',
       'telefone.max' => 'O telefone não pode ter mais de 20 caracteres.',
       'lotacao.max' => 'A lotação não pode ter mais de 255 caracteres.',
+      'data_nascimento.date' =>
+        'A data de nascimento deve ser uma data válida.',
+      'data_nascimento.before' =>
+        'A data de nascimento deve ser anterior a hoje.',
     ];
   }
 

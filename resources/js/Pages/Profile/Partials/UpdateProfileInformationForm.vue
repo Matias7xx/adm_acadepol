@@ -18,14 +18,33 @@ const props = defineProps({
 const user = usePage().props.auth.user;
 const { toast } = useToast();
 
+// Função para formatar data do backend (YYYY-MM-DD) para input date
+const formatDateForInput = dateString => {
+  if (!dateString) return '';
+  // Se já está no formato YYYY-MM-DD, retorna
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+  // Se vier como objeto Date ou string, converte
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
 const form = useForm({
-  name: user.name,
-  email: user.email,
-  matricula: user.matricula || '',
-  cargo: user.cargo || '',
-  lotacao: user.lotacao || '',
-  telefone: user.telefone || '',
-  documento: user.cpf || '',
+  name: user?.name || '',
+  email: user?.email || '',
+  matricula: user?.matricula || '',
+  cargo: user?.cargo || '',
+  lotacao: user?.lotacao || '',
+  telefone: user?.telefone || '',
+  documento: user?.cpf || '',
+  data_nascimento: formatDateForInput(user?.data_nascimento) || '',
 });
 
 const updateProfileInformation = () => {
@@ -42,13 +61,14 @@ const updateProfileInformation = () => {
 };
 
 const resetForm = () => {
-  form.name = user.name;
-  form.email = user.email;
-  form.matricula = user.matricula || '';
-  form.cargo = user.cargo || '';
-  form.lotacao = user.lotacao || '';
-  form.telefone = user.telefone || '';
-  form.documento = user.cpf || '';
+  form.name = user?.name || '';
+  form.email = user?.email || '';
+  form.matricula = user?.matricula || '';
+  form.cargo = user?.cargo || '';
+  form.lotacao = user?.lotacao || '';
+  form.telefone = user?.telefone || '';
+  form.documento = user?.cpf || '';
+  form.data_nascimento = formatDateForInput(user?.data_nascimento) || '';
   toast.info('Formulário restaurado com os valores originais');
 };
 </script>
@@ -145,9 +165,21 @@ const resetForm = () => {
           />
           <InputError class="mt-2" :message="form.errors.documento" />
         </div>
+
+        <!-- Data de Nascimento -->
+        <div>
+          <InputLabel for="data_nascimento" value="Data de Nascimento" />
+          <TextInput
+            id="data_nascimento"
+            type="date"
+            class="mt-1 block w-full"
+            v-model="form.data_nascimento"
+          />
+          <InputError class="mt-2" :message="form.errors.data_nascimento" />
+        </div>
       </div>
 
-      <div v-if="mustVerifyEmail && user.email_verified_at === null">
+      <div v-if="mustVerifyEmail && user?.email_verified_at === null">
         <p class="text-sm mt-2 text-gray-800">
           Seu e-mail não foi verificado.
           <Link

@@ -302,7 +302,7 @@ onUnmounted(() => {
               </p>
               <Link
                 href="/noticias"
-                class="inline-flex items-center px-6 py-3 bg-[#bea55a] text-white font-medium rounded-lg hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-200 focus:outline-none transition-all duration-200 shadow-md"
+                class="inline-flex items-center px-6 py-3 bg-[#bea55a] text-white font-medium rounded-lg hover:bg-[#887439] focus:outline-none transition-all duration-200 shadow-md"
               >
                 Explorar arquivo de notícias
               </Link>

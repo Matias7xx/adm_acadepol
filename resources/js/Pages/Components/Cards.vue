@@ -153,6 +153,6 @@ const utilidade = ref([
     titulo: 'Emissão de RG',
     link: 'https://www.policiacivil.pb.gov.br/servicos/emissao-de-rg',
   },
-  { id: 7, titulo: 'Fale Conosco', link: '/fale-conosco', novo: true },
+  { id: 7, titulo: 'Fale Conosco', link: '/fale-conosco', novo: false },
 ]);
 </script>

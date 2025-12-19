@@ -30,11 +30,21 @@ class ProfileController extends Controller
   public function update(ProfileUpdateRequest $request): RedirectResponse
   {
     $additionalValidation = [];
+
     if ($request->has('telefone')) {
       $additionalValidation['telefone'] = ['nullable', 'string', 'max:20'];
     }
+
     if ($request->has('lotacao')) {
       $additionalValidation['lotacao'] = ['nullable', 'string', 'max:255'];
+    }
+
+    if ($request->has('data_nascimento')) {
+      $additionalValidation['data_nascimento'] = [
+        'nullable',
+        'date',
+        'before:today',
+      ];
     }
 
     if (!empty($additionalValidation)) {
@@ -46,8 +56,13 @@ class ProfileController extends Controller
     if ($request->has('telefone')) {
       $data['telefone'] = $request->telefone;
     }
+
     if ($request->has('lotacao')) {
       $data['lotacao'] = $request->lotacao;
+    }
+
+    if ($request->has('data_nascimento')) {
+      $data['data_nascimento'] = $request->data_nascimento;
     }
 
     $request->user()->fill($data);

@@ -45,6 +45,12 @@ class HandleInertiaRequests extends Middleware
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
+            'cargo' => $user->cargo ?? null,
+            'lotacao' => $user->lotacao ?? null,
+            'cpf' => $user->cpf ?? null,
+            'telefone' => $user->telefone ?? null,
+            'orgao' => $user->orgao ?? null,
+            'data_nascimento' => $user->data_nascimento ?? null,
             // Adicionar roles e permissions
             'roles' => $user->roles ? json_decode($user->roles, true) : [],
             'permissions' => $user->permissions

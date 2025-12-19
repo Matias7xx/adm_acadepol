@@ -154,10 +154,7 @@ const submit = () => {
                   Informações Básicas
                 </h3>
 
-                <FormField
-                  label="Nome do Diretor"
-                  :class="{ 'text-red-400': form.errors.nome }"
-                >
+                <FormField label="Nome do Diretor" :error="form.errors.nome">
                   <FormControl
                     v-model="form.nome"
                     type="text"
@@ -165,35 +162,23 @@ const submit = () => {
                     :error="form.errors.nome"
                     autofocus
                   />
-                  <div
-                    v-if="form.errors.nome"
-                    class="text-red-400 text-sm mt-1"
-                  >
-                    {{ form.errors.nome }}
-                  </div>
                 </FormField>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     label="Data de Início"
-                    :class="{ 'text-red-400': form.errors.data_inicio }"
+                    :error="form.errors.data_inicio"
                   >
                     <FormControl
                       v-model="form.data_inicio"
                       type="date"
                       :error="form.errors.data_inicio"
                     />
-                    <div
-                      v-if="form.errors.data_inicio"
-                      class="text-red-400 text-sm mt-1"
-                    >
-                      {{ form.errors.data_inicio }}
-                    </div>
                   </FormField>
 
                   <FormField
                     label="Data de Término"
-                    :class="{ 'text-red-400': form.errors.data_fim }"
+                    :error="form.errors.data_fim"
                   >
                     <FormControl
                       v-model="form.data_fim"
@@ -202,16 +187,10 @@ const submit = () => {
                       :disabled="form.atual"
                       :class="{ 'opacity-50': form.atual }"
                     />
-                    <div
-                      v-if="form.errors.data_fim"
-                      class="text-red-400 text-sm mt-1"
-                    >
-                      {{ form.errors.data_fim }}
-                    </div>
                   </FormField>
                 </div>
 
-                <FormField label="Status">
+                <FormField label="Status" :error="form.errors.atual">
                   <div class="flex items-center space-x-3 p-3 rounded-lg">
                     <FormControl
                       v-model="form.atual"
@@ -242,12 +221,6 @@ const submit = () => {
                       Diretor atual
                     </div>
                   </div>
-                  <div
-                    v-if="form.errors.atual"
-                    class="text-red-400 text-sm mt-1"
-                  >
-                    {{ form.errors.atual }}
-                  </div>
                 </FormField>
               </div>
 
@@ -261,7 +234,7 @@ const submit = () => {
 
                 <FormField
                   label="Biografia/Histórico"
-                  :class="{ 'text-red-400': form.errors.historico }"
+                  :error="form.errors.historico"
                 >
                   <FormControl
                     v-model="form.historico"
@@ -270,12 +243,6 @@ const submit = () => {
                     :error="form.errors.historico"
                     rows="4"
                   />
-                  <div
-                    v-if="form.errors.historico"
-                    class="text-red-400 text-sm mt-1"
-                  >
-                    {{ form.errors.historico }}
-                  </div>
                 </FormField>
               </div>
 

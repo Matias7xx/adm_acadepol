@@ -15,6 +15,7 @@ const props = defineProps({
   status: {
     type: String,
   },
+  user: Object,
 });
 
 const user = usePage().props.auth.user;
@@ -158,7 +159,7 @@ const handlePhotoError = () => {
                   Segurança
                 </button>
                 <!-- Conta -->
-                <!-- <button 
+                <!-- <button
                                     @click="activeTab = 'account'"
                                     class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
                                     :class="activeTab === 'account' ? 'bg-[#bea55a]/10 text-[#bea55a]' : 'text-gray-600 hover:bg-gray-100'"
@@ -195,6 +196,7 @@ const handlePhotoError = () => {
                 :must-verify-email="mustVerifyEmail"
                 :status="status"
                 class="max-w-3xl"
+                :user="user"
               />
             </div>
           </div>
@@ -224,7 +226,7 @@ const handlePhotoError = () => {
                                 Gerencie as configurações da sua conta e opções de exclusão.
                             </p>
                         </div>
-                        
+
                         <div class="p-6">
                             <DeleteUserForm class="max-w-3xl" />
                         </div>

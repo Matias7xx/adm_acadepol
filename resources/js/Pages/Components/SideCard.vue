@@ -11,17 +11,17 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png';
     </h3>
 
     <!-- Card Agendamentos -->
-    <!-- <div class="bg-white hover:bg-gray-50 shadow rounded-lg transition-all duration-300 
+    <!-- <div class="bg-white hover:bg-gray-50 shadow rounded-lg transition-all duration-300
                 overflow-hidden group">
       <div class="p-4 flex items-center gap-4">
         <div class="w-12 h-12 flex-shrink-0 rounded-full bg-gray-300 flex items-center justify-center">
-          <img 
-            :src="iconAgenda" 
-            class="h-6 w-auto" 
+          <img
+            :src="iconAgenda"
+            class="h-6 w-auto"
             alt="Ícone de agenda"
           >
         </div>
-        
+
         <div class="flex-1">
           <h4 class="text-base font-bold text-gray-800 group-hover:text-gray-900">
             AGENDAMENTOS
@@ -71,7 +71,7 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png';
           </p>
           <a
             href="/requerimentos/novo"
-            class="text-sm font-medium text-[#bea55a] hover:text-yellow-600 inline-block mt-2 group-hover:underline"
+            class="text-sm font-medium text-[#bea55a] hover:text-[#9e8743] inline-block mt-2 group-hover:underline"
           >
             Fazer requerimento →
           </a>
@@ -105,7 +105,7 @@ import iconAlojamento from '@/src/assets/icon-alojamento.png';
           </p>
           <a
             href="/alojamento/escolha-tipo"
-            class="text-sm font-medium text-[#bea55a] hover:text-yellow-600 inline-block mt-2 group-hover:underline"
+            class="text-sm font-medium text-[#bea55a] hover:text-[#9e8743] inline-block mt-2 group-hover:underline"
           >
             Reservar agora →
           </a>
