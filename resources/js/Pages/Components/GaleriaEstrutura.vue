@@ -9,7 +9,7 @@
     </header>
 
     <!-- Barra de busca -->
-    <div class="mb-6">
+    <!-- <div class="mb-6">
       <div class="relative">
         <input
           v-model="termoBusca"
@@ -51,7 +51,7 @@
           </svg>
         </button>
       </div>
-    </div>
+    </div> -->
 
     <!-- Filtros para categorias -->
     <div class="mb-8">
@@ -61,10 +61,10 @@
       <div class="flex flex-wrap gap-2">
         <button
           @click="filtrarPor('Todos')"
-          class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none"
           :class="
             categoriaAtiva === 'Todos'
-              ? 'bg-blue-600 text-white shadow-md'
+              ? 'bg-gray-600 text-white shadow-md'
               : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
           "
         >
@@ -74,10 +74,10 @@
           v-for="categoria in categorias"
           :key="categoria"
           @click="filtrarPor(categoria)"
-          class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none"
           :class="
             categoriaAtiva === categoria
-              ? 'bg-blue-600 text-white shadow-md'
+              ? 'bg-gray-600 text-white shadow-md'
               : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
           "
         >
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Controles de visualização -->
-    <div class="flex justify-between items-center mb-6">
+    <!-- <div class="flex justify-between items-center mb-6">
       <div class="flex items-center gap-4">
         <label class="text-sm font-medium text-gray-700">Visualização:</label>
         <div class="flex bg-gray-100 rounded-lg p-1">
@@ -106,7 +106,7 @@
               />
             </svg>
           </button>
-          <button
+           <button
             @click="tipoVisualizacao = 'list'"
             class="px-3 py-1 rounded text-sm transition-all"
             :class="
@@ -133,7 +133,7 @@
           <option value="large">Grande</option>
         </select>
       </div>
-    </div>
+    </div> -->
 
     <!-- Loading state -->
     <div v-if="carregando" class="text-center py-12">
@@ -483,7 +483,7 @@
 
     <!-- Rodapé -->
     <footer class="mt-12 text-center text-gray-500 text-sm">
-      <p>&copy; 2023 ACADEPOL - Todos os direitos reservados.</p>
+      <p>&copy; 2026 ACADEPOL - Todos os direitos reservados.</p>
     </footer>
   </div>
 </template>
@@ -499,101 +499,80 @@ export default {
       'Oferecemos instalações modernas e equipadas para a formação e treinamento dos profissionais de segurança pública.';
 
     const categorias = [
-      'Salas de Aula',
-      'Laboratórios',
       'Área Externa',
+      'Estande de Tiro',
       'Auditório',
-      'Biblioteca',
-      'Instalações Esportivas',
+      'Quadra Poliesportiva',
     ];
 
     const fotos = [
       {
         id: 1,
-        titulo: 'Fachada Principal',
-        descricao:
-          'Entrada principal da ACADEPOL com arquitetura moderna e acessibilidade completa',
+        titulo: 'Entrada Administração',
+        /* descricao:
+          'Entrada principal da ACADEPOL com arquitetura moderna e acessibilidade completa', */
         categoria: 'Área Externa',
-        url: 'https://static.paraiba.pb.gov.br/2015/01/acadepol-foto-francisco-fran%C3%A7a-19.jpg',
+        url: '/images/estrutura/ENTRADA_ADMIN.jpeg',
       },
       {
         id: 2,
-        titulo: 'Laboratório ACADEPOL',
-        descricao:
-          'Laboratório moderno da ACADEPOL equipado com tecnologia avançada para ensino e treinamento',
-        categoria: 'Laboratórios',
-        url: '/images/estrutura/laboratorio.jpg',
+        titulo: 'Entrada Alojamentos',
+        categoria: 'Área Externa',
+        url: '/images/estrutura/ENTRADA_ALOJAMENTO_2.jpeg',
       },
       {
         id: 3,
-        titulo: 'Laboratório de Informática',
-        descricao:
-          'Laboratório equipado com computadores de última geração para treinamento digital',
-        categoria: 'Laboratórios',
-        url: 'https://pm.es.gov.br/Media/PMES/_Profiles/c4d8c6e6/9a583751/materia174mes10edit.jpg?v=637972173914939020',
+        titulo: 'Entrada Alojamentos',
+        categoria: 'Área Externa',
+        url: '/images/estrutura/ENTRADA_ALOJAMENTO_1.jpeg',
       },
       {
         id: 4,
-        titulo: 'Sala de Aula Interativa',
-        descricao:
-          'Sala moderna com recursos multimídia para aulas dinâmicas e interativas',
-        categoria: 'Salas de Aula',
-        url: 'https://www.es.gov.br/Media/PortalES/_Profiles/c4d8c6e6/d8d1f292/WhatsApp%20Image%202023-11-13%20at%2013.18.54%20(1)-1.jpeg?v=638513060550508360',
+        titulo: 'Entrada Pátio',
+        categoria: 'Área Externa',
+        url: '/images/estrutura/ENTRADA_SALAS.jpeg',
       },
       {
         id: 5,
-        titulo: 'Biblioteca Central',
-        descricao:
-          'Acervo completo com obras especializadas em segurança pública e direito',
-        categoria: 'Biblioteca',
-        url: 'https://images.pexels.com/photos/1370296/pexels-photo-1370296.jpeg',
+        titulo: 'Pátio',
+        categoria: 'Área Externa',
+        url: '/images/estrutura/PATIO.jpeg',
       },
       {
         id: 6,
-        titulo: 'Auditório Principal',
-        descricao:
-          'Capacidade para 300 pessoas, equipado com sistema de som e projeção modernos',
-        categoria: 'Auditório',
-        url: 'https://www.policiacivil.pb.gov.br/noticias/acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestra-sobre-administracao-publica/22092023-acadepol-conclui-primeira-turma-do-curso-de-formacao-2023-com-palestr-1.jpg/@@images/6e0e85f7-3f3e-4bf8-a70c-3f35c0ab93db.jpeg',
+        titulo: 'Estande',
+        categoria: 'Estande de Tiro',
+        url: '/images/estrutura/ESTANDE_1.jpeg',
       },
       {
         id: 7,
-        titulo: 'Laboratório de Balística',
-        descricao:
-          'Ambiente especializado para análises e estudos balísticos avançados',
-        categoria: 'Laboratórios',
-        url: 'https://thumbs.dreamstime.com/z/pol%C3%ADcia-cient%C3%ADfica-extrai-vest%C3%ADgios-de-arma-no-laborat%C3%B3rio-bal%C3%ADstica-imagem-conceitual-181491170.jpg?ct=jpeg',
+        titulo: 'Estande',
+        categoria: 'Estande de Tiro',
+        url: '/images/estrutura/ESTANDE_2.jpeg',
       },
       {
         id: 8,
-        titulo: 'Quadra Poliesportiva',
-        descricao:
-          'Espaço amplo para atividades físicas e treinamento tático dos alunos',
-        categoria: 'Instalações Esportivas',
-        url: 'https://brejo.com/wp-content/uploads/2023/08/acadepol2.jpeg',
+        titulo: 'Auditório',
+        categoria: 'Auditório',
+        url: '/images/estrutura/AUDITORIO1.jpeg',
       },
       {
         id: 9,
-        titulo: 'Estande de Tiro',
-        descricao:
-          'Ambiente seguro e controlado para treinamento de tiro e manuseio de armas',
-        categoria: 'Instalações Esportivas',
-        url: 'https://www.policiacivil.pb.gov.br/noticias/capacitacao-acadepol-promove-cursos-de-tiro-defensivo-investigacao-de-homicidios-e-extracao-de-dados-para-policiais/capacitacao2.jpeg/@@images/bf056900-b1d1-4dc0-9e44-3a3ad75f6bcb.jpeg',
+        titulo: 'Auditório',
+        categoria: 'Auditório',
+        url: '/images/estrutura/AUDITORIO2.jpeg',
       },
       {
         id: 10,
-        titulo: 'Laboratório de Química Forense',
-        descricao:
-          'Laboratório moderno para análises químicas e perícias forenses',
-        categoria: 'Laboratórios',
-        url: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg',
+        titulo: 'Quadra Poliesportiva',
+        categoria: 'Quadra Poliesportiva',
+        url: '/images/estrutura/QUADRA_1.jpeg',
       },
       {
         id: 11,
-        titulo: 'Sala de Simulação',
-        descricao: 'Ambiente para simulações práticas de situações reais',
-        categoria: 'Salas de Aula',
-        url: 'https://images.pexels.com/photos/8199559/pexels-photo-8199559.jpeg',
+        titulo: 'Quadra Poliesportiva',
+        categoria: 'Quadra Poliesportiva',
+        url: '/images/estrutura/QUADRA_2.jpeg',
       },
     ];
 

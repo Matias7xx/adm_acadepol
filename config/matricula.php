@@ -11,10 +11,10 @@ return [
     */
 
     // Email do administrador para receber notificações de novas matrículas
-    'admin_email' => env('MATRICULA_ADMIN_EMAIL', 'matiasnobrega7@gmail.com'),
+    //'admin_email' => env('MATRICULA_ADMIN_EMAIL', 'matiasnobrega7@gmail.com'),
 
     // Email institucional para receber cópia das notificações EMAIL DA ACADEPOL
-    'institutional_email' => env('MATRICULA_INSTITUTIONAL_EMAIL', 'nobregamatias7@gmail.com'),
+    'institutional_email' => env('EMAIL_INSTITUCIONAL', 'acadepol@gmail.com'),
 
     // Status possíveis para uma matrícula
     'status' => [
@@ -22,7 +22,7 @@ return [
         'aprovada' => 'Aprovada',
         'rejeitada' => 'Rejeitada',
     ],
-    
+
     // Tempo máximo (em dias) para analisar uma matrícula
     'tempo_analise' => env('MATRICULA_TEMPO_ANALISE', 5),
 ];

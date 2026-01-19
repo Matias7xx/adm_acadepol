@@ -802,7 +802,7 @@ const gerarFichaHospedagem = () => {
                 label="Gerar Ficha"
                 color="info"
               />
-              <BaseButton
+              <!-- <BaseButton
                 @click="rejeitarReserva"
                 :icon="mdiCloseCircle"
                 label="Rejeitar"
@@ -815,7 +815,7 @@ const gerarFichaHospedagem = () => {
                 label="Retornar para Pendente"
                 color="white"
                 :disabled="isChangingStatus"
-              />
+              /> -->
             </div>
 
             <div v-if="reserva.status === 'rejeitada'" class="flex gap-2">

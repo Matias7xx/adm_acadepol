@@ -172,28 +172,26 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="w-full bg-gradient-to-br bg-gray-100 py-8 sm:py-8 lg:py-10"
+    class="w-full bg-gradient-to-br bg-gray-100 py-6 md:py-8 lg:py-10"
     aria-labelledby="noticias-titulo"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header da seção -->
-      <div class="text-center mb-8 lg:mb-12">
-        <h2
-          id="noticias-titulo"
-          class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block"
-        >
-          Últimas Notícias
-          <span
-            class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gray-700 rounded-full"
-            aria-hidden="true"
-          ></span>
-        </h2>
-      </div>
 
       <!-- Conteúdo principal -->
-      <div class="flex flex-col xl:flex-row gap-8 lg:gap-12">
+      <div class="flex flex-col-reverse lg:flex-row gap-6 md:gap-8 lg:gap-12">
         <!-- Coluna principal de notícias -->
-        <main class="w-full xl:w-2/3">
+        <main class="w-full lg:w-2/3">
+          <div class="">
+            <div class="space-y-4">
+              <h2
+                id="noticias-titulo"
+                class="text-xl sm:text-2xl font-semibold text-gray-700 mb-4 pl-2 border-l-4 border-[#bea55a]"
+              >
+                Últimas Notícias
+              </h2>
+            </div>
+          </div>
           <!-- Estado de carregamento -->
           <div
             v-if="loading"
@@ -203,11 +201,11 @@ onUnmounted(() => {
           >
             <div class="relative">
               <div
-                class="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-[#bea55a]"
+                class="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-gray-400"
                 role="status"
               ></div>
               <div
-                class="absolute inset-0 rounded-full border-4 border-transparent border-t-yellow-400 animate-pulse"
+                class="absolute inset-0 rounded-full border-4 border-transparent animate-pulse"
               ></div>
             </div>
             <p class="mt-4 text-gray-600 font-medium">Carregando notícias...</p>
@@ -436,7 +434,7 @@ onUnmounted(() => {
         </main>
 
         <!-- Sidebar -->
-        <aside class="w-full xl:w-1/3">
+        <aside class="w-full lg:w-1/3">
           <div class="sticky top-8">
             <SideCard />
           </div>

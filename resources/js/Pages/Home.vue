@@ -6,16 +6,16 @@ import Cards from './Components/Cards.vue';
 import Footer from './Components/Footer.vue';
 import Noticias from './Components/Noticias.vue';
 import Header from './Components/Header.vue';
-import PowerBIComponent from './Components/PowerBIComponent.vue';
+/* import PowerBIComponent from './Components/PowerBIComponent.vue'; */
 
 // URL do relatório Power BI
-const powerBIUrl =
-  'https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00NDhkLTllNDktZWQ1ZjMwN2ZiMjM5IiwidCI6IjgxYzUyNzVkLTIxMjMtNDU0Yi1iMjEwLTI4MWI0NjVmZGI4YSJ9';
+/* const powerBIUrl =
+  'https://app.powerbi.com/view?r=eyJrIjoiODA4MDIwNDEtY2ZhNi00NDhkLTllNDktZWQ1ZjMwN2ZiMjM5IiwidCI6IjgxYzUyNzVkLTIxMjMtNDU0Yi1iMjEwLTI4MWI0NjVmZGI4YSJ9'; */
 </script>
 
 <template>
   <Head title="Home" />
-  <div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="min-h-screen flex flex-col">
     <!-- Header Section -->
     <header class="w-full">
       <!--  <Header class="shadow-xl" /> -->
@@ -37,24 +37,24 @@ const powerBIUrl =
     <main class="flex-grow">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Cards Grid -->
-        <section class="mb-12">
+        <section class="">
           <Cards />
         </section>
 
         <!-- Seção do Power BI  -->
-        <section class="mb-19">
+        <!-- <section class="mb-19">
           <PowerBIComponent
             :src="powerBIUrl"
             title="Dados e Estatísticas"
             height="650px"
           />
-        </section>
+        </section> -->
 
         <!-- Eventos Grid -->
-        <section class="mb-10">
-          <Noticias />
-        </section>
       </div>
+      <section class="">
+        <Noticias />
+      </section>
     </main>
 
     <!-- Footer -->

@@ -175,24 +175,24 @@
                 padding: 2rem;
                 margin: 1rem;
             }
-            
+
             .error-code {
                 font-size: 5rem;
             }
-            
+
             .error-title {
                 font-size: 2rem;
             }
-            
+
             .error-message {
                 font-size: 1.1rem;
             }
-            
+
             .action-buttons {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .btn {
                 width: 100%;
                 max-width: 280px;
@@ -204,46 +204,46 @@
             body {
                 background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             }
-            
+
             .error-container {
                 background: rgba(26, 26, 26, 0.98);
                 color: white;
                 border: 1px solid rgba(190, 165, 90, 0.3);
             }
-            
+
             .error-title {
                 color: #f3f4f6;
             }
-            
+
             .error-message {
                 color: #d1d5db;
             }
-            
+
             .error-details {
                 background: rgba(55, 65, 81, 0.7);
                 border-left-color: #bea55a;
             }
-            
+
             .error-details h3 {
                 color: #f3f4f6;
             }
-            
+
             .error-details p {
                 color: #d1d5db;
             }
-            
+
             .btn-secondary {
                 background: rgba(255, 255, 255, 0.1);
                 color: #d1d5db;
                 border-color: #4b5563;
             }
-            
+
             .btn-secondary:hover {
                 background: #374151;
                 color: white;
                 border-color: #bea55a;
             }
-            
+
             .footer-info {
                 color: #9ca3af;
             }
@@ -254,16 +254,16 @@
     <div class="error-container">
         <!-- Ícone do erro -->
         <i class="error-icon @yield('icon', 'fas fa-exclamation-triangle') @yield('icon_class', 'error-500')"></i>
-        
+
         <!-- Código do erro -->
         <div class="error-code">@yield('code', '500')</div>
-        
+
         <!-- Título do erro -->
         <h1 class="error-title">@yield('title', 'Erro do Servidor')</h1>
-        
+
         <!-- Mensagem do erro -->
         <p class="error-message">@yield('message', 'Ocorreu um erro inesperado. Tente novamente mais tarde.')</p>
-        
+
         <!-- Detalhes específicos do erro -->
         @hasSection('details')
             @yield('details')
@@ -273,27 +273,27 @@
                 <p>Um erro inesperado ocorreu durante o processamento da sua solicitação.</p>
             </div>
         @endif
-        
+
         <!-- Botões de ação -->
         <div class="action-buttons">
             @yield('extra_buttons')
-            
+
             <a href="javascript:history.back()" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i>
                 Voltar
             </a>
-            
+
             <a href="{{ url('/') }}" class="btn btn-primary">
                 <i class="fas fa-home"></i>
                 Página Inicial
             </a>
         </div>
-        
+
         <!-- Informações do rodapé -->
         <div class="footer-info">
-            <p>Se você acredita que isso é um erro, entre em contato com o 
-                <a href="mailto:{{ config('mail.from.address', 'suporte@acadepol.com') }}">suporte técnico</a>
-            </p>
+            <p class="text-xs text-gray-500">
+                        Em caso de dúvidas, solicite atendimento à Diretoria de Tecnologia da Informação <a href="https://helpdesk.apps.pc.pb.gov.br/login">por meio de um chamado.</a>
+                    </p>
             <p>© {{ date('Y') }} ACADEPOL - Academia de Polícia Civil da Paraíba</p>
         </div>
     </div>

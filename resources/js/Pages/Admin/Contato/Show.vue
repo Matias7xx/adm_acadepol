@@ -261,35 +261,35 @@ const closeRespostaModal = () => {
                 color="success"
                 :disabled="isChangingStatus"
               />
-              <BaseButton
+              <!--  <BaseButton
                 @click="arquivarContato"
                 :icon="mdiCheckCircle"
                 label="Arquivar"
                 color="info"
                 :disabled="isChangingStatus"
-              />
+              /> -->
             </div>
 
             <!-- Ações para status respondido -->
             <div v-if="contato.status === 'respondido'" class="flex gap-2">
-              <BaseButton
+              <!-- <BaseButton
                 @click="arquivarContato"
                 :icon="mdiCheckCircle"
                 label="Arquivar"
                 color="info"
                 :disabled="isChangingStatus"
-              />
-              <BaseButton
+              /> -->
+              <!-- <BaseButton
                 @click="retornarParaPendente"
                 :icon="mdiRefresh"
                 label="Retornar para Pendente"
                 color="warning"
                 :disabled="isChangingStatus"
-              />
+              /> -->
             </div>
 
             <!-- Ações para status arquivado -->
-            <div v-if="contato.status === 'arquivado'" class="flex gap-2">
+            <!-- <div v-if="contato.status === 'arquivado'" class="flex gap-2">
               <BaseButton
                 @click="retornarParaPendente"
                 :icon="mdiRefresh"
@@ -297,16 +297,16 @@ const closeRespostaModal = () => {
                 color="warning"
                 :disabled="isChangingStatus"
               />
-            </div>
+            </div> -->
 
             <!-- Botão de exclusão -->
-            <BaseButton
+            <!-- <BaseButton
               @click="excluirContato"
               :icon="mdiDelete"
               label="Excluir"
               color="danger"
               :disabled="isChangingStatus"
-            />
+            /> -->
           </div>
         </div>
       </CardBox>

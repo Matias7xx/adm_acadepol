@@ -8,7 +8,7 @@
     <button
       type="button"
       @click="handleButtonClick"
-      class="inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold text-black-300 hover:bg-[#a38e4d] transition-colors duration-200"
+      class="inline-flex w-full bg-[#bea55a] justify-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold text-black-300 hover:bg-[#a38e4d] transition-colors duration-200"
     >
       Serviços
       <svg

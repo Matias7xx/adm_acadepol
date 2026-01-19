@@ -11,10 +11,10 @@ return [
     */
 
     // Email do administrador para receber notificações de novos requerimentos
-    'admin_email' => env('REQUERIMENTO_ADMIN_EMAIL', 'matiasnobrega7@gmail.com'),
+    //'admin_email' => env('REQUERIMENTO_ADMIN_EMAIL', 'matiasnobrega7@gmail.com'),
 
     // Email institucional para receber cópia das notificações EMAIL DA ACADEPOL
-    'institutional_email' => env('REQUERIMENTO_INSTITUTIONAL_EMAIL', 'nobregamatias7@gmail.com'),
+    'institutional_email' => env('EMAIL_INSTITUCIONAL', 'acadepol@gmail.com'),
 
     // Status possíveis para um requerimento
     'status' => [
@@ -22,7 +22,7 @@ return [
         'deferido' => 'Deferido',
         'indeferido' => 'Indeferido',
     ],
-    
+
     // Tipos de requerimentos disponíveis
     'tipos' => [
         'segunda_via_certificado' => '2ª Via de Certificado',

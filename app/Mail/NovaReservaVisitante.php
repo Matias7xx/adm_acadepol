@@ -43,10 +43,7 @@ class NovaReservaVisitante extends Mailable implements ShouldQueue
       markdown: 'emails.visitante.nova-reserva',
       with: [
         'visitante' => $this->visitante,
-        'url' => route('admin.alojamento.show-reserva', [
-          'tipo' => 'visitante',
-          'id' => $this->visitante->id,
-        ]),
+        'url' => route('admin.visitante.show', $this->visitante->id),
         'dataInicial' => $this->visitante->data_inicial->format('d/m/Y'),
         'dataFinal' => $this->visitante->data_final->format('d/m/Y'),
       ],

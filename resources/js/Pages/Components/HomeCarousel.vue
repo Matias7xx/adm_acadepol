@@ -453,7 +453,9 @@ const retry = () => {
 </script>
 
 <template>
-  <div class="carousel-wrapper max-w-screen-xl mx-auto px-4 mt-1">
+  <div
+    class="carousel-wrapper max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 md:mt-4 lg:mt-6"
+  >
     <!-- Estado de carregamento -->
     <div v-if="showSkeleton" class="carousel-skeleton">
       <div class="skeleton-image">
@@ -599,7 +601,7 @@ const retry = () => {
           <!-- Conteúdo -->
           <div class="slide-content">
             <h2 class="slide-title">{{ news.title }}</h2>
-            <p v-if="news.excerpt" class="slide-excerpt">{{ news.excerpt }}</p>
+            <!-- <p v-if="news.excerpt" class="slide-excerpt">{{ news.excerpt }}</p> -->
             <a
               :href="news.link"
               class="slide-link"
@@ -669,7 +671,7 @@ const retry = () => {
         </button>
 
         <!-- Botão play/pause -->
-        <button
+        <!-- <button
           @click="toggleAutoPlay"
           class="play-pause-button"
           :aria-label="
@@ -704,7 +706,7 @@ const retry = () => {
               d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8"
             />
           </svg>
-        </button>
+        </button> -->
       </template>
 
       <!-- Indicadores -->
@@ -815,12 +817,12 @@ const retry = () => {
 
 .error-title,
 .empty-title {
-  @apply text-lg font-semibold text-gray-700 mb-2;
+  @apply text-base sm:text-lg font-semibold text-gray-700 mb-2;
 }
 
 .error-message,
 .empty-message {
-  @apply text-gray-500 mb-4;
+  @apply text-sm sm:text-base text-gray-500 mb-4;
 }
 
 .error-retry-btn {
@@ -856,7 +858,14 @@ const retry = () => {
 }
 
 .slide-overlay {
-  @apply absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent;
+  @apply absolute inset-0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.75) 40%,
+    rgba(0, 0, 0, 0.3) 70%,
+    transparent 100%
+  );
 }
 
 .slide-content {
@@ -864,15 +873,15 @@ const retry = () => {
 }
 
 .slide-title {
-  @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 line-clamp-2 leading-tight;
+  @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 line-clamp-2 leading-tight;
 }
 
 .slide-excerpt {
-  @apply text-sm sm:text-base mb-3 line-clamp-2 text-gray-200 leading-relaxed;
+  @apply text-sm sm:text-base mb-1 line-clamp-2 text-gray-200 leading-relaxed;
 }
 
 .slide-link {
-  @apply inline-flex items-center text-yellow-400 hover:text-yellow-300 transition-colors text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black rounded px-1;
+  @apply inline-flex items-center text-yellow-400 hover:text-yellow-300 transition-colors text-sm sm:text-base font-medium focus:outline-none focus:ring-offset-black rounded px-1;
 }
 
 .link-arrow {
@@ -881,7 +890,7 @@ const retry = () => {
 
 /* Controles de navegação */
 .nav-button {
-  @apply absolute top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply absolute top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-3 sm:p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .nav-button-prev {

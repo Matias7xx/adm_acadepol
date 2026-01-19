@@ -24,8 +24,8 @@ TABLES_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>
 
 if [ "$TABLES_COUNT" = "0" ]; then
     echo "📊 Executando seeders (primeira execução)..."
-    php artisan db:seed --class=AdminCoreSeeder --force
-    php artisan db:seed --class=DormitorioSeeder
+    php artisan migrate --seed --seeder=AdminCoreSeeder
+    php artisan migrate --seed --seeder=DormitorioSeeder
 else
     echo "📈 Banco já possui dados, pulando seeders..."
 fi
@@ -45,14 +45,10 @@ if [ "$APP_ENV" != "local" ]; then
     php artisan view:cache
 fi
 
-# Garantir que o storage link existe
-echo "🔗 Verificando storage link..."
-if [ ! -L public/storage ]; then
-    echo "Criando storage link..."
-    php artisan storage:link --no-interaction
-else
-    echo "Storage link já existe, pulando..."
-fi
+# Garantir que o storage link existe e está correto
+echo "🔗 Recriando storage link..."
+rm -f public/storage
+php artisan storage:link --no-interaction --force
 
 # Ajustar permissões finais
 echo "🔒 Ajustando permissões..."

@@ -122,20 +122,18 @@ class RequerimentoController extends Controller
     $requerimento->save();
 
     // Enviar email para o administrador
-    $administradorEmail = config(
+    /* $administradorEmail = config(
       'requerimento.admin_email',
       'matiasnobrega7@gmail.com',
     );
-    Mail::to($administradorEmail)->send(new NovoRequerimento($requerimento));
+    Mail::to($administradorEmail)->send(new NovoRequerimento($requerimento)); */
 
     // Enviar cópia para o email institucional
     $emailInstitucional = config(
       'requerimento.institutional_email',
-      'nobregamatias7@gmail.com',
+      'acadepol@gmail.com',
     );
-    if ($emailInstitucional !== $administradorEmail) {
-      Mail::to($emailInstitucional)->send(new NovoRequerimento($requerimento));
-    }
+    Mail::to($emailInstitucional)->send(new NovoRequerimento($requerimento));
 
     // Armazene detalhes importantes do requerimento na sessão
     session([

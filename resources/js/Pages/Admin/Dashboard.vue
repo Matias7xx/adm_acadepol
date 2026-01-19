@@ -601,7 +601,7 @@ const legendaGrafico = computed(() => [
                   Respondidos
                 </div>
               </div>
-              <div
+              <!-- <div
                 class="text-center p-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 rounded-lg border border-gray-200 dark:border-gray-600"
               >
                 <div
@@ -612,7 +612,7 @@ const legendaGrafico = computed(() => [
                 <div class="text-xs text-gray-600 dark:text-gray-400">
                   Arquivados
                 </div>
-              </div>
+              </div> -->
             </div>
           </CardBox>
         </div>

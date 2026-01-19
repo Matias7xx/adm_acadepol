@@ -96,20 +96,18 @@ class ContatoController extends Controller
     );
 
     // Enviar e-mail para o administrador
-    $administradorEmail = config(
+    /* $administradorEmail = config(
       'contato.admin_email',
       'matiasnobrega7@gmail.com',
     );
-    Mail::to($administradorEmail)->send(new NovoContato($contato));
+    Mail::to($administradorEmail)->send(new NovoContato($contato)); */
 
     // Enviar cópia para o e-mail institucional
     $emailInstitucional = config(
       'contato.institutional_email',
-      'nobregamatias7@gmail.com',
+      'acadepol@gmail.com',
     );
-    if ($emailInstitucional !== $administradorEmail) {
-      Mail::to($emailInstitucional)->send(new NovoContato($contato));
-    }
+    Mail::to($emailInstitucional)->send(new NovoContato($contato));
 
     // Armazenar detalhes na sessão para a página de confirmação
     session([

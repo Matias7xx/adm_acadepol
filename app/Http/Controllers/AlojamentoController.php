@@ -213,23 +213,21 @@ class AlojamentoController extends Controller
       ]);
 
       // Enviar emails
-      $administradorEmail = config(
+      /* $administradorEmail = config(
         'alojamento.admin_email',
         'matiasnobrega7@gmail.com',
       );
       Mail::to($administradorEmail)->send(
         new NovaReservaAlojamento($alojamento),
-      );
+      ); */
 
       $emailInstitucional = config(
         'alojamento.institutional_email',
-        'nobregamatias7@gmail.com',
+        'acadepol@gmail.com',
       );
-      if ($emailInstitucional !== $administradorEmail) {
-        Mail::to($emailInstitucional)->send(
-          new NovaReservaAlojamento($alojamento),
-        );
-      }
+      Mail::to($emailInstitucional)->send(
+        new NovaReservaAlojamento($alojamento),
+      );
 
       // Session
       session([

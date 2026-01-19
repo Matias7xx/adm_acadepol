@@ -388,7 +388,7 @@ const closeRejeicaoModal = () => {
               "
               class="flex gap-2"
             >
-              <BaseButton
+              <!-- <BaseButton
                 @click="rejeitarRequerimento"
                 :icon="mdiCloseCircle"
                 label="Indeferir"
@@ -401,7 +401,7 @@ const closeRejeicaoModal = () => {
                 label="Retornar para Pendente"
                 color="white"
                 :disabled="isChangingStatus"
-              />
+              /> -->
             </div>
 
             <div
@@ -411,7 +411,7 @@ const closeRejeicaoModal = () => {
               "
               class="flex gap-2"
             >
-              <BaseButton
+              <!-- <BaseButton
                 @click="aprovarRequerimento"
                 :icon="mdiCheckCircle"
                 label="Aprovar"
@@ -424,7 +424,7 @@ const closeRejeicaoModal = () => {
                 label="Retornar para Pendente"
                 color="white"
                 :disabled="isChangingStatus"
-              />
+              /> -->
             </div>
           </div>
         </div>

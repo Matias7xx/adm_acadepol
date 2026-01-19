@@ -18,6 +18,7 @@ use Dompdf\Options;
 use Illuminate\Validation\ValidationException;
 use App\Mail\ReservaVisitanteAprovada;
 use App\Mail\ReservaVisitanteRejeitada;
+use App\Mail\NovaReservaVisitante;
 use App\Services\DataSanitizerService;
 use App\Services\AuditLoggerService;
 
@@ -295,7 +296,7 @@ class VisitanteController extends Controller
 
       $novaReserva->save();
 
-      // ✅ Log de sucesso
+      // Log de sucesso
       \Log::info(
         $visitanteExistente
           ? 'Nova reserva criada para visitante existente'
@@ -306,12 +307,6 @@ class VisitanteController extends Controller
           'nome' => $request->nome,
           'eh_primeira_reserva' => !$visitanteExistente,
         ],
-      );
-
-      // Enviar email para administrador
-      $administradorEmail = config(
-        'alojamento.admin_email',
-        'matiasnobrega7@gmail.com',
       );
 
       // Registrar na auditoria (se o serviço estiver disponível)
@@ -330,6 +325,14 @@ class VisitanteController extends Controller
           ],
         );
       }
+
+      $emailInstitucional = config(
+        'visitante.institutional_email',
+        'acadepol@gmail.com',
+      );
+      Mail::to($emailInstitucional)->send(
+        new NovaReservaVisitante($novaReserva),
+      );
 
       // Armazenar detalhes na sessão
       session([

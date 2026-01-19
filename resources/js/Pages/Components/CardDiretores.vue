@@ -440,36 +440,6 @@ watch(offline, novoValor => {
         </p>
       </header>
 
-      <!-- Alert de conectividade -->
-      <Transition name="slide-down">
-        <div
-          v-if="offline"
-          class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl shadow-sm"
-        >
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg
-                class="h-5 w-5 text-amber-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-amber-800">
-                Você está offline. Algumas funcionalidades podem estar
-                limitadas.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
       <!-- Controles otimizados -->
       <div class="mb-8 space-y-6">
         <!-- Barra de busca -->
@@ -496,7 +466,7 @@ watch(offline, novoValor => {
             @input="buscarDiretores($event.target.value)"
             type="text"
             placeholder="Buscar por nome ou período..."
-            class="w-full pl-10 pr-10 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+            class="w-full pl-10 pr-10 py-4 text-lg border border-gray-300 rounded-xl focus:ring-1 focus:ring-gray-200 focus:border-gray-200 transition-all shadow-sm"
           />
           <button
             v-if="termoBusca"
@@ -532,10 +502,10 @@ watch(offline, novoValor => {
                 :key="filtro.key"
                 @click="filtrarPeriodo(filtro.key)"
                 :aria-pressed="filtroAtivo === filtro.key"
-                class="group inline-flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-105"
+                class="group inline-flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none transform hover:scale-105"
                 :class="
                   filtroAtivo === filtro.key
-                    ? 'bg-blue-600 text-white shadow-lg'
+                    ? 'bg-gray-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm'
                 "
               >
@@ -574,7 +544,7 @@ watch(offline, novoValor => {
               <label class="text-sm font-medium text-gray-700">Ordenar:</label>
               <select
                 v-model="ordenacaoAtiva"
-                class="px-8 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
+                class="px-8 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-gray-500 focus:border-gray-500 bg-white shadow-sm"
               >
                 <option
                   v-for="ordenacao in ordenacoesDisponiveis"
@@ -1148,7 +1118,7 @@ watch(offline, novoValor => {
               ></div>
 
               <!-- Badge diretor atual sobreposto na imagem -->
-              <div
+              <!-- <div
                 v-if="
                   diretorSelecionado.periodo?.includes('ATUALMENTE') ||
                   diretorSelecionado.atual
@@ -1167,7 +1137,7 @@ watch(offline, novoValor => {
                   </svg>
                   ATUAL
                 </span>
-              </div>
+              </div> -->
             </div>
 
             <!-- Seção do conteúdo -->

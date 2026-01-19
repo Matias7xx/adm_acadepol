@@ -9,9 +9,9 @@ return [
     |
     */
 
-    'admin_email' => env('VISITANTE_ADMIN_EMAIL', env('ALOJAMENTO_ADMIN_EMAIL', 'matiasnobrega7@gmail.com')),
+    //'admin_email' => env('VISITANTE_ADMIN_EMAIL', env('ALOJAMENTO_ADMIN_EMAIL', 'matiasnobrega7@gmail.com')),
 
-    'institutional_email' => env('VISITANTE_INSTITUTIONAL_EMAIL', env('ALOJAMENTO_INSTITUTIONAL_EMAIL', 'nobregamatias7@gmail.com')),
+    'institutional_email' => env('EMAIL_INSTITUCIONAL', 'acadepol@gmail.com'),
 
     // Status possíveis para uma reserva de visitante
     'status' => [

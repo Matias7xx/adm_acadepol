@@ -270,25 +270,25 @@ onBeforeUnmount(() => {
         <!-- Menu Mobile -->
         <div
           v-if="isMenuOpen"
-          class="sm:hidden bg-white border-t border-gray-200"
+          class="sm:hidden bg-gray-50 border-t border-gray-200"
         >
           <div class="flex flex-col space-y-2 p-4">
             <DropdownInstitucional />
             <DropdownServicos />
             <Link
               href="/cursos"
-              class="text-black hover:text-[#a38e4d] px-3 py-2"
+              class="text-black bg-gray-200 rounded-md hover:text-[#a38e4d] px-3 py-2"
               >Cursos</Link
             >
             <!-- <Link href="#" class="text-black hover:text-[#a38e4d] px-3 py-2">Banco de Currículos</Link> -->
             <Link
               href="/concursos"
-              class="text-black hover:text-[#a38e4d] px-3 py-2"
+              class="text-black bg-gray-200 rounded-md hover:text-[#a38e4d] px-3 py-2"
               >Concursos</Link
             >
             <Link
               href="/fale-conosco"
-              class="text-black hover:text-[#a38e4d] px-3 py-2"
+              class="text-black bg-gray-200 rounded-md hover:text-[#a38e4d] px-3 py-2"
               >Fale Conosco</Link
             >
 

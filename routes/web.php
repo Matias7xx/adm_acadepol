@@ -48,7 +48,7 @@ Route::post('/api/upload-ckeditor-files', [UploadController::class, 'uploadCKEdi
 
 Route::get('/download', [App\Http\Controllers\DownloadController::class, 'downloadFile'])
     ->name('file.download'); //Download do file na notícia
-    
+
 Route::get('/view-file', [App\Http\Controllers\DownloadController::class, 'viewFile'])
     ->name('file.view'); //Visualizar o file da notícia
 
@@ -104,6 +104,10 @@ Route::get('/manual-aluno', function () {
 Route::get('/concursos', function () {
     return Inertia::render('Concursos');
 })->name('concursos');
+
+Route::get('/dados-estatisticos', function () {
+    return Inertia::render('DadosEstatisticos');
+})->name('dados.estatisticos');
 
 /*
 |--------------------------------------------------------------------------
@@ -178,35 +182,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/foto-usuario/{cpf?}', function($cpf = null) {
         Log::info("=== DEBUG ROTA FOTO ===");
         Log::info("CPF recebido: " . ($cpf ?? 'null'));
-        
+
         if (!Auth::check()) {
             Log::warning("Usuário não autenticado");
             return abort(404);
         }
-        
+
         // Se não passou CPF, usa o do usuário logado
         if (!$cpf) {
             $cpf = str_replace(['.', '-'], '', Auth::user()->cpf ?? '');
             Log::info("CPF do usuário logado: {$cpf}");
         }
-        
+
         $nomeArquivo = "{$cpf}_F.jpg";
         Log::info("Nome do arquivo: {$nomeArquivo}");
-        
+
         try {
             // DEBUG: Configuração do disco
             $diskConfig = config('filesystems.disks.s3');
             Log::info("Configuração do disco:", $diskConfig);
-            
+
             // Usar o disco s3 (bucket funcionais)
             $exists = StorageHelper::fotos()->exists($nomeArquivo);
             Log::info("Arquivo existe: " . ($exists ? 'SIM' : 'NÃO'));
-            
+
             if ($exists) {
                 $conteudo = StorageHelper::fotos()->get($nomeArquivo);
                 $tamanho = strlen($conteudo);
                 Log::info("Arquivo encontrado - Tamanho: {$tamanho} bytes");
-                
+
                 return response($conteudo, 200)
                     ->header('Content-Type', 'image/jpg')
                     ->header('Cache-Control', 'public, max-age=3600'); // Cache por 1 hora
@@ -218,17 +222,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 } catch (\Exception $e) {
                     Log::error("Erro ao listar arquivos: " . $e->getMessage());
                 }
-                
+
                 Log::warning("Arquivo não encontrado: {$nomeArquivo}");
                 return abort(404);
             }
-            
+
         } catch (\Exception $e) {
             Log::error("Erro na rota de foto: " . $e->getMessage());
             Log::error("Stack trace: " . $e->getTraceAsString());
             return abort(500);
         }
-        
+
     })->name('foto.usuario');
 
     // Perfil do usuário
@@ -268,11 +272,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::controller(CertificadoController::class)->prefix('certificados')->name('certificados.')->group(function () {
         // Listar certificados do usuário logado
         Route::get('/meus', 'meusCertificados')->name('meus');
-        
+
         // DOWNLOAD via MinIO
         Route::get('/{certificado}/download', 'download')->name('download')
             ->where('certificado', '[0-9]+');
-        
+
         // VISUALIZAR via MinIO
         Route::get('/{certificado}/view', 'view')->name('view')
             ->where('certificado', '[0-9]+');

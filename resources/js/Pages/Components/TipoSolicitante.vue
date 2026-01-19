@@ -53,7 +53,7 @@ import imgUrl from '@/src/assets/logo-acadepol.png';
             <!-- Botão -->
             <Link
               :href="route('alojamento.reserva.form')"
-              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none focus:ring-2 focus:ring-[#bea54a] focus:ring-offset-2 transition ease-in-out duration-150"
+              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none transition ease-in-out duration-150"
             >
               <svg
                 class="w-4 h-4 mr-2"
@@ -86,7 +86,7 @@ import imgUrl from '@/src/assets/logo-acadepol.png';
             <!-- Botão -->
             <Link
               :href="route('visitante.formulario')"
-              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none focus:ring-2 focus:ring-[#bea54a] focus:ring-offset-2 transition ease-in-out duration-150"
+              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none transition ease-in-out duration-150"
             >
               <svg
                 class="w-4 h-4 mr-2"

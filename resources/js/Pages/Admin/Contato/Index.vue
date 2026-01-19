@@ -391,57 +391,57 @@ const closeRespostaModal = () => {
                       outline
                       title="Responder"
                     />
-                    <BaseButton
+                    <!-- <BaseButton
                       @click="arquivarContato(contato.id)"
                       :icon="mdiCheckCircle"
                       small
                       color="info"
                       outline
                       title="Arquivar"
-                    />
+                    /> -->
                   </template>
 
                   <!-- Ações para status respondido -->
                   <template v-if="contato.status === 'respondido'">
-                    <BaseButton
+                    <!-- <BaseButton
                       @click="arquivarContato(contato.id)"
                       :icon="mdiCheckCircle"
                       small
                       color="info"
                       outline
                       title="Arquivar"
-                    />
-                    <BaseButton
+                    /> -->
+                    <!-- <BaseButton
                       @click="retornarParaPendente(contato.id)"
                       :icon="mdiReply"
                       small
                       color="warning"
                       outline
                       title="Retornar para Pendente"
-                    />
+                    /> -->
                   </template>
 
                   <!-- Ações para status arquivado -->
                   <template v-if="contato.status === 'arquivado'">
-                    <BaseButton
+                    <!-- <BaseButton
                       @click="retornarParaPendente(contato.id)"
                       :icon="mdiReply"
                       small
                       color="warning"
                       outline
                       title="Retornar para Pendente"
-                    />
+                    /> -->
                   </template>
 
                   <!-- Ação de exclusão -->
-                  <BaseButton
+                  <!-- <BaseButton
                     @click="excluirContato(contato.id)"
                     :icon="mdiDelete"
                     small
                     color="danger"
                     outline
                     title="Excluir"
-                  />
+                  /> -->
                 </BaseButtons>
               </td>
             </tr>

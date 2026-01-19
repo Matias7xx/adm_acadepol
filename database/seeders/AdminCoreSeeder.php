@@ -74,7 +74,7 @@ class AdminCoreSeeder extends Seeder
             'director edit',
             'director delete',
             'noticia list',
-            'noticia create', 
+            'noticia create',
             'noticia edit',
             'noticia delete'
         ];

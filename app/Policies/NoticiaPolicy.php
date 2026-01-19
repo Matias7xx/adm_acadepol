@@ -45,7 +45,7 @@ class NoticiaPolicy
   /**
    * Determina se o usuário pode excluir uma notícia
    */
-  public function adminDelete(User $user, Noticia $noticia)
+  public function adminDelete(User $user)
   {
     return $user->hasPermissionTo('noticia delete');
   }
