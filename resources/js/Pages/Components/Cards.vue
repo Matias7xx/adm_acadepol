@@ -74,7 +74,7 @@ const isAuthenticated = computed(() => page.props.auth?.user);
 
 const capacitacao = ref([
   { id: 1, titulo: 'Cursos', link: '/cursos' },
-  { id: 2, titulo: 'Ensino a Distância', link: '/banco-de-curriculos' },
+  { id: 2, titulo: 'Ensino a Distância', link: 'https://ead.acadepol.apps.pc.pb.gov.br/' },
   {
     id: 3,
     titulo: 'Certificados',
