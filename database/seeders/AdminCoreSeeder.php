@@ -95,7 +95,7 @@ class AdminCoreSeeder extends Seeder
         $role3 = Role::create(['name' => 'servidor']);
         /* $role3->givePermissionTo('admin user'); */ //Permissão de super usuário para o Servidor
 
-        $role4 = Role::create(['name' => 'aluno']);
+        /* $role4 = Role::create(['name' => 'aluno']); */
 
         foreach ($permissions as $permission) {
             if (Str::contains($permission, 'list')) {
@@ -104,26 +104,30 @@ class AdminCoreSeeder extends Seeder
         }
 
         // create demo users
-        $user = \App\Models\User::factory()->create([
+        $user = \App\Models\User::create([
             'name' => 'Super Admin',
             'email' => 'superadmin@example.com',
-            'matricula' => '0000000'
+            'matricula' => '4691210',
+            'password' => \Hash::make('97ms6S9a'),
+            'email_verified_at' => now(),
         ]);
         $user->assignRole($role1);
 
-        $user = \App\Models\User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'matricula' => '0000001'
+        $user = \App\Models\User::create([
+            'name' => 'Administrador Acadepol',
+            'email' => 'acadepoladmin@example.com',
+            'matricula' => '5277397',
+            'password' => \Hash::make('4aDv42v1'),
+            'email_verified_at' => now(),
         ]);
         $user->assignRole($role2);
 
-        $user = \App\Models\User::factory()->create([
+        /* $user = \App\Models\User::factory()->create([
             'name' => 'Example User',
             'email' => 'test@example.com',
             'matricula' => '0000002'
-        ]);
-        $user->assignRole($role3);
+        ]); */
+        //$user->assignRole($role3);
 
         // create menu
         $menu = Menu::create([
