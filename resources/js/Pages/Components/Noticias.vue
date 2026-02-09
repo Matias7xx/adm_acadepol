@@ -314,29 +314,7 @@ onUnmounted(() => {
               :key="noticia.id"
               class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
             >
-              <div class="flex h-36 sm:h-44">
-                <!-- Container da imagem compacta -->
-                <div
-                  class="w-32 sm:w-40 relative overflow-hidden flex-shrink-0"
-                  v-if="noticia.imagem"
-                >
-                  <img
-                    :src="noticia.imagem"
-                    :alt="`Imagem ilustrativa da notícia: ${noticia.titulo}`"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    @error="handleImageError"
-                  />
-
-                  <!-- Badge de destaque -->
-                  <div
-                    v-if="noticia.destaque"
-                    class="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-[#bea55a] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm"
-                    aria-label="Notícia em destaque"
-                  >
-                    Destaque
-                  </div>
-                </div>
+              <div class="flex h-38 sm:h-40">
 
                 <!-- Conteúdo compacto -->
                 <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
@@ -389,7 +367,7 @@ onUnmounted(() => {
                         truncateText(noticia.descricao_curta, 100)
                       }}</span>
                       <span class="hidden sm:inline">{{
-                        truncateText(noticia.descricao_curta, 190)
+                        truncateText(noticia.descricao_curta, 290)
                       }}</span>
                     </p>
                   </div>

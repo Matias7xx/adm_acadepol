@@ -16,12 +16,12 @@ class Kernel extends HttpKernel
   protected $middleware = [
     // \App\Http\Middleware\TrustHosts::class,
     \App\Http\Middleware\TrustProxies::class,
-    \Illuminate\Http\Middleware\HandleCors::class,
+    \App\Http\Middleware\HandleCors::class,
     \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
     \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
     \App\Http\Middleware\TrimStrings::class,
     \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-    \App\Http\Middleware\SecurityHeadersMiddleware::class, // Middleware de segurança global
+    \App\Http\Middleware\SecurityHeadersMiddleware::class,
   ];
 
   /**
@@ -37,14 +37,14 @@ class Kernel extends HttpKernel
       \Illuminate\View\Middleware\ShareErrorsFromSession::class,
       \App\Http\Middleware\VerifyCsrfToken::class,
       \Illuminate\Routing\Middleware\SubstituteBindings::class,
-      \App\Http\Middleware\HandleInertiaRequests::class,
+      // HandleInertiaRequests foi movido para bootstrap/app.php (Laravel 11)
     ],
 
     'api' => [
       // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
       'throttle:api',
       \Illuminate\Routing\Middleware\SubstituteBindings::class,
-      \App\Http\Middleware\VerifyCsrfToken::class,
+      // Removido VerifyCsrfToken - APIs REST não usam CSRF tokens
     ],
   ];
 
@@ -67,6 +67,6 @@ class Kernel extends HttpKernel
     'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
     'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
     'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-    'rate.limit' => \App\Http\Middleware\RateLimitRequests::class, // proteção contra ataques de força bruta nas rotas de autenticação e APIs sensíveis.
+    'rate.limit' => \App\Http\Middleware\RateLimitRequests::class,
   ];
 }

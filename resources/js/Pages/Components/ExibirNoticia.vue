@@ -88,28 +88,27 @@ const urlsCompartilhamento = computed(() => ({
 // Formatar data de publicação
 const dataPublicacaoFormatada = computed(() => {
   try {
-    const data = new Date(props.noticia.data_publicacao);
+    const data = new Date(props.noticia.data_publicacao_iso);
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
     }).format(data);
   } catch (e) {
-    return props.noticia.data_publicacao;
+    return props.noticia.data_publicacao; // Fallback para o formato já formatado
   }
 });
 
 // Data de atualização formatada (apenas se for diferente da publicação)
 const dataAtualizacaoFormatada = computed(() => {
-  if (!props.noticia.updated_at || !props.noticia.data_publicacao) return null;
+  if (!props.noticia.updated_at_iso || !props.noticia.data_publicacao_iso) return null;
 
   try {
-    const dataPublicacao = new Date(props.noticia.data_publicacao);
-    const dataAtualizacao = new Date(props.noticia.updated_at);
+    const dataPublicacao = new Date(props.noticia.data_publicacao_iso);
+    const dataAtualizacao = new Date(props.noticia.updated_at_iso);
 
     // Se a diferença for menor que 1 minuto, não mostrar
-    const diffMinutes =
-      Math.abs(dataAtualizacao - dataPublicacao) / (1000 * 60);
+    const diffMinutes = Math.abs(dataAtualizacao - dataPublicacao) / (1000 * 60);
     if (diffMinutes < 1) return null;
 
     const agora = new Date();
@@ -333,7 +332,7 @@ const navegarComScroll = url => {
           <div
             class="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3 sm:gap-4"
           >
-            <span class="font-semibold">Compartilhar Notícia:</span>
+            <span class="font-semibold">Compartilhar:</span>
             <div class="items-center flex flex-wrap gap-2">
               <!-- Facebook -->
               <button

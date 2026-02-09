@@ -53,10 +53,10 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
             $trail->parent("{$name}.index", $model);
             $trail->push('Criar', route("{$name}.create", $model));
         });
-    
+
         Breadcrumbs::for("{$name}.show", function (BreadcrumbTrail $trail, $model, $item) use ($name) {
             $trail->parent("{$name}.index", $model, $item);
-            
+
             if (Route::has("{$name}.show")) {
                 // Usa o helper para obter um título amigável
                 $itemTitle = BreadcrumbsHelper::getTitle($item, 'Item');
@@ -65,12 +65,12 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
                 $trail->push(BreadcrumbsHelper::getTitle($model, 'Item'));
             }
         });
-    
+
         Breadcrumbs::for("{$name}.edit", function (BreadcrumbTrail $trail, $model, $item) use ($name) {
             $trail->parent("{$name}.show", $model, $item);
             $trail->push('Editar', route("{$name}.edit", [$model, $item]));
         });
-        
+
     } else {
         Breadcrumbs::for("{$name}.index", function (BreadcrumbTrail $trail) use ($name, $title) {
             $trail->parent('admin.dashboard');
@@ -81,10 +81,10 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
             $trail->parent("{$name}.index");
             $trail->push('Criar', route("{$name}.create"));
         });
-    
+
         Breadcrumbs::for("{$name}.show", function (BreadcrumbTrail $trail, $model) use ($name) {
             $trail->parent("{$name}.index");
-            
+
             if (Route::has("{$name}.show")) {
                 // Usa o helper para obter um título amigável
                 $modelTitle = BreadcrumbsHelper::getTitle($model, 'Item');
@@ -93,7 +93,7 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
                 $trail->push(BreadcrumbsHelper::getTitle($model, 'Item'));
             }
         });
-    
+
         Breadcrumbs::for("{$name}.edit", function (BreadcrumbTrail $trail, $model) use ($name) {
             $trail->parent("{$name}.show", $model);
             $trail->push('Editar', route("{$name}.edit", $model));
@@ -115,6 +115,26 @@ Breadcrumbs::resource('admin.matriculas', 'Matrículas');
 Breadcrumbs::resource('admin.directors', 'Diretores');
 Breadcrumbs::resource('admin.alojamento', 'Reserva de Alojamento');
 Breadcrumbs::resource('admin.noticias', 'Notícias');
+Breadcrumbs::for('admin.noticias.destaques-atuais', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.noticias.index');
+    $trail->push('Destaques Atuais');
+});
+
+Breadcrumbs::for('admin.noticias.confirmar-substituicao-destaque', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.noticias.index');
+    $trail->push('Confirmar Substituição de Destaque');
+});
+
+Breadcrumbs::for('admin.noticias.atualizar-ordem-destaques', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.noticias.index');
+    $trail->push('Atualizar Ordem dos Destaques');
+});
+
+Breadcrumbs::for('admin.noticias.toggle-destaque', function (BreadcrumbTrail $trail, $noticia) {
+    $trail->parent('admin.noticias.show', $noticia);
+    $trail->push('Alterar Destaque');
+});
+
 Breadcrumbs::resource('admin.contato', 'Mensagens de Contato');
 Breadcrumbs::resource('admin.requerimentos', 'Requerimentos');
 
@@ -159,7 +179,7 @@ Breadcrumbs::for('admin.matriculas.relatorio.pdf', function (BreadcrumbTrail $tr
     $trail->parent('admin.matriculas.curso', $curso);
     $trail->push('Relatório PDF', route('admin.matriculas.relatorio.pdf', $curso));
 });
-  
+
 Breadcrumbs::for('admin.matriculas.relatorio.excel', function (BreadcrumbTrail $trail, $curso) {
     $trail->parent('admin.matriculas.curso', $curso);
     $trail->push('Relatório Excel', route('admin.matriculas.relatorio.excel', $curso));

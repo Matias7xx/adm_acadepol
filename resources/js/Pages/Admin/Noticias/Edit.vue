@@ -42,7 +42,6 @@ const form = useForm({
   imagem: null,
   carousel_images: props.noticia.carousel_images || [],
   remover_imagem: false,
-  destaque: Boolean(props.noticia.destaque),
   data_publicacao: props.noticia.data_publicacao,
   status: props.noticia.status,
 });
@@ -249,7 +248,7 @@ const submit = async () => {
 // Verificar se o formulário tem todos os campos obrigatórios
 const isFormValid = computed(() => {
   return (
-    form.titulo && form.descricao_curta && form.data_publicacao && form.status
+    form.titulo && form.data_publicacao && form.status
   );
 });
 
@@ -456,34 +455,6 @@ const currentImagePreview = computed(() => {
                 </div>
               </FormControl>
             </FormField>
-
-            <FormField
-              label="Destaque"
-              :class="{ 'text-red-400': form.errors.destaque }"
-              :icon="mdiStar"
-            >
-              <div class="flex items-center space-x-2">
-                <FormControl
-                  v-model="form.destaque"
-                  type="checkbox"
-                  :error="form.errors.destaque"
-                />
-                <span>Exibir esta notícia como destaque na página inicial</span>
-              </div>
-              <div
-                class="text-red-400 text-sm mt-1 flex items-center"
-                v-if="form.errors.destaque"
-              >
-                <span class="icon w-4 h-4 mr-1">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                      d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
-                    />
-                  </svg>
-                </span>
-                {{ form.errors.destaque }}
-              </div>
-            </FormField>
           </div>
         </div>
 
@@ -597,15 +568,6 @@ const currentImagePreview = computed(() => {
                   </svg>
                   Cancelar remoção
                 </button>
-              </div>
-
-              <div class="mt-4 flex flex-col gap-2" v-if="currentImagePreview">
-                <p class="text-sm font-medium">
-                  A imagem será exibida nas listagens e no topo da notícia
-                </p>
-                <p class="text-xs text-gray-500">
-                  Para melhor qualidade, use imagens na proporção 16:9
-                </p>
               </div>
             </div>
 

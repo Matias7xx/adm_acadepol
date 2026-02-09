@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { CKEditor } from '@ckeditor/ckeditor5-vue';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import axios from 'axios';
 
 // Props
 const props = defineProps({
@@ -45,6 +46,7 @@ const documentUploadProgress = ref(0);
 const isUploadingDocument = ref(false);
 const isUploadingCarouselImage = ref(false);
 const carouselImageUploadProgress = ref(0);
+const isSessionReady = ref(false);
 let autoSaveTimer = null;
 
 // Watch para sincronizar com prop externa
@@ -150,98 +152,84 @@ function LaravelUploadAdapterPlugin(editor) {
 }
 
 // Upload de imagens para o carrossel
-const handleCarouselImageUpload = async event => {
-  const files = Array.from(event.target.files);
+const handleCarouselImageUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-  for (const file of files) {
-    try {
-      // Validar tamanho (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB');
-        continue;
-      }
-
-      // Validar tipo
-      const validTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-      ];
-      if (!validTypes.includes(file.type)) {
-        alert('Formato de imagem não suportado. Use JPEG, PNG, GIF ou WebP');
-        continue;
-      }
-
-      // Criar FormData
-      const formData = new FormData();
-      formData.append('upload', file);
-
-      // Obter token CSRF
-      const csrfToken = document
-        .querySelector('meta[name="csrf-token"]')
-        ?.getAttribute('content');
-
-      isUploadingCarouselImage.value = true;
-      carouselImageUploadProgress.value = 0;
-
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        if (carouselImageUploadProgress.value < 90) {
-          carouselImageUploadProgress.value += 10;
-        }
-      }, 100);
-
-      // Fazer upload via fetch
-      const response = await fetch('/api/upload-ckeditor-images', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-
-      clearInterval(progressInterval);
-      carouselImageUploadProgress.value = 100;
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.uploaded && data.url) {
-        console.log('✅ Imagem do carrossel enviada:', data.url);
-
-        // Adicionar à lista de imagens do carrossel
-        carouselImagesLocal.value.push({
-          url: data.url,
-          id: Date.now() + Math.random(),
-        });
-
-        // Emitir atualização
-        emit('update:carouselImages', carouselImagesLocal.value);
-
-        setTimeout(() => {
-          isUploadingCarouselImage.value = false;
-          carouselImageUploadProgress.value = 0;
-        }, 500);
-      } else {
-        throw new Error(data.error?.message || 'Upload falhou');
-      }
-    } catch (error) {
-      isUploadingCarouselImage.value = false;
-      carouselImageUploadProgress.value = 0;
-      console.error('❌ Erro no upload de imagem do carrossel:', error);
-      alert(`Erro no upload: ${error.message}`);
-    }
+  // Validação: o botão está desabilitado se não estiver pronto
+  if (!isSessionReady.value) {
+    console.warn('⚠️ Tentativa de upload antes da sessão estar pronta');
+    alert('Por favor, aguarde a inicialização completa da página.');
+    return;
   }
 
-  // Limpar input
-  event.target.value = '';
+  isUploadingCarouselImage.value = true;
+  carouselImageUploadProgress.value = 0;
+
+  const formData = new FormData();
+  formData.append('upload', file);
+
+  try {
+    // 2. ENVIO DO TOKEN NO HEADER
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    if (!csrfToken) {
+      console.error('❌ Token CSRF não encontrado na meta tag!');
+      alert('Erro: Token de segurança não encontrado. Recarregue a página.');
+      return;
+    }
+
+    console.log('Iniciando upload do carrossel');
+    console.log('CSRF Token:', csrfToken?.substring(0, 10) + '...');
+    console.log('Arquivo:', file.name, '-', Math.round(file.size / 1024) + 'KB');
+    console.log('Cookies:', document.cookie.split(';').length, 'cookies disponíveis');
+    console.log('withCredentials:', axios.defaults.withCredentials);
+
+    const response = await axios.post('/api/upload-ckeditor-images', formData, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      onUploadProgress: (progressEvent) => {
+        carouselImageUploadProgress.value = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+      },
+    });
+
+    if (response.data.uploaded && response.data.url) {
+      console.log('Imagem do carrossel enviada:', response.data.url);
+
+      carouselImagesLocal.value.push({
+        url: response.data.url,
+        id: Date.now() + Math.random(),
+      });
+      emit('update:carouselImages', carouselImagesLocal.value);
+    } else {
+      throw new Error('Upload falhou - resposta inválida');
+    }
+  } catch (error) {
+    console.error('Erro no upload do carrossel:', error);
+    console.error('Status:', error.response?.status);
+    console.error('Resposta:', error.response?.data);
+    console.error('Config:', error.config?.headers);
+
+    if (error.response?.status === 419) {
+      console.error('🚨 ERRO 419 - Token CSRF inválido!');
+      console.error('🔑 Token enviado:', csrfToken?.substring(0, 20) + '...');
+      console.error('🍪 Cookies:', document.cookie);
+      alert('Erro de autenticação. A página será recarregada.');
+      window.location.reload();
+    } else {
+      alert(`Erro no upload: ${error.response?.data?.error?.message || error.message}`);
+    }
+  } finally {
+    isUploadingCarouselImage.value = false;
+    // Limpa o input para permitir subir a mesma imagem novamente se necessário
+    event.target.value = '';
+  }
 };
 
 // Remover imagem do carrossel
@@ -676,21 +664,46 @@ watch(
   }
 );
 
-onMounted(() => {
-  const handleEsc = e => {
-    if (e.key === 'Escape' && isFullScreen.value) {
-      toggleFullScreen();
-    }
-  };
-  document.addEventListener('keydown', handleEsc);
+onMounted(async () => {
+  console.log('🔧 Componente montado, iniciando warm-up da sessão...');
 
-  onUnmounted(() => {
-    document.removeEventListener('keydown', handleEsc);
-    document.body.style.overflow = '';
-    if (autoSaveTimer) {
-      clearTimeout(autoSaveTimer);
+  axios.defaults.withCredentials = true;
+  axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+  try {
+    // Aguardar um pouco para garantir que o DOM está completo
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Fazer warm-up da sessão
+    const response = await axios.get('/api/session-init');
+    console.log('✅ Warm-up completado:', response.data);
+
+    if (response.data.csrf_token) {
+      const metaTag = document.querySelector('meta[name="csrf-token"]');
+      if (metaTag) {
+        metaTag.setAttribute('content', response.data.csrf_token);
+        console.log('🔄 Meta tag CSRF atualizada com novo token');
+        console.log('🔑 Novo token:', response.data.csrf_token.substring(0, 20) + '...');
+      }
+
+      // Atualizar também o header padrão do axios
+      axios.defaults.headers.common['X-CSRF-TOKEN'] = response.data.csrf_token;
     }
-  });
+
+    // Aguardar mais um pouco para sincronização total
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    isSessionReady.value = true;
+    console.log('✅ Sessão pronta para uploads!');
+  } catch (error) {
+    console.error('❌ Erro no warmup da sessão:', error);
+    // Habilitar mesmo com erro (fallback)
+    isSessionReady.value = true;
+  }
+
+  if (content.value) {
+    updateWordCount(content.value);
+  }
 });
 </script>
 
@@ -732,12 +745,28 @@ onMounted(() => {
             multiple
             @change="handleCarouselImageUpload"
             class="hidden"
-            :disabled="isUploadingCarouselImage"
+            :disabled="isUploadingCarouselImage || !isSessionReady"
           />
           <div
-            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md"
+            :class="[
+              'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-md',
+              isSessionReady
+                ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+            ]"
           >
             <svg
+              v-if="!isSessionReady"
+              class="animate-spin h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg
+              v-else
               class="w-5 h-5"
               fill="none"
               stroke="currentColor"
@@ -750,7 +779,7 @@ onMounted(() => {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            <span>Adicionar Imagens</span>
+            <span>{{ isSessionReady ? 'Adicionar Imagens' : 'Iniciando...' }}</span>
           </div>
         </label>
       </div>

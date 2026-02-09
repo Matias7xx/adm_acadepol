@@ -31,7 +31,6 @@ const form = useForm({
   titulo: '',
   descricao_curta: '',
   conteudo: '',
-  destaque: false,
   data_publicacao: new Date().toISOString().substring(0, 10), // Data atual como padrão
   status: 'publicado', // Status padrão
   imagem: null,
@@ -202,7 +201,7 @@ const submit = async () => {
 // Verificar se o formulário tem todos os campos obrigatórios
 const isFormValid = computed(() => {
   return (
-    form.titulo && form.descricao_curta && form.data_publicacao && form.status
+    form.titulo && form.data_publicacao && form.status
   );
 });
 
@@ -277,7 +276,7 @@ const isProcessing = computed(() => {
             Informações da Notícia
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
             <FormField
               label="Título"
               :class="{ 'text-red-400': form.errors.titulo }"
@@ -394,34 +393,6 @@ const isProcessing = computed(() => {
                 </div>
               </FormControl>
             </FormField>
-
-            <FormField
-              label="Destaque"
-              :class="{ 'text-red-400': form.errors.destaque }"
-              :icon="mdiStar"
-            >
-              <div class="flex items-center space-x-2">
-                <FormControl
-                  v-model="form.destaque"
-                  type="checkbox"
-                  :error="form.errors.destaque"
-                />
-                <span>Exibir esta notícia como destaque na página inicial</span>
-              </div>
-              <div
-                class="text-red-400 text-sm mt-1 flex items-center"
-                v-if="form.errors.destaque"
-              >
-                <span class="icon w-4 h-4 mr-1">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                      d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
-                    />
-                  </svg>
-                </span>
-                {{ form.errors.destaque }}
-              </div>
-            </FormField>
           </div>
         </div>
 
@@ -477,16 +448,6 @@ const isProcessing = computed(() => {
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
                   Processando imagem... {{ uploadProgress }}%
-                </p>
-              </div>
-
-              <div class="mt-4 flex flex-col gap-2" v-if="imagePreview">
-                <p class="text-sm font-medium">
-                  A imagem será exibida nas listagens e no carrossel de imagens
-                  (caso seja marcada como destaque)
-                </p>
-                <p class="text-xs text-gray-500">
-                  Para melhor qualidade, use imagens na proporção 16:9
                 </p>
               </div>
             </div>

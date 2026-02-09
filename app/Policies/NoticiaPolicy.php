@@ -42,6 +42,11 @@ class NoticiaPolicy
     return $user->hasPermissionTo('noticia edit');
   }
 
+  public function adminEdit(User $user)
+  {
+    return $user->hasPermissionTo('noticia edit');
+  }
+
   /**
    * Determina se o usuário pode excluir uma notícia
    */

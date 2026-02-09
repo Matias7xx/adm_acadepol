@@ -56,35 +56,6 @@ function destroy() {
   }
 }
 
-// Formulário para alterar destaque
-const formDestaque = useForm({});
-const isTogglingDestaque = ref(false);
-const destaqueMessage = ref(null);
-function toggleDestaque() {
-  isTogglingDestaque.value = true;
-  destaqueMessage.value = null;
-  formDestaque.patch(
-    route('admin.noticias.toggle-destaque', props.noticia.id),
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        destaqueMessage.value = {
-          type: 'success',
-          text: `Notícia ${props.noticia.destaque ? 'marcada como' : 'removida do'} destaque!`,
-        };
-        isTogglingDestaque.value = false;
-      },
-      onError: () => {
-        destaqueMessage.value = {
-          type: 'danger',
-          text: 'Erro ao alterar o status de destaque.',
-        };
-        isTogglingDestaque.value = false;
-      },
-    }
-  );
-}
-
 // Função auxiliar para obter URL da imagem
 const getImageUrl = imagePath => {
   if (!imagePath) return null;
@@ -247,13 +218,6 @@ const goToImage = index => {
       >
         {{ deleteMessage.text }}
       </NotificationBar>
-      <NotificationBar
-        v-if="destaqueMessage"
-        :color="destaqueMessage.type"
-        :icon="mdiInformationOutline"
-      >
-        {{ destaqueMessage.text }}
-      </NotificationBar>
 
       <!-- Cabeçalho com ações -->
       <div class="flex justify-between items-center mb-4">
@@ -263,17 +227,6 @@ const goToImage = index => {
             :class="getStatusClass(noticia.status)"
           >
             {{ noticia.status }}
-          </span>
-          <span
-            v-if="noticia.destaque"
-            class="flex items-center text-yellow-600"
-          >
-            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-              />
-            </svg>
-            Destaque
           </span>
         </div>
         <BaseButtons>
@@ -569,12 +522,6 @@ const goToImage = index => {
             }}</span>
           </div>
           <div>
-            <span class="text-gray-600 text-sm">Destaque:</span>
-            <span class="ml-2 font-medium">{{
-              noticia.destaque ? 'Sim' : 'Não'
-            }}</span>
-          </div>
-          <div>
             <span class="text-gray-600 text-sm">Visualizações:</span>
             <span class="ml-2 font-medium">{{ noticia.visualizacoes }}</span>
           </div>
@@ -591,24 +538,6 @@ const goToImage = index => {
           aria-label="Voltar para a lista de notícias"
         />
         <BaseButtons v-if="can.edit">
-          <BaseButton
-            v-if="noticia.destaque"
-            @click="toggleDestaque"
-            :icon="mdiStarOutline"
-            label="Remover Destaque"
-            color="warning"
-            :disabled="isTogglingDestaque"
-            aria-label="Remover notícia do destaque"
-          />
-          <BaseButton
-            v-else
-            @click="toggleDestaque"
-            :icon="mdiStar"
-            label="Marcar como Destaque"
-            color="warning"
-            :disabled="isTogglingDestaque"
-            aria-label="Marcar notícia como destaque"
-          />
           <BaseButton
             :route-name="route('admin.noticias.edit', noticia.id)"
             :icon="mdiPencilOutline"

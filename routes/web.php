@@ -39,12 +39,20 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Rota para inicializar/warm-up da sessão (resolve erro 419 no primeiro upload)
+Route::get('/api/session-init', function () {
+    return response()->json([
+        'initialized' => true,
+        'csrf_token' => csrf_token()
+    ]);
+})->middleware(['web', 'auth']);
+
 // Rotas para upload do CKEditor
 Route::post('/api/upload-ckeditor-images', [UploadController::class, 'uploadCKEditorImage'])
-    ->middleware(['web']); // Apenas middleware web para CSRF
+    ->middleware(['web', 'auth', 'verified']);
 
 Route::post('/api/upload-ckeditor-files', [UploadController::class, 'uploadCKEditorFile'])
-    ->middleware(['web']); // Apenas middleware web para CSRF
+    ->middleware(['web', 'auth', 'verified']);
 
 Route::get('/download', [App\Http\Controllers\DownloadController::class, 'downloadFile'])
     ->name('file.download'); //Download do file na notícia

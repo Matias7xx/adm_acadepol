@@ -42,7 +42,7 @@ Route::group([
     | Gerenciamento de Usuários, Funções e Permissões
     |--------------------------------------------------------------------------
     */
-    
+
     // Usuários
     Route::resource('user', UserController::class);
     Route::controller(UserController::class)->group(function () {
@@ -54,33 +54,33 @@ Route::group([
         Route::post('user/{user}/certificados', 'adicionarCertificado')->name('certificados.adicionar.usuario');
         Route::delete('user/{user}/certificados/{certificado}', 'removerCertificado')->name('certificados.remover.usuario');
     });
-    
+
     // Funções e Permissões
     Route::resource('role', RoleController::class);
     Route::resource('permission', PermissionController::class);
-    
+
     /*
     |--------------------------------------------------------------------------
     | Configurações do Sistema
     |--------------------------------------------------------------------------
     */
-    
+
     // Menus
     Route::resource('menu', MenuController::class)->except(['show']);
     Route::resource('menu.item', MenuItemController::class)->except(['show']);
-    
+
     // Mídia
     Route::resource('media', MediaController::class);
-    
+
     /*
     |--------------------------------------------------------------------------
     | Gerenciamento Acadêmico
     |--------------------------------------------------------------------------
     */
-    
+
     // Cursos
     Route::resource('cursos', CursoController::class);
-    
+
     // Diretores
     Route::resource('directors', DirectorController::class);
 
@@ -92,47 +92,47 @@ Route::group([
         Route::patch('/{id}/aprovar', [MatriculaController::class, 'aprovar'])->name('matriculas.aprovar');
         Route::patch('/{id}/rejeitar', [MatriculaController::class, 'rejeitar'])->name('matriculas.rejeitar');
         Route::patch('/{id}/alterar-status', [MatriculaController::class, 'alterarStatus'])->name('matriculas.alterar-status');
-        
+
         Route::get('/relatorio/{curso}/pdf', [MatriculaRelatorioController::class, 'gerarRelatorioPDF'])->name('matriculas.relatorio.pdf');
         Route::get('/relatorio/{curso}/excel', [MatriculaRelatorioController::class, 'gerarRelatorioExcel'])->name('matriculas.relatorio.excel');
     });
 
     // Certificados - Administrador
     Route::prefix('certificados')->name('certificados.')->group(function () {
-        
+
         // GERAR CERTIFICADO
         Route::post('/gerar/{matricula}', [CertificadoController::class, 'gerar'])
             ->name('gerar')
             ->where('matricula', '[0-9]+');
-        
+
         // CRIAR CERTIFICADO EXTERNO (cursos fora do sistema)
         Route::post('/externo', [CertificadoController::class, 'criarCertificadoExterno'])
             ->name('externo.criar');
-        
+
         // EXCLUIR CERTIFICADO
         Route::delete('/{certificado}', [CertificadoController::class, 'excluir'])
             ->name('excluir')
-            ->where('certificado', '[0-9]+'); 
+            ->where('certificado', '[0-9]+');
     });
-    
+
     /*
     |--------------------------------------------------------------------------
     | Gerenciamento de Alojamentos
     |--------------------------------------------------------------------------
     */
-    
+
     Route::prefix('alojamento')->group(function () {
         // Listagem e visualização
         Route::get('/', [AlojamentoController::class, 'index'])->name('alojamento.index');
-        
+
         // Rota para visualizar reservas de qualquer tipo
         Route::get('/{tipo}/{id}', [AlojamentoController::class, 'showReserva'])
             ->where(['tipo' => 'usuario|visitante', 'id' => '[0-9]+'])
             ->name('alojamento.show.reserva');
-        
+
         // Visualização de reservas de usuário
         Route::get('/{alojamento}', [AlojamentoController::class, 'show'])->name('alojamento.show');
-        
+
         // Ações de aprovação/rejeição
         Route::patch('/{alojamento}/aprovar', [AlojamentoController::class, 'aprovar'])->name('alojamento.aprovar');
         Route::patch('/{alojamento}/rejeitar', [AlojamentoController::class, 'rejeitar'])->name('alojamento.rejeitar');
@@ -151,7 +151,7 @@ Route::group([
     Route::prefix('visitante')->group(function () {
         // Visualização
         Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('visitante.show');
-        
+
         // Rota para alteração de status
         Route::patch('/{visitante}/alterar-status', [VisitanteController::class, 'alterarStatus'])->name('visitante.alterar-status');
 
@@ -174,12 +174,12 @@ Route::group([
     | Gerenciamento de Visitantes
     |--------------------------------------------------------------------------
     */
-    
+
     Route::prefix('visitantes')->name('visitantes.')->group(function () {
         // Listagem e visualização
         Route::get('/', [VisitanteController::class, 'index'])->name('index');
         Route::get('/{visitante}', [VisitanteController::class, 'show'])->name('show');
-        
+
         // Ações de aprovação/rejeição
         Route::patch('/{visitante}/aprovar', [VisitanteController::class, 'aprovar'])->name('aprovar');
         Route::patch('/{visitante}/rejeitar', [VisitanteController::class, 'rejeitar'])->name('rejeitar');
@@ -190,9 +190,23 @@ Route::group([
     | Gerenciamento de Notícias
     |--------------------------------------------------------------------------
     */
-    Route::resource('noticias', NoticiaController::class);
+    // Buscar destaques atuais (para widget)
+    Route::get('noticias/destaques-atuais', [NoticiaController::class, 'getDestaquesAtuais'])
+        ->name('noticias.destaques-atuais');
+
+    // Confirmar substituição de destaque (quando já tem 2)
+    Route::post('noticias/confirmar-substituicao-destaque', [NoticiaController::class, 'confirmarSubstituicaoDestaque'])
+        ->name('noticias.confirmar-substituicao-destaque');
+
+    // Atualizar ordem dos destaques (drag and drop)
+    Route::post('noticias/atualizar-ordem-destaques', [NoticiaController::class, 'atualizarOrdemDestaques'])
+        ->name('noticias.atualizar-ordem-destaques');
+
     Route::patch('noticias/{noticia}/toggle-destaque', [NoticiaController::class, 'toggleDestaque'])
-        ->name('noticias.toggle-destaque');
+    ->name('noticias.toggle-destaque')
+    ->where('noticia', '[0-9]+'); // Garante que aqui só passe número
+
+    Route::resource('noticias', NoticiaController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -203,7 +217,7 @@ Route::group([
         // Listagem e visualização
         Route::get('/', [RequerimentoController::class, 'index'])->name('requerimentos.index');
         Route::get('/{requerimento}', [RequerimentoController::class, 'show'])->name('requerimentos.show');
-        
+
         // Ações de aprovação/rejeição
         Route::post('/{requerimento}/aprovar', [RequerimentoController::class, 'deferir'])->name('requerimentos.deferir');
         Route::post('/{requerimento}/rejeitar', [RequerimentoController::class, 'indeferir'])->name('requerimentos.indeferir');
@@ -235,19 +249,19 @@ Route::group([
     Route::prefix('ocupacao')->name('ocupacao.')->group(function () {
         // Dashboard principal de ocupação
         Route::get('/', [OcupacaoController::class, 'index'])->name('index');
-        
+
         // Buscar reservas para check-in rápido
         Route::get('/buscar-reservas', [OcupacaoController::class, 'buscarReservas'])->name('buscar-reservas');
-        
+
         // Funcionalidades de check-in e check-out
         Route::get('/modal-checkin', [OcupacaoController::class, 'modalCheckin'])->name('modal-checkin');
         Route::post('/checkin', [OcupacaoController::class, 'checkin'])->name('checkin');
         Route::post('/{ocupacao}/checkout', [OcupacaoController::class, 'checkout'])->name('checkout');
-        
+
         // Informações
         Route::get('/dormitorios-disponiveis', [OcupacaoController::class, 'dormitoriosDisponiveis'])->name('dormitorios-disponiveis');
         Route::get('/dormitorio/{dormitorio}/detalhes', [OcupacaoController::class, 'dormitorioDetalhes'])->name('dormitorio-detalhes');
-        
+
         // API para atualização em tempo real
         Route::get('/api', [OcupacaoController::class, 'apiIndex'])->name('api.index');
     });

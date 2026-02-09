@@ -11,13 +11,6 @@ use Carbon\Carbon;
 
 class UploadController extends Controller
 {
-  /**
-   * Constructor para aplicar middleware de autenticação
-   */
-  public function __construct()
-  {
-    $this->middleware(['auth', 'verified']);
-  }
 
   /**
    * Upload de imagens para o CKEditor

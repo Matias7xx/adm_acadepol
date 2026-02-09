@@ -29,7 +29,7 @@ import Header from './Components/Header.vue';
     </header>
 
     <!-- Hero Section -->
-    <section class="w-full mt-2">
+    <section class="mt-2">
       <HomeCarousel />
     </section>
 
