@@ -5,7 +5,7 @@ import Header from './Components/Header.vue';
 import Footer from './Components/Footer.vue';
 import ExibirDocumentos from './Components/ExibirDocumentos.vue';
 
-const DOCUMENT_URL = '/storage/documentos/ManualDoAluno.pdf';
+const DOCUMENT_URL = '/assets/documentos/ManualDoAluno.pdf';
 const DOCUMENT_TITLE = 'Manual do Aluno';
 const DOCUMENT_FILENAME = 'Manual_do_Aluno_ACADEPOL';
 const DOCUMENT_DESCRIPTION =

@@ -5,7 +5,7 @@ import Header from './Components/Header.vue';
 import Footer from './Components/Footer.vue';
 import ExibirDocumentos from './Components/ExibirDocumentos.vue';
 
-const DOCUMENT_URL = '/storage/documentos/OrganogramaAcadepol.pdf';
+const DOCUMENT_URL = '/assets/documentos/OrganogramaAcadepol.pdf';
 const DOCUMENT_TITLE = 'Organograma da ACADEPOL';
 const DOCUMENT_FILENAME = 'Organograma_ACADEPOL';
 const DOCUMENT_DESCRIPTION = 'Estrutura organizacional e hierárquica.';

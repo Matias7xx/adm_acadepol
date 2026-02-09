@@ -5,7 +5,7 @@ import Header from './Components/Header.vue';
 import Footer from './Components/Footer.vue';
 import ExibirDocumentos from './Components/ExibirDocumentos.vue';
 
-const DOCUMENT_URL = '/storage/documentos/RegimentoInternoAcadepol.pdf';
+const DOCUMENT_URL = '/assets/documentos/RegimentoInternoAcadepol.pdf';
 const DOCUMENT_TITLE = 'Regimento Interno da ACADEPOL';
 const DOCUMENT_FILENAME = 'Regimento_Interno_ACADEPOL';
 const DOCUMENT_DESCRIPTION =
