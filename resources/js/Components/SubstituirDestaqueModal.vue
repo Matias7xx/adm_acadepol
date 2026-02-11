@@ -69,10 +69,16 @@ const cancelar = () => {
             class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
           >
             <!-- Header -->
-            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div
+              class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between"
+            >
               <div class="flex items-center space-x-3">
                 <div class="bg-amber-100 p-2 rounded-lg">
-                  <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    class="w-6 h-6 text-amber-600"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path :d="mdiAlertCircle" />
                   </svg>
                 </div>
@@ -81,7 +87,8 @@ const cancelar = () => {
                     Limite de Destaques Atingido
                   </h3>
                   <p class="text-sm text-gray-600">
-                    Você já tem 2 notícias em destaque. Escolha qual deseja substituir.
+                    Você já tem 2 notícias em destaque. Escolha qual deseja
+                    substituir.
                   </p>
                 </div>
               </div>
@@ -102,7 +109,9 @@ const cancelar = () => {
                 <h4 class="text-sm font-semibold text-gray-700 mb-3">
                   Nova notícia para destaque:
                 </h4>
-                <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4 flex items-start space-x-4">
+                <div
+                  class="bg-green-50 border-2 border-green-200 rounded-lg p-4 flex items-start space-x-4"
+                >
                   <div class="flex-shrink-0">
                     <img
                       v-if="noticiaNova.imagem"
@@ -121,7 +130,9 @@ const cancelar = () => {
                     <h5 class="text-base font-semibold text-gray-900 mb-1">
                       {{ noticiaNova.titulo }}
                     </h5>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
                       Nova
                     </span>
                   </div>
@@ -157,17 +168,23 @@ const cancelar = () => {
                       </div>
                       <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between mb-2">
-                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-500 text-white">
+                          <span
+                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-500 text-white"
+                          >
                             {{ destaque.ordem }}º Destaque
                           </span>
                         </div>
-                        <h5 class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                        <h5
+                          class="text-sm font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors"
+                        >
                           {{ destaque.titulo }}
                         </h5>
                         <p class="text-xs text-gray-500">
                           {{ destaque.data_publicacao }}
                         </p>
-                        <div class="mt-3 text-xs text-red-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div
+                          class="mt-3 text-xs text-red-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                           Clique para substituir →
                         </div>
                       </div>
@@ -177,7 +194,9 @@ const cancelar = () => {
               </div>
 
               <!-- Informação -->
-              <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div
+                class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4"
+              >
                 <div class="flex items-start">
                   <svg
                     class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
@@ -188,8 +207,8 @@ const cancelar = () => {
                   </svg>
                   <div class="ml-3">
                     <p class="text-sm text-blue-800">
-                      A notícia removida do destaque permanecerá publicada no site,
-                      apenas não será exibida na área de destaque.
+                      A notícia removida do destaque permanecerá publicada no
+                      site, apenas não será exibida na área de destaque.
                     </p>
                   </div>
                 </div>
@@ -197,7 +216,9 @@ const cancelar = () => {
             </div>
 
             <!-- Footer -->
-            <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+            <div
+              class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end space-x-3"
+            >
               <button
                 @click="cancelar"
                 class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"

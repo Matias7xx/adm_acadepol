@@ -577,7 +577,6 @@ onUnmounted(() => {
             class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
           >
             <div class="flex h-38 sm:h-40">
-
               <!-- Conteúdo compacto -->
               <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
                 <div>

@@ -65,7 +65,7 @@ const fetchNoticias = async (isRetry = false) => {
         ...noticia,
         id: noticia.id || Math.random().toString(36).substr(2, 9),
         titulo: noticia.titulo || 'Título não disponível',
-        descricao_curta: noticia.descricao_curta || 'Descrição não disponível',
+        descricao_curta: noticia.descricao_curta,
         data_publicacao: formatDate(noticia.data_publicacao),
         visualizacoes: parseInt(noticia.visualizacoes) || 0,
         destaque: Boolean(noticia.destaque),
@@ -314,54 +314,48 @@ onUnmounted(() => {
               :key="noticia.id"
               class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
             >
-              <div class="flex h-38 sm:h-40">
-
-                <!-- Conteúdo compacto -->
-                <div class="flex-1 p-4 flex flex-col justify-between min-w-0">
-                  <div>
-                    <!-- Metadados compactos -->
-                    <div class="flex items-center justify-between mb-1">
-                      <div class="flex items-center text-xs text-gray-500">
-                        <svg
-                          class="h-3 w-3 mr-1 text-[#bea55a]"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <time :datetime="noticia.data_publicacao">
-                          {{ noticia.data_publicacao }}
-                        </time>
-                      </div>
-
-                      <!-- <div class="flex items-center text-xs text-gray-500">
-                        <svg class="h-3 w-3 mr-1 text-[#bea55a]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                        </svg>
-                        <span>{{ formatViews(noticia.visualizacoes) }}</span>
-                      </div> -->
+              <div class="flex min-h-[120px]">
+                <div class="flex-1 p-4 flex flex-col min-w-0">
+                  <div class="block">
+                    <div class="flex items-center text-xs text-gray-500 mb-2">
+                      <svg
+                        class="h-3 w-3 mr-1 text-[#bea55a]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <time :datetime="noticia.data_publicacao">{{
+                        noticia.data_publicacao
+                      }}</time>
                     </div>
 
-                    <!-- Título compacto -->
                     <Link :href="`/noticias/${noticia.id}`">
                       <h3
-                        class="text-sm sm:text-base font-bold text-gray-900 mb-2 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300"
+                        :class="[
+                          'text-sm sm:text-base font-bold text-gray-900 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300',
+                          noticia.descricao_curta &&
+                          noticia.descricao_curta !== 'Descrição não disponível'
+                            ? 'mb-2'
+                            : 'mb-0',
+                        ]"
                       >
                         {{ noticia.titulo }}
                       </h3>
                     </Link>
 
-                    <!-- Descrição compacta -->
                     <p
-                      class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2"
+                      v-if="
+                        noticia.descricao_curta &&
+                        noticia.descricao_curta !== 'Descrição não disponível'
+                      "
+                      class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4"
                     >
                       <span class="sm:hidden">{{
                         truncateText(noticia.descricao_curta, 100)
@@ -372,12 +366,10 @@ onUnmounted(() => {
                     </p>
                   </div>
 
-                  <!-- Ação compacta -->
-                  <div class="">
+                  <div class="mt-auto">
                     <Link
                       :href="`/noticias/${noticia.id}`"
                       class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-md group-hover:gap-2 gap-1 transition-all duration-300"
-                      :aria-label="`Leia a notícia completa: ${noticia.titulo}`"
                     >
                       Leia mais
                       <svg
@@ -385,7 +377,6 @@ onUnmounted(() => {
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
-                        aria-hidden="true"
                       >
                         <path
                           stroke-linecap="round"

@@ -45,7 +45,7 @@ const destaquesCheiосFlash = computed(() => page.props.flash?.destaques_cheios
 // Watch para detectar quando precisa mostrar o modal
 watch(
   destaquesCheiосFlash,
-  (destaquesCheios) => {
+  destaquesCheios => {
     if (destaquesCheios) {
       console.log('Destaques cheios detectados:', destaquesCheios);
       modalData.value = {
@@ -143,7 +143,9 @@ function getStatusClass(status) {
 
       <!-- Filtros -->
       <CardBox class="mb-6" has-table>
-        <form @submit.prevent="router.get(route('admin.noticias.index'), filters)">
+        <form
+          @submit.prevent="router.get(route('admin.noticias.index'), filters)"
+        >
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2"

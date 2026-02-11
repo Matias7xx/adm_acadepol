@@ -200,9 +200,7 @@ const submit = async () => {
 
 // Verificar se o formulário tem todos os campos obrigatórios
 const isFormValid = computed(() => {
-  return (
-    form.titulo && form.data_publicacao && form.status
-  );
+  return form.titulo && form.data_publicacao && form.status;
 });
 
 // Verificar se está processando

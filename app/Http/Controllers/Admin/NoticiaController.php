@@ -466,75 +466,77 @@ class NoticiaController extends Controller
   }
 
   /**
- * Toggle destaque com controle de limite
- */
-public function toggleDestaque(Request $request, Noticia $noticia)
-{
+   * Toggle destaque com controle de limite
+   */
+  public function toggleDestaque(Request $request, Noticia $noticia)
+  {
     $this->authorize('adminUpdate', $noticia);
 
     // Se está removendo destaque
     if ($noticia->destaque) {
-        $noticia->update([
-            'destaque' => false,
-            'ordem_destaque' => null,
-        ]);
+      $noticia->update([
+        'destaque' => false,
+        'ordem_destaque' => null,
+      ]);
 
-        // Reorganizar ordem dos destaques restantes
-        $this->reorganizarOrdemDestaques();
+      // Reorganizar ordem dos destaques restantes
+      $this->reorganizarOrdemDestaques();
 
-        $this->invalidateAllNoticiasCache();
+      $this->invalidateAllNoticiasCache();
 
-        return redirect()
-            ->back()
-            ->with('message', 'Destaque removido com sucesso.');
+      return redirect()
+        ->back()
+        ->with('message', 'Destaque removido com sucesso.');
     }
 
     // Se está adicionando destaque, verificar limite
     $destaquesAtuais = Noticia::where('destaque', true)
-        ->where('id', '!=', $noticia->id)
-        ->orderBy('ordem_destaque', 'asc')
-        ->get();
+      ->where('id', '!=', $noticia->id)
+      ->orderBy('ordem_destaque', 'asc')
+      ->get();
 
     // Se já tem 2 destaques, retornar para escolher qual substituir
     if ($destaquesAtuais->count() >= 2) {
-        return redirect()
-            ->back()
-            ->with('destaques_cheios', [
-                'noticia_nova' => [
-                    'id' => $noticia->id,
-                    'titulo' => $noticia->titulo,
-                    'imagem' => $noticia->imagem
-                        ? \App\Helpers\UploadHelper::getPublicUrl($noticia->imagem)
-                        : null,
-                ],
-                'destaques_atuais' => $destaquesAtuais->map(function ($n) {
-                    return [
-                        'id' => $n->id,
-                        'titulo' => $n->titulo,
-                        'imagem' => $n->imagem
-                            ? \App\Helpers\UploadHelper::getPublicUrl($n->imagem)
-                            : null,
-                        'ordem' => $n->ordem_destaque,
-                        'data_publicacao' => $n->data_formatada,
-                    ];
-                })->values(),
-            ]);
+      return redirect()
+        ->back()
+        ->with('destaques_cheios', [
+          'noticia_nova' => [
+            'id' => $noticia->id,
+            'titulo' => $noticia->titulo,
+            'imagem' => $noticia->imagem
+              ? \App\Helpers\UploadHelper::getPublicUrl($noticia->imagem)
+              : null,
+          ],
+          'destaques_atuais' => $destaquesAtuais
+            ->map(function ($n) {
+              return [
+                'id' => $n->id,
+                'titulo' => $n->titulo,
+                'imagem' => $n->imagem
+                  ? \App\Helpers\UploadHelper::getPublicUrl($n->imagem)
+                  : null,
+                'ordem' => $n->ordem_destaque,
+                'data_publicacao' => $n->data_formatada,
+              ];
+            })
+            ->values(),
+        ]);
     }
 
     // Se tem menos de 2, adicionar normalmente
     $proximaOrdem = $destaquesAtuais->count() + 1;
 
     $noticia->update([
-        'destaque' => true,
-        'ordem_destaque' => $proximaOrdem,
+      'destaque' => true,
+      'ordem_destaque' => $proximaOrdem,
     ]);
 
     $this->invalidateAllNoticiasCache();
 
     return redirect()
-        ->back()
-        ->with('message', 'Notícia marcada como destaque!', 'flash_id', uniqid());
-}
+      ->back()
+      ->with('message', 'Notícia marcada como destaque!', 'flash_id', uniqid());
+  }
 
   /**
    * Processa imagens base64 e documentos temporários do conteúdo e os salva no storage
@@ -843,106 +845,111 @@ public function toggleDestaque(Request $request, Noticia $noticia)
     }
   }
 
-/**
- * Confirmar substituição de destaque
- */
-public function confirmarSubstituicaoDestaque(Request $request)
-{
+  /**
+   * Confirmar substituição de destaque
+   */
+  public function confirmarSubstituicaoDestaque(Request $request)
+  {
     $this->authorize('adminUpdate', Noticia::class);
 
     $validated = $request->validate([
-        'noticia_nova_id' => 'required|exists:noticias,id',
-        'noticia_substituir_id' => 'required|exists:noticias,id',
+      'noticia_nova_id' => 'required|exists:noticias,id',
+      'noticia_substituir_id' => 'required|exists:noticias,id',
     ]);
 
     $noticiaNova = Noticia::findOrFail($validated['noticia_nova_id']);
-    $noticiaSubstituir = Noticia::findOrFail($validated['noticia_substituir_id']);
+    $noticiaSubstituir = Noticia::findOrFail(
+      $validated['noticia_substituir_id'],
+    );
 
     // Pegar a ordem da notícia que será substituída
     $ordem = $noticiaSubstituir->ordem_destaque;
 
     // Remover destaque da notícia antiga
     $noticiaSubstituir->update([
-        'destaque' => false,
-        'ordem_destaque' => null,
+      'destaque' => false,
+      'ordem_destaque' => null,
     ]);
 
     // Adicionar destaque na nova notícia
     $noticiaNova->update([
-        'destaque' => true,
-        'ordem_destaque' => $ordem,
+      'destaque' => true,
+      'ordem_destaque' => $ordem,
     ]);
 
     $this->invalidateAllNoticiasCache();
 
     return redirect()
-        ->back()
-        ->with('message', "Destaque substituído com sucesso! '{$noticiaNova->titulo}' agora está em destaque.");
-}
+      ->back()
+      ->with(
+        'message',
+        "Destaque substituído com sucesso! '{$noticiaNova->titulo}' agora está em destaque.",
+      );
+  }
 
-/**
- * Atualizar ordem dos destaques
- */
-public function atualizarOrdemDestaques(Request $request)
-{
+  /**
+   * Atualizar ordem dos destaques
+   */
+  public function atualizarOrdemDestaques(Request $request)
+  {
     $this->authorize('adminUpdate', Noticia::class);
 
     $validated = $request->validate([
-        'destaques' => 'required|array|max:2',
-        'destaques.*.id' => 'required|exists:noticias,id',
-        'destaques.*.ordem' => 'required|integer|min:1|max:2',
+      'destaques' => 'required|array|max:2',
+      'destaques.*.id' => 'required|exists:noticias,id',
+      'destaques.*.ordem' => 'required|integer|min:1|max:2',
     ]);
 
     foreach ($validated['destaques'] as $destaque) {
-        Noticia::where('id', $destaque['id'])->update([
-            'ordem_destaque' => $destaque['ordem'],
-        ]);
+      Noticia::where('id', $destaque['id'])->update([
+        'ordem_destaque' => $destaque['ordem'],
+      ]);
     }
 
     $this->invalidateAllNoticiasCache();
 
     return redirect()
-        ->back()
-        ->with('message', 'Ordem dos destaques atualizada com sucesso!');
-}
+      ->back()
+      ->with('message', 'Ordem dos destaques atualizada com sucesso!');
+  }
 
-/**
- * Buscar destaques atuais
- */
-public function getDestaquesAtuais()
-{
+  /**
+   * Buscar destaques atuais
+   */
+  public function getDestaquesAtuais()
+  {
     $this->authorize('adminViewAny', Noticia::class);
 
     $destaques = Noticia::where('destaque', true)
-        ->orderBy('ordem_destaque', 'asc')
-        ->get()
-        ->map(function ($noticia) {
-            return [
-                'id' => $noticia->id,
-                'titulo' => $noticia->titulo,
-                'imagem' => $noticia->imagem
-                    ? \App\Helpers\UploadHelper::getPublicUrl($noticia->imagem)
-                    : null,
-                'ordem' => $noticia->ordem_destaque,
-                'data_publicacao' => $noticia->data_formatada,
-                'status' => $noticia->status,
-            ];
-        });
+      ->orderBy('ordem_destaque', 'asc')
+      ->get()
+      ->map(function ($noticia) {
+        return [
+          'id' => $noticia->id,
+          'titulo' => $noticia->titulo,
+          'imagem' => $noticia->imagem
+            ? \App\Helpers\UploadHelper::getPublicUrl($noticia->imagem)
+            : null,
+          'ordem' => $noticia->ordem_destaque,
+          'data_publicacao' => $noticia->data_formatada,
+          'status' => $noticia->status,
+        ];
+      });
 
     return response()->json($destaques);
-}
+  }
 
-/**
- * Reorganizar ordem dos destaques após remoção
- */
-private function reorganizarOrdemDestaques()
-{
+  /**
+   * Reorganizar ordem dos destaques após remoção
+   */
+  private function reorganizarOrdemDestaques()
+  {
     $destaques = Noticia::where('destaque', true)
-        ->orderBy('ordem_destaque', 'asc')
-        ->get();
+      ->orderBy('ordem_destaque', 'asc')
+      ->get();
 
     foreach ($destaques as $index => $destaque) {
-        $destaque->update(['ordem_destaque' => $index + 1]);
+      $destaque->update(['ordem_destaque' => $index + 1]);
     }
-}
+  }
 }

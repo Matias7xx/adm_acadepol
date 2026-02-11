@@ -101,14 +101,16 @@ const dataPublicacaoFormatada = computed(() => {
 
 // Data de atualização formatada (apenas se for diferente da publicação)
 const dataAtualizacaoFormatada = computed(() => {
-  if (!props.noticia.updated_at_iso || !props.noticia.data_publicacao_iso) return null;
+  if (!props.noticia.updated_at_iso || !props.noticia.data_publicacao_iso)
+    return null;
 
   try {
     const dataPublicacao = new Date(props.noticia.data_publicacao_iso);
     const dataAtualizacao = new Date(props.noticia.updated_at_iso);
 
     // Se a diferença for menor que 1 minuto, não mostrar
-    const diffMinutes = Math.abs(dataAtualizacao - dataPublicacao) / (1000 * 60);
+    const diffMinutes =
+      Math.abs(dataAtualizacao - dataPublicacao) / (1000 * 60);
     if (diffMinutes < 1) return null;
 
     const agora = new Date();
@@ -304,12 +306,12 @@ const navegarComScroll = url => {
           </div>
 
           <!-- Descrição curta -->
-          <p
+          <!-- <p
             v-if="noticia.descricao_curta"
             class="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed"
           >
             {{ noticia.descricao_curta }}
-          </p>
+          </p> -->
         </div>
 
         <!-- Carrossel de Imagens -->

@@ -151,7 +151,7 @@ function LaravelUploadAdapterPlugin(editor) {
 }
 
 // Upload de imagens para o carrossel
-const handleCarouselImageUpload = async (event) => {
+const handleCarouselImageUpload = async event => {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -170,7 +170,9 @@ const handleCarouselImageUpload = async (event) => {
 
   try {
     // 2. ENVIO DO TOKEN NO HEADER
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const csrfToken = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute('content');
 
     if (!csrfToken) {
       console.error('❌ Token CSRF não encontrado na meta tag!');
@@ -180,8 +182,17 @@ const handleCarouselImageUpload = async (event) => {
 
     console.log('Iniciando upload do carrossel');
     console.log('CSRF Token:', csrfToken?.substring(0, 10) + '...');
-    console.log('Arquivo:', file.name, '-', Math.round(file.size / 1024) + 'KB');
-    console.log('Cookies:', document.cookie.split(';').length, 'cookies disponíveis');
+    console.log(
+      'Arquivo:',
+      file.name,
+      '-',
+      Math.round(file.size / 1024) + 'KB'
+    );
+    console.log(
+      'Cookies:',
+      document.cookie.split(';').length,
+      'cookies disponíveis'
+    );
     console.log('withCredentials:', axios.defaults.withCredentials);
 
     const response = await axios.post('/api/upload-ckeditor-images', formData, {
@@ -191,7 +202,7 @@ const handleCarouselImageUpload = async (event) => {
         'X-CSRF-TOKEN': csrfToken,
         'X-Requested-With': 'XMLHttpRequest',
       },
-      onUploadProgress: (progressEvent) => {
+      onUploadProgress: progressEvent => {
         carouselImageUploadProgress.value = Math.round(
           (progressEvent.loaded * 100) / progressEvent.total
         );
@@ -222,7 +233,9 @@ const handleCarouselImageUpload = async (event) => {
       alert('Erro de autenticação. A página será recarregada.');
       window.location.reload();
     } else {
-      alert(`Erro no upload: ${error.response?.data?.error?.message || error.message}`);
+      alert(
+        `Erro no upload: ${error.response?.data?.error?.message || error.message}`
+      );
     }
   } finally {
     isUploadingCarouselImage.value = false;
@@ -682,7 +695,10 @@ onMounted(async () => {
       if (metaTag) {
         metaTag.setAttribute('content', response.data.csrf_token);
         console.log('🔄 Meta tag CSRF atualizada com novo token');
-        console.log('🔑 Novo token:', response.data.csrf_token.substring(0, 20) + '...');
+        console.log(
+          '🔑 Novo token:',
+          response.data.csrf_token.substring(0, 20) + '...'
+        );
       }
 
       // Atualizar também o header padrão do axios
@@ -751,7 +767,7 @@ onMounted(async () => {
               'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-md',
               isSessionReady
                 ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed',
             ]"
           >
             <svg
@@ -761,8 +777,19 @@ onMounted(async () => {
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             <svg
               v-else
@@ -778,7 +805,9 @@ onMounted(async () => {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            <span>{{ isSessionReady ? 'Adicionar Imagens' : 'Iniciando...' }}</span>
+            <span>{{
+              isSessionReady ? 'Adicionar Imagens' : 'Iniciando...'
+            }}</span>
           </div>
         </label>
       </div>

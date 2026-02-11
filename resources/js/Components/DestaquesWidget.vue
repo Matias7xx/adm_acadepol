@@ -94,12 +94,18 @@ watch(
 </script>
 
 <template>
-  <div class="bg-gray-100 rounded-lg shadow-lg p-6 mb-6 border-2 border-gray-200">
+  <div
+    class="bg-gray-100 rounded-lg shadow-lg p-6 mb-6 border-2 border-gray-200"
+  >
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-3">
         <div class="bg-amber-500 p-2 rounded-lg">
-          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            class="w-6 h-6 text-white"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path :d="mdiStar" />
           </svg>
         </div>
@@ -130,13 +136,22 @@ watch(
 
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+      <div
+        class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"
+      ></div>
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <div
+      v-else-if="error"
+      class="bg-red-50 border border-red-200 rounded-lg p-4"
+    >
       <div class="flex items-start">
-        <svg class="w-5 h-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+        <svg
+          class="w-5 h-5 text-red-500 mt-0.5"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path :d="mdiAlertCircle" />
         </svg>
         <div class="ml-3">
@@ -360,8 +375,8 @@ watch(
             Nenhuma notícia em destaque
           </p>
           <p class="text-xs text-blue-700 mt-1">
-            Marque até 2 notícias como destaque para aparecerem na página inicial
-            do site.
+            Marque até 2 notícias como destaque para aparecerem na página
+            inicial do site.
           </p>
         </div>
       </div>

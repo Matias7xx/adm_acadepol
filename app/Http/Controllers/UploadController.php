@@ -11,7 +11,6 @@ use Carbon\Carbon;
 
 class UploadController extends Controller
 {
-
   /**
    * Upload de imagens para o CKEditor
    */

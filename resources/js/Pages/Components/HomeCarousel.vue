@@ -184,11 +184,11 @@ onMounted(async () => {
   <div class="news-section">
     <!-- Skeleton Loading -->
     <div v-if="showSkeleton" class="news-skeleton">
-        <div class="skeleton-grid single-item">
-            <div class="skeleton-card-simple">
-                <div class="skeleton-shimmer"></div>
-            </div>
+      <div class="skeleton-grid single-item">
+        <div class="skeleton-card-simple">
+          <div class="skeleton-shimmer"></div>
         </div>
+      </div>
     </div>
 
     <!-- Conteúdo Principal -->
@@ -205,10 +205,7 @@ onMounted(async () => {
           <hr class="flex-1 border-t border-gray-300" />
         </div>
       </div> -->
-      <div
-        class="news-grid"
-        :class="{ 'single-item': newsItems.length === 1 }"
-      >
+      <div class="news-grid" :class="{ 'single-item': newsItems.length === 1 }">
         <a
           v-for="(item, index) in newsItems"
           :key="item.id"
@@ -299,7 +296,7 @@ onMounted(async () => {
 
 <style scoped>
 .news-section {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative mb-6;
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative mb-2;
 }
 
 .news-container {
