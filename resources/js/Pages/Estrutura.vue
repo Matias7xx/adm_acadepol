@@ -8,7 +8,7 @@ import Header from './Components/Header.vue';
 
 <template>
   <Head title="Estrutura" />
-  <div class="min-h-screen flex flex-col bg-gray-100">
+  <div class="min-h-screen flex flex-col bg-gray-50">
     <Header />
     <SiteNavbar />
     <GaleriaEstrutura />

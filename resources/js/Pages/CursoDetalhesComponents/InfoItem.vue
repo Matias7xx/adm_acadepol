@@ -1,14 +1,10 @@
 <script setup>
-import { defineProps } from 'vue';
+import IconComponent from './IconComponent.vue';
 
 defineProps({
   icon: {
     type: String,
     required: true,
-  },
-  color: {
-    type: String,
-    default: 'gray',
   },
   label: {
     type: String,
@@ -22,13 +18,36 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex items-start">
-    <div :class="`bg-${color}-100 p-3 rounded-full mr-4`">
-      <IconComponent :name="icon" :color="color" />
+  <div class="info-item">
+    <div class="info-icon-wrapper">
+      <IconComponent :name="icon" />
     </div>
-    <div>
-      <h3 class="text-md font-semibold text-gray-800">{{ label }}</h3>
-      <p class="text-gray-600">{{ value }}</p>
+    <div class="info-text">
+      <p class="info-label">{{ label }}</p>
+      <p class="info-value">{{ value }}</p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.info-item {
+  @apply flex items-start gap-3;
+}
+
+.info-icon-wrapper {
+  @apply flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center;
+  background-color: #faf5e8;
+}
+
+.info-text {
+  @apply flex flex-col;
+}
+
+.info-label {
+  @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+}
+
+.info-value {
+  @apply text-sm font-semibold text-gray-800 mt-0.5;
+}
+</style>

@@ -13,109 +13,204 @@ import imgUrl from '@/src/assets/logo-acadepol.png';
     <Head title="Reserva de Alojamento - Tipo de Solicitante" />
 
     <SectionFullScreen v-slot="{ cardClass }" bg="white">
-      <CardBox :class="[cardClass, 'px-4 md:px-6']">
+      <CardBox :class="[cardClass, 'px-6 md:px-10 py-8']">
         <!-- Logo -->
-        <div class="flex items-center mt-2 justify-center">
-          <img
-            :src="imgUrl"
-            class="w-32 md:w-40 lg:w-48 mx-auto"
-            alt="ACADEPOL"
-          />
+        <div class="flex justify-center mb-8">
+          <img :src="imgUrl" class="w-28 md:w-36" alt="ACADEPOL" />
         </div>
 
-        <!-- Título e Descrição -->
-        <div
-          class="w-full mt-6 px-1 py-1 overflow-hidden text-center flex flex-col items-center"
-        >
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-            Reserva de Alojamento
-          </h1>
-          <p class="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
-            Escolha o tipo de solicitante para continuar
+        <!-- Título -->
+        <div class="text-center mb-8">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <h1
+              class="text-lg md:text-xl font-semibold text-gray-800 tracking-wide"
+            >
+              Reserva de Alojamento
+            </h1>
+          </div>
+          <p class="text-sm text-gray-500">
+            Selecione seu perfil para prosseguir com a solicitação
           </p>
         </div>
 
-        <!-- Opções de Solicitante -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <!-- Opções -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Servidor da PCPB -->
-          <div
-            class="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6 hover:shadow-md transition-all duration-300 text-center"
+          <Link
+            :href="route('alojamento.reserva.form')"
+            class="option-card group"
           >
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">
-              Servidor da PCPB
-            </h3>
-
-            <p class="text-sm text-gray-600 mb-4">
-              Você é servidor da Polícia Civil da Paraíba e precisa fazer uma
-              reserva no alojamento.
-            </p>
-
-            <!-- Botão -->
-            <Link
-              :href="route('alojamento.reserva.form')"
-              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none transition ease-in-out duration-150"
-            >
+            <div class="option-icon-wrapper">
+              <!-- Ícone: crachá/servidor -->
               <svg
-                class="w-4 h-4 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                class="option-icon"
                 fill="none"
-                stroke="currentColor"
                 viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                ></path>
+                  stroke-width="1.5"
+                  d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c0 1.306.835 2.418 2 2.83"
+                />
               </svg>
-              Solicitar Alojamento
-            </Link>
-          </div>
+            </div>
+            <div class="option-body">
+              <h3 class="option-title">Servidor da PCPB</h3>
+              <p class="option-desc">
+                Servidor da Polícia Civil da Paraíba com acesso ao sistema.
+              </p>
+            </div>
+            <svg
+              class="option-arrow"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </Link>
 
           <!-- Visitante -->
-          <div
-            class="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6 hover:shadow-md transition-all duration-300 text-center"
-          >
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Visitante</h3>
-
-            <p class="text-sm text-gray-600 mb-4">
-              Você é servidor de outro órgão ou visitante e precisa de
-              hospedagem.
-            </p>
-
-            <!-- Botão -->
-            <Link
-              :href="route('visitante.formulario')"
-              class="w-full inline-flex justify-center items-center px-4 py-2 bg-[#bea54a] border border-transparent rounded-md font-semibold text-xs text-black uppercase tracking-widest hover:bg-[#a38e5d] focus:bg-[#a38e5d] active:bg-[#8b7a51] focus:outline-none transition ease-in-out duration-150"
-            >
+          <Link :href="route('visitante.formulario')" class="option-card group">
+            <div class="option-icon-wrapper">
+              <!-- Ícone: pessoa/visitante -->
               <svg
-                class="w-4 h-4 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                class="option-icon"
                 fill="none"
-                stroke="currentColor"
                 viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                ></path>
+                  stroke-width="1.5"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
-              Solicitar Alojamento
-            </Link>
-          </div>
+            </div>
+            <div class="option-body">
+              <h3 class="option-title">Visitante</h3>
+              <p class="option-desc">
+                Servidor de outro órgão ou visitante externo sem cadastro.
+              </p>
+            </div>
+            <svg
+              class="option-arrow"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </Link>
         </div>
 
-        <BaseDivider />
+        <BaseDivider class="my-6" />
 
-        <!-- Botão Voltar -->
+        <!-- Voltar -->
         <BaseLevel>
           <div></div>
-          <Link :href="route('home')" class="hover:text-[#a38e5d] text-sm">
-            ← Voltar à página inicial
+          <Link :href="route('home')" class="back-link">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Voltar à página inicial
           </Link>
         </BaseLevel>
       </CardBox>
     </SectionFullScreen>
   </LayoutGuest>
 </template>
+
+<style scoped>
+/* Card de opção */
+.option-card {
+  @apply flex items-center gap-4 p-5 rounded-lg border border-gray-200 bg-white;
+  @apply transition-all duration-200 cursor-pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.option-card:hover {
+  @apply border-gray-300 bg-gray-50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Ícone */
+.option-icon-wrapper {
+  @apply flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center;
+  @apply bg-amber-50 transition-colors duration-200;
+}
+
+.option-card:hover .option-icon-wrapper {
+  background-color: #f5edd6;
+}
+
+.option-icon {
+  @apply w-6 h-6;
+  color: #bea55a;
+}
+
+/* Texto */
+.option-body {
+  @apply flex-1 text-left;
+}
+
+.option-title {
+  @apply text-sm font-semibold text-gray-800 mb-0.5;
+}
+
+.option-desc {
+  @apply text-xs text-gray-500 leading-relaxed;
+}
+
+/* Seta */
+.option-arrow {
+  @apply w-4 h-4 text-gray-300 flex-shrink-0 transition-all duration-200;
+}
+
+.option-card:hover .option-arrow {
+  color: #bea55a;
+  transform: translateX(2px);
+}
+
+/* Voltar */
+.back-link {
+  @apply flex items-center gap-1.5 text-sm text-gray-400 transition-colors duration-150;
+}
+
+.back-link:hover {
+  color: #bea55a;
+}
+
+/* Redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  .option-card,
+  .option-arrow,
+  .option-icon-wrapper {
+    @apply transition-none;
+  }
+}
+</style>

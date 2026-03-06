@@ -210,7 +210,7 @@ const handleImageError = event => {
           <div
             v-for="curso in cursos.data"
             :key="curso.id"
-            class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col relative h-[420px]"
+            class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col relative min-h-[420px] h-full"
             :class="{
               'ring-1 ring-[#bea55a] ring-offset-2 hover:shadow-lg':
                 curso.status === 'aberto',
@@ -293,7 +293,7 @@ const handleImageError = event => {
             <!-- Conteúdo do card -->
             <div class="p-4 flex flex-col flex-grow">
               <h3
-                class="text-lg font-bold mb-3 line-clamp-2"
+                class="text-lg font-bold mb-1 line-clamp-2 h-[3.5rem]"
                 :class="{
                   'text-gray-600':
                     curso.status === 'concluído' ||
@@ -305,8 +305,8 @@ const handleImageError = event => {
                 {{ curso.nome }}
               </h3>
 
-              <p
-                class="text-sm mb-4 line-clamp-3 flex-grow"
+              <!-- <p
+                class="text-sm mb-3 line-clamp-2 flex-grow"
                 :class="{
                   'text-gray-500':
                     curso.status === 'concluído' ||
@@ -316,10 +316,10 @@ const handleImageError = event => {
                 }"
               >
                 {{ curso.descricao }}
-              </p>
+              </p> -->
 
               <!-- Informações do curso -->
-              <div class="space-y-2 mb-4">
+              <div class="space-y-2 mb-4 mt-auto">
                 <div class="flex items-center text-xs text-gray-500">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

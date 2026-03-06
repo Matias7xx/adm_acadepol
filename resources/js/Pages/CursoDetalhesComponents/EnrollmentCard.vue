@@ -33,10 +33,8 @@ const handleEnrollment = cursoId => {
     onError: errors => {
       if (errors.unauthenticated) {
         window.sessionStorage.setItem('intended_curso_id', cursoId);
-        return; // Importante retornar para evitar processamento adicional
+        return;
       }
-
-      // Verificar explicitamente a existência do erro de matrícula e mostrar toast
       if (errors.enrollment) {
         toast.error(errors.enrollment);
       }
@@ -56,54 +54,118 @@ const formatDate = date => {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-4">
-    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
-      Inscrições
-    </h3>
-    <!-- Descomente o componente Toast -->
+  <div class="enrollment-card">
     <Toast />
 
-    <div class="space-y-3 mb-6">
-      <div class="flex justify-between">
-        <span class="text-gray-600">Status:</span>
-        <span
-          class="font-medium"
-          :class="{
-            'text-green-600': status === 'aberto',
-            'text-red-600': status === 'fechado' || !status,
-            'text-yellow-600': status === 'em andamento',
-          }"
-        >
-          {{ status || 'Indisponível' }}
-        </span>
-      </div>
-
-      <div class="flex justify-between">
-        <span class="text-gray-600">Vagas:</span>
-        <span class="font-medium text-gray-800">{{ capacidade }}</span>
-      </div>
-
-      <div class="flex justify-between">
-        <span class="text-gray-600">Período de matrícula:</span>
-        <span class="font-medium text-gray-800"
-          >Até {{ formatDate(dataInicio) }}</span
-        >
-      </div>
+    <!-- Header -->
+    <div class="enrollment-header">
+      <span class="enrollment-accent"></span>
+      <h3 class="enrollment-title">Inscrições</h3>
     </div>
 
-    <!-- Botão de Inscrição -->
-    <div v-if="status === 'aberto' && curso && curso.id">
-      <button
-        @click="handleEnrollment(curso.id)"
-        class="block w-full bg-[#bea55a] hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-md text-center transition-colors duration-200"
-      >
-        Inscrever-se
-      </button>
-    </div>
+    <!-- Dados -->
+    <div class="enrollment-body">
+      <div class="enrollment-rows">
+        <div class="enrollment-row">
+          <span class="row-label">Status</span>
+          <span
+            class="row-value"
+            :class="{
+              'status-open': status === 'aberto',
+              'status-closed': status === 'fechado' || !status,
+              'status-ongoing': status === 'em andamento',
+            }"
+          >
+            {{ status || 'Indisponível' }}
+          </span>
+        </div>
 
-    <div v-else class="mt-3 text-sm text-center text-gray-500">
-      Inscrições
-      {{ status === 'em andamento' ? 'encerradas' : 'não disponíveis' }}
+        <div class="enrollment-row">
+          <span class="row-label">Vagas</span>
+          <span class="row-value text-gray-800">{{ capacidade }}</span>
+        </div>
+
+        <div class="enrollment-row">
+          <span class="row-label">Prazo de matrícula</span>
+          <span class="row-value text-gray-800"
+            >Até {{ formatDate(dataInicio) }}</span
+          >
+        </div>
+      </div>
+
+      <!-- Botão -->
+      <div v-if="status === 'aberto' && curso && curso.id" class="mt-5">
+        <button @click="handleEnrollment(curso.id)" class="enroll-btn">
+          Inscrever-se
+        </button>
+      </div>
+      <div v-else class="mt-5 text-center text-sm text-gray-400">
+        Inscrições
+        {{ status === 'em andamento' ? 'encerradas' : 'não disponíveis' }}
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.enrollment-card {
+  @apply bg-white rounded-lg overflow-hidden border border-gray-200;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.enrollment-header {
+  @apply flex items-center px-5 py-4 border-b border-gray-100;
+}
+
+.enrollment-title {
+  @apply text-lg font-bold text-gray-800 tracking-wide uppercase;
+}
+
+.enrollment-body {
+  @apply p-6;
+}
+
+.enrollment-rows {
+  @apply divide-y divide-gray-50;
+}
+
+.enrollment-row {
+  @apply flex items-center justify-between py-2.5;
+}
+
+.row-label {
+  @apply text-sm text-gray-500;
+}
+
+.row-value {
+  @apply text-sm font-medium;
+}
+
+.status-open {
+  @apply text-emerald-600;
+}
+
+.status-closed {
+  @apply text-red-500;
+}
+
+.status-ongoing {
+  @apply text-amber-600;
+}
+
+.enroll-btn {
+  @apply w-full py-2.5 px-4 rounded-md text-sm font-semibold text-white;
+  @apply transition-colors duration-150;
+  background-color: #bea55a;
+}
+
+.enroll-btn:hover {
+  background-color: #a38e4d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enroll-btn {
+    @apply transition-none;
+  }
+}
+</style>

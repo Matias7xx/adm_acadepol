@@ -17,11 +17,9 @@ const { toast } = useToast();
 
 const formatDate = dateString => {
   if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR');
+  return new Date(dateString).toLocaleDateString('pt-BR');
 };
 
-// Download de certificado
 const baixarCertificado = certificado => {
   try {
     window.open(route('certificados.download', certificado.id), '_blank');
@@ -34,15 +32,8 @@ const baixarCertificado = certificado => {
 
 const estatisticas = computed(() => {
   const certificados = props.certificados.data || [];
-
   return {
     total: certificados.length,
-    regulares: certificados.filter(
-      c => !c.tipo_origem || c.tipo_origem === 'matricula'
-    ).length,
-    sistema: certificados.filter(c => c.tipo_origem === 'curso_sistema').length,
-    externos: certificados.filter(c => c.tipo_origem === 'curso_externo')
-      .length,
     horasTotais: certificados.reduce(
       (total, c) => total + (parseInt(c.carga_horaria) || 0),
       0
@@ -53,41 +44,25 @@ const estatisticas = computed(() => {
 
 <template>
   <Head title="Meus Certificados" />
-  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <div class="min-h-screen bg-gray-50">
     <Header />
     <SiteNavbar />
 
-    <div
-      class="bg-gradient-to-r from-black to-gray-900 text-white py-5 shadow-md"
-    >
-      <div class="container mx-auto flex justify-between items-center px-4">
-        <div class="flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 text-[#bea55a] mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h1 class="text-2xl font-bold">Meus Certificados</h1>
+    <!-- Header da página -->
+    <div class="page-header">
+      <div
+        class="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <span class="page-header-accent"></span>
+          <h1 class="page-header-title">Meus Certificados</h1>
         </div>
-        <Link
-          :href="route('home')"
-          class="flex items-center text-[#bea55a] hover:text-amber-300 transition"
-        >
+        <Link :href="route('home')" class="back-link">
           <svg
-            class="h-4 w-4 mr-2"
+            class="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -96,87 +71,20 @@ const estatisticas = computed(() => {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span>Início</span>
+          Início
         </Link>
       </div>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <div class="container mx-auto py-8 px-4">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Estatísticas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total de Certificados -->
-        <div
-          class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 transform hover:scale-105 transition-transform"
-        >
-          <div class="flex items-center">
-            <div class="bg-gray-600 p-3 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">
-                Total de Certificados
-              </p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ estatisticas.total }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Carga Horária Total -->
-        <div
-          class="bg-white rounded-lg shadow-lg p-6 border border-gray-200 transform hover:scale-105 transition-transform"
-        >
-          <div class="flex items-center">
-            <div class="bg-gray-600 p-3 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">
-                Carga Horária Total
-              </p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ estatisticas.horasTotais }}h
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Aviso sobre o Novo Sistema -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <div class="flex items-start">
-          <div class="flex-shrink-0">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-7">
+        <!-- Total -->
+        <div class="stat-card">
+          <div class="stat-icon-wrap">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-blue-600"
+              class="stat-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -184,118 +92,128 @@ const estatisticas = computed(() => {
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                stroke-width="1.75"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
           </div>
-          <div class="ml-3">
-            <h3 class="text-lg font-medium text-blue-900 mb-2">
-              Informação Importante sobre Certificados
-            </h3>
-            <div class="text-blue-800">
-              <p class="mb-3">
-                No momento, serão disponibilizados,
-                <strong>majoritariamente</strong>, os certificados emitidos a
-                partir da implementação do novo sistema.
-              </p>
-              <p class="mb-3">
-                Certificados de cursos realizados antes da implementação do
-                sistema atual podem não estar disponíveis para download nesta
-                plataforma.
-              </p>
-              <p class="text-sm">
-                <strong>Precisa de um certificado anterior?</strong>
-                Entre em contato conosco através do
-                <Link
-                  :href="route('contato.create')"
-                  class="text-blue-700 hover:text-blue-900 underline font-medium"
-                >
-                  Fale Conosco
-                </Link>
-                ou solicite uma
-                <Link
-                  :href="route('requerimentos.create')"
-                  class="text-blue-700 hover:text-blue-900 underline font-medium"
-                >
-                  2ª via do certificado </Link
-                >.
-              </p>
-            </div>
+          <div>
+            <p class="stat-label">Total de Certificados</p>
+            <p class="stat-value">{{ estatisticas.total }}</p>
+          </div>
+        </div>
+
+        <!-- Carga Horária -->
+        <div class="stat-card">
+          <div class="stat-icon-wrap">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="stat-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.75"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="stat-label">Carga Horária Total</p>
+            <p class="stat-value">
+              {{ estatisticas.horasTotais }}<span class="stat-unit">h</span>
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Card Principal de Certificados -->
-      <div
-        class="bg-white rounded-lg shadow-lg p-6 mb-6 border border-gray-200"
-      >
-        <div
-          class="flex items-center justify-between mb-6 pb-3 border-b border-[#bea55a]"
-        >
-          <div class="flex items-center">
-            <div class="bg-amber-100 p-3 rounded-full mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-[#bea55a]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-800">Seus Certificados</h2>
-          </div>
-          <!-- <div class="text-sm text-gray-500">{{ certificados.total }} certificado(s) encontrado(s)</div> -->
+      <!-- Aviso sobre o sistema -->
+      <div class="notice-box mb-7">
+        <div class="notice-icon-wrap">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div class="notice-body">
+          <h3 class="notice-title">Informação Importante sobre Certificados</h3>
+          <p class="notice-text">
+            No momento, serão disponibilizados
+            <strong>majoritariamente</strong> os certificados emitidos a partir
+            da implementação do novo sistema. Certificados de cursos anteriores
+            podem não estar disponíveis aqui.
+          </p>
+          <p class="notice-text mt-1.5">
+            <strong>Precisa de um certificado anterior?</strong>
+            Entre em contato pelo
+            <Link :href="route('contato.create')" class="notice-link"
+              >Fale Conosco</Link
+            >
+            ou solicite uma
+            <Link :href="route('requerimentos.create')" class="notice-link"
+              >2ª via do certificado</Link
+            >.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card principal -->
+      <div class="main-card">
+        <!-- Header do card -->
+        <div class="main-card-header">
+          <span class="main-card-accent"></span>
+          <h2 class="main-card-title">Seus Certificados</h2>
         </div>
 
-        <!-- Lista de Certificados -->
+        <!-- Lista -->
         <div
           v-if="certificados.data && certificados.data.length > 0"
-          class="space-y-6"
+          class="cert-list"
         >
           <div
             v-for="certificado in certificados.data"
             :key="certificado.id"
-            class="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-[#bea55a]"
+            class="cert-item group"
           >
-            <div class="flex items-start justify-between">
-              <!-- Informações do Certificado -->
-              <div class="flex-1">
-                <div class="flex items-center mb-3">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6 text-[#bea55a] mr-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">
-                      {{ certificado.nome_curso }}
-                    </h3>
-                  </div>
-                </div>
+            <!-- Ícone + nome -->
+            <div class="cert-main">
+              <div class="cert-icon-wrap">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="cert-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.75"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div class="cert-info">
+                <h3 class="cert-name">{{ certificado.nome_curso }}</h3>
 
-                <!-- Detalhes -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div class="flex items-center text-gray-600">
+                <!-- Metadados -->
+                <div class="cert-meta">
+                  <div class="meta-chip">
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 mr-2 text-blue-500"
+                      class="w-3.5 h-3.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -307,20 +225,13 @@ const estatisticas = computed(() => {
                         d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-6 0v1h6V7m-6 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-3"
                       />
                     </svg>
-                    <div>
-                      <span class="text-xs text-gray-500 block"
-                        >Data de Emissão</span
-                      >
-                      <span class="font-medium">{{
-                        formatDate(certificado.data_emissao)
-                      }}</span>
-                    </div>
+                    <span
+                      >Emissão: {{ formatDate(certificado.data_emissao) }}</span
+                    >
                   </div>
-
-                  <div class="flex items-center text-gray-600">
+                  <div class="meta-chip">
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 mr-2 text-green-500"
+                      class="w-3.5 h-3.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -332,20 +243,11 @@ const estatisticas = computed(() => {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <div>
-                      <span class="text-xs text-gray-500 block"
-                        >Carga Horária</span
-                      >
-                      <span class="font-medium"
-                        >{{ certificado.carga_horaria }}h</span
-                      >
-                    </div>
+                    <span>{{ certificado.carga_horaria }}h</span>
                   </div>
-
-                  <div class="flex items-center text-gray-600">
+                  <div class="meta-chip">
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 mr-2 text-purple-500"
+                      class="w-3.5 h-3.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -357,54 +259,46 @@ const estatisticas = computed(() => {
                         d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-6 0v1h6V7m-6 0H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-3"
                       />
                     </svg>
-                    <div>
-                      <span class="text-xs text-gray-500 block"
-                        >Data de Conclusão</span
-                      >
-                      <span class="font-medium">{{
-                        formatDate(certificado.data_conclusao_curso)
-                      }}</span>
-                    </div>
+                    <span
+                      >Conclusão:
+                      {{ formatDate(certificado.data_conclusao_curso) }}</span
+                    >
                   </div>
                 </div>
               </div>
-
-              <!-- Botão de Download -->
-              <div class="ml-6 mt-6 flex-shrink-0">
-                <button
-                  @click="baixarCertificado(certificado)"
-                  class="bg-[#bea55a] text-white py-2 px-6 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 flex items-center"
-                  :title="`Baixar certificado ${certificado.numero_certificado}`"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Baixar PDF
-                </button>
-              </div>
             </div>
+
+            <!-- Botão download -->
+            <button
+              @click="baixarCertificado(certificado)"
+              class="download-btn"
+              :title="`Baixar certificado ${certificado.numero_certificado}`"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span>Baixar PDF</span>
+            </button>
           </div>
         </div>
 
-        <!-- Estado Vazio -->
-        <div v-else class="text-center py-12">
-          <div
-            class="bg-gray-100 p-6 rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center"
-          >
+        <!-- Estado vazio -->
+        <div v-else class="empty-state">
+          <div class="empty-icon-wrap">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-12 w-12 text-gray-400"
+              class="h-10 w-10 text-gray-300"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -412,36 +306,18 @@ const estatisticas = computed(() => {
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                stroke-width="2"
+                stroke-width="1.5"
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">
+          <h3 class="text-sm font-semibold text-gray-700 mb-1">
             Nenhum certificado encontrado
           </h3>
-          <p class="text-gray-500 mb-6">
-            Você ainda não possui certificados emitidos. Complete um curso para
-            receber seu certificado.
+          <p class="text-sm text-gray-400 mb-5">
+            Complete um curso para receber seu certificado.
           </p>
-          <Link
-            :href="route('cursos')"
-            class="bg-[#bea55a] text-white py-3 px-6 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 inline-flex items-center"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
+          <Link :href="route('cursos')" class="btn-primary">
             Ver Cursos Disponíveis
           </Link>
         </div>
@@ -451,80 +327,40 @@ const estatisticas = computed(() => {
           v-if="
             certificados.data &&
             certificados.data.length > 0 &&
-            certificados.links
+            certificados.links &&
+            certificados.links.length > 3
           "
-          class="mt-8 border-t border-gray-200 pt-6"
+          class="pagination-wrap"
         >
-          <nav class="flex items-center justify-between">
-            <div class="flex-1 flex justify-between sm:hidden">
+          <p class="text-sm text-gray-500">
+            Mostrando
+            <span class="font-medium text-gray-700">{{
+              certificados.from || 0
+            }}</span
+            >–<span class="font-medium text-gray-700">{{
+              certificados.to || 0
+            }}</span>
+            de
+            <span class="font-medium text-gray-700">{{
+              certificados.total || 0
+            }}</span>
+            certificados
+          </p>
+          <nav class="flex gap-1">
+            <template v-for="(link, index) in certificados.links" :key="index">
               <Link
-                v-if="certificados.prev_page_url"
-                :href="certificados.prev_page_url"
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Anterior
-              </Link>
-              <Link
-                v-if="certificados.next_page_url"
-                :href="certificados.next_page_url"
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Próximo
-              </Link>
-            </div>
-            <div
-              class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
-            >
-              <div>
-                <p class="text-sm text-gray-700">
-                  Mostrando
-                  <span class="font-medium">{{ certificados.from || 0 }}</span>
-                  até
-                  <span class="font-medium">{{ certificados.to || 0 }}</span>
-                  de
-                  <span class="font-medium">{{ certificados.total || 0 }}</span>
-                  certificados
-                </p>
-              </div>
-              <div v-if="certificados.links && certificados.links.length > 3">
-                <nav
-                  class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
-                >
-                  <template
-                    v-for="(link, index) in certificados.links"
-                    :key="index"
-                  >
-                    <Link
-                      v-if="link.url"
-                      :href="link.url"
-                      :class="[
-                        'relative inline-flex items-center px-2 py-2 border text-sm font-medium transition-colors',
-                        link.active
-                          ? 'z-10 bg-amber-50 border-amber-500 text-amber-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                        index === 0 ? 'rounded-l-md' : '',
-                        index === certificados.links.length - 1
-                          ? 'rounded-r-md'
-                          : '',
-                      ]"
-                      v-html="link.label"
-                    />
-                    <span
-                      v-else
-                      :class="[
-                        'relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500',
-                        index === 0 ? 'rounded-l-md' : '',
-                        index === certificados.links.length - 1
-                          ? 'rounded-r-md'
-                          : '',
-                      ]"
-                      v-html="link.label"
-                    />
-                  </template>
-                </nav>
-              </div>
-            </div>
+                v-if="link.url"
+                :href="link.url"
+                class="page-btn"
+                :class="link.active ? 'page-btn-active' : ''"
+                v-html="link.label"
+              />
+              <span
+                v-else
+                class="page-btn page-btn-disabled"
+                v-html="link.label"
+              />
+            </template>
           </nav>
         </div>
       </div>
@@ -534,26 +370,204 @@ const estatisticas = computed(() => {
 </template>
 
 <style scoped>
-/* Animações suaves */
-.transform {
-  transition: all 0.2s ease-in-out;
+/* Header da página */
+.page-header {
+  @apply py-4 bg-white border-b border-gray-200;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.hover\:scale-105:hover {
-  transform: scale(1.05);
+.page-header-accent {
+  @apply block w-1 h-6 rounded-full flex-shrink-0;
+  background-color: #bea55a;
 }
 
-/* Hover effects para cards */
-.hover\:shadow-md:hover {
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.page-header-title {
+  @apply text-base font-semibold text-gray-800;
 }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
+.back-link {
+  @apply inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-150;
+  color: #bea55a;
+}
+.back-link:hover {
+  color: #a38e4d;
+}
+
+/* Estatísticas */
+.stat-card {
+  @apply flex items-center gap-4 bg-white rounded-lg border border-gray-200 p-5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.stat-icon-wrap {
+  @apply flex-shrink-0 w-11 h-11 rounded-lg flex items-center justify-center;
+  background-color: #faf5e8;
+}
+
+.stat-icon {
+  @apply w-5 h-5;
+  color: #bea55a;
+}
+
+.stat-label {
+  @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+}
+
+.stat-value {
+  @apply text-2xl font-bold text-gray-900 mt-0.5;
+}
+
+.stat-unit {
+  @apply text-base font-medium text-gray-500 ml-0.5;
+}
+
+/* Aviso */
+.notice-box {
+  @apply flex gap-3 bg-blue-50 border border-blue-100 rounded-lg p-5;
+}
+
+.notice-icon-wrap {
+  @apply flex-shrink-0 text-blue-500 mt-0.5;
+}
+
+.notice-body {
+  @apply flex-1;
+}
+
+.notice-title {
+  @apply text-sm font-semibold text-blue-800 mb-1.5;
+}
+
+.notice-text {
+  @apply text-sm text-blue-700;
+}
+
+.notice-link {
+  @apply font-medium underline underline-offset-2 transition-colors duration-150;
+  color: #1d4ed8;
+}
+.notice-link:hover {
+  color: #1e3a8a;
+}
+
+/* Card principal */
+.main-card {
+  @apply bg-white rounded-lg overflow-hidden border border-gray-200;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.main-card-header {
+  @apply flex items-center gap-3 px-6 py-4 border-b border-gray-100;
+}
+
+.main-card-accent {
+  @apply block w-1 h-5 rounded-full flex-shrink-0;
+  background-color: #bea55a;
+}
+
+.main-card-title {
+  @apply text-sm font-semibold text-gray-800 uppercase tracking-wide;
+}
+
+/* Lista de certificados */
+.cert-list {
+  @apply divide-y divide-gray-50;
+}
+
+.cert-item {
+  @apply flex items-center justify-between gap-4 px-6 py-5;
+  @apply transition-colors duration-150;
+}
+
+.cert-item:hover {
+  @apply bg-gray-50;
+}
+
+.cert-main {
+  @apply flex items-start gap-4 flex-1 min-w-0;
+}
+
+.cert-icon-wrap {
+  @apply flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center;
+  background-color: #faf5e8;
+}
+
+.cert-icon {
+  @apply w-5 h-5;
+  color: #bea55a;
+}
+
+.cert-info {
+  @apply flex-1 min-w-0;
+}
+
+.cert-name {
+  @apply text-sm font-semibold text-gray-800 mb-2 leading-snug;
+}
+
+.cert-meta {
+  @apply flex flex-wrap gap-2;
+}
+
+.meta-chip {
+  @apply inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded;
+}
+
+/* Botão download */
+.download-btn {
+  @apply flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-md;
+  @apply text-sm font-medium text-white transition-colors duration-150;
+  background-color: #bea55a;
+}
+
+.download-btn:hover {
+  background-color: #a38e4d;
+}
+
+/* Estado vazio */
+.empty-state {
+  @apply flex flex-col items-center text-center py-14 px-6;
+}
+
+.empty-icon-wrap {
+  @apply w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 border border-gray-100;
+}
+
+/* Botão primário */
+.btn-primary {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-md;
+  @apply text-sm font-semibold text-white transition-colors duration-150;
+  background-color: #bea55a;
+}
+.btn-primary:hover {
+  background-color: #a38e4d;
+}
+
+/* Paginação */
+.pagination-wrap {
+  @apply flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100;
+}
+
+.page-btn {
+  @apply inline-flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-600;
+  @apply hover:border-gray-300 hover:text-gray-800 transition-colors duration-150;
+  min-width: 2rem;
+}
+
+.page-btn-active {
+  @apply text-white border-transparent;
+  background-color: #bea55a;
+}
+
+.page-btn-disabled {
+  @apply bg-gray-50 text-gray-400 cursor-default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cert-item,
+  .download-btn,
+  .page-btn {
+    @apply transition-none;
   }
 }
 </style>

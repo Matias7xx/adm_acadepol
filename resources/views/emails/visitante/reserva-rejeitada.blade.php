@@ -20,5 +20,5 @@ Se você acredita que houve algum engano ou gostaria de esclarecer alguma inform
 Você pode fazer uma nova solicitação quando as condições permitirem.
 
 Atenciosamente,<br>
-**Equipe ACADEPOL**
+**ACADEPOL**
 @endcomponent

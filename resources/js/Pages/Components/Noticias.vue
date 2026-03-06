@@ -3,34 +3,57 @@ import SideCard from './SideCard.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 
-// Estado do componente
 const noticias = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const retryCount = ref(0);
 const mounted = ref(false);
 
-// Configurações
 const MAX_RETRIES = 1;
 const RETRY_DELAY = 2000;
 const MAX_PREVIEW_ITEMS = 5;
 
-// Debounce controller para evitar múltiplas requisições
 let abortController = null;
 
-// Buscar notícias da API
+const formatDate = dateString => {
+  if (!dateString) return 'Data não informada';
+  try {
+    let date;
+    if (dateString.includes('/')) {
+      const [day, month, year] = dateString.split('/');
+      date = new Date(year, month - 1, day);
+    } else {
+      date = new Date(dateString);
+    }
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch (e) {
+    return dateString;
+  }
+};
+
+const truncateText = (text, length = 80) => {
+  if (!text || typeof text !== 'string') return '';
+  if (text.length <= length) return text;
+  const truncated = text.substring(0, length);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return (
+    (lastSpace > length * 0.7
+      ? truncated.substring(0, lastSpace)
+      : truncated
+    ).trim() + '...'
+  );
+};
+
 const fetchNoticias = async (isRetry = false) => {
   try {
-    // Cancelar requisição anterior se existir
-    if (abortController) {
-      abortController.abort();
-    }
-
+    if (abortController) abortController.abort();
     abortController = new AbortController();
-
-    if (!isRetry) {
-      loading.value = true;
-    }
+    if (!isRetry) loading.value = true;
     error.value = null;
 
     const response = await fetch('/api/noticias-home', {
@@ -44,47 +67,36 @@ const fetchNoticias = async (isRetry = false) => {
     });
 
     if (!response.ok) {
-      const errorMessage =
+      throw new Error(
         response.status === 404
           ? 'Serviço de notícias indisponível'
-          : `Erro ${response.status}: ${response.statusText || 'Não foi possível carregar as notícias'}`;
-      throw new Error(errorMessage);
+          : `Erro ${response.status}: ${response.statusText || 'Não foi possível carregar as notícias'}`
+      );
     }
 
     const data = await response.json();
-
-    // Validar estrutura dos dados
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(data))
       throw new Error('Formato de dados inválido recebido do servidor');
-    }
 
-    // Processar e limitar dados
     noticias.value = data
       .slice(0, MAX_PREVIEW_ITEMS)
-      .map(noticia => ({
-        ...noticia,
-        id: noticia.id || Math.random().toString(36).substr(2, 9),
-        titulo: noticia.titulo || 'Título não disponível',
-        descricao_curta: noticia.descricao_curta,
-        data_publicacao: formatDate(noticia.data_publicacao),
-        visualizacoes: parseInt(noticia.visualizacoes) || 0,
-        destaque: Boolean(noticia.destaque),
+      .map(n => ({
+        ...n,
+        id: n.id || Math.random().toString(36).substr(2, 9),
+        titulo: n.titulo || 'Título não disponível',
+        descricao_curta: n.descricao_curta,
+        data_publicacao: formatDate(n.data_publicacao),
+        visualizacoes: parseInt(n.visualizacoes) || 0,
+        destaque: Boolean(n.destaque),
       }))
-      .filter(noticia => noticia.titulo !== 'Título não disponível');
+      .filter(n => n.titulo !== 'Título não disponível');
 
     loading.value = false;
     retryCount.value = 0;
   } catch (err) {
-    // Ignorar erros de abort (cancelamento de requisição)
-    if (err.name === 'AbortError') {
-      return;
-    }
-
-    console.error('Erro ao carregar notícias:', err);
-
+    if (err.name === 'AbortError') return;
     if (retryCount.value < MAX_RETRIES && mounted.value) {
       retryCount.value++;
-      console.log(`Tentativa ${retryCount.value} de ${MAX_RETRIES}...`);
       setTimeout(() => {
         if (mounted.value) fetchNoticias(true);
       }, RETRY_DELAY);
@@ -95,310 +107,204 @@ const fetchNoticias = async (isRetry = false) => {
   }
 };
 
-// Tratamento de erro de imagem com fallback
-const handleImageError = event => {
-  event.target.style.display = 'none';
-};
-
-// Função para formatar datas com fallback
-const formatDate = dateString => {
-  if (!dateString) return 'Data não informada';
-
-  try {
-    // Tentar diferentes formatos de data
-    let date;
-    if (dateString.includes('/')) {
-      const [day, month, year] = dateString.split('/');
-      date = new Date(year, month - 1, day);
-    } else {
-      date = new Date(dateString);
-    }
-
-    if (isNaN(date.getTime())) {
-      return dateString; // Retorna o valor original se não conseguir converter
-    }
-
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  } catch (e) {
-    console.warn('Erro ao formatar data:', e);
-    return dateString;
-  }
-};
-
-// Truncar texto de forma inteligente para layout compacto
-const truncateText = (text, length = 80) => {
-  if (!text || typeof text !== 'string') return '';
-  if (text.length <= length) return text;
-
-  const truncated = text.substring(0, length);
-  const lastSpace = truncated.lastIndexOf(' ');
-
-  if (lastSpace > length * 0.7) {
-    return truncated.substring(0, lastSpace).trim() + '...';
-  }
-
-  return truncated.trim() + '...';
-};
-
-// Verificar se há notícias em destaque
-const hasDestaque = () => {
-  return noticias.value.some(noticia => noticia.destaque);
-};
-
-// Formatar número de visualizações
-const formatViews = views => {
-  if (views >= 1000) {
-    return (views / 1000).toFixed(1) + 'k';
-  }
-  return views.toString();
-};
-
 onMounted(() => {
   mounted.value = true;
   fetchNoticias();
 });
-
 onUnmounted(() => {
   mounted.value = false;
-  if (abortController) {
-    abortController.abort();
-  }
+  if (abortController) abortController.abort();
 });
 </script>
 
 <template>
   <section
-    class="w-full bg-gradient-to-br bg-gray-100 py-6 md:py-8 lg:py-10"
+    class="w-full bg-gray-50 py-8 lg:py-12"
     aria-labelledby="noticias-titulo"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Header da seção -->
-
-      <!-- Conteúdo principal -->
-      <div class="flex flex-col-reverse lg:flex-row gap-6 md:gap-8 lg:gap-12">
-        <!-- Coluna principal de notícias -->
+      <div class="flex flex-col-reverse lg:flex-row gap-8 lg:gap-12">
+        <!-- Coluna principal -->
         <main class="w-full lg:w-2/3">
-          <div class="">
-            <div class="space-y-4">
-              <h2
-                id="noticias-titulo"
-                class="text-xl sm:text-2xl font-semibold text-gray-700 mb-4 pl-2 border-l-4 border-[#bea55a]"
-              >
-                Últimas Notícias
-              </h2>
-            </div>
+          <!-- Título da seção -->
+          <div class="flex items-center gap-2.5 mb-6">
+            <span class="section-accent"></span>
+            <h2 id="noticias-titulo" class="section-title">Últimas Notícias</h2>
           </div>
-          <!-- Estado de carregamento -->
+
+          <!-- Carregando -->
           <div
             v-if="loading"
-            class="flex flex-col justify-center items-center py-16 lg:py-24"
+            class="flex flex-col items-center py-16"
             aria-live="polite"
             aria-busy="true"
           >
-            <div class="relative">
-              <div
-                class="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-gray-400"
-                role="status"
-              ></div>
-              <div
-                class="absolute inset-0 rounded-full border-4 border-transparent animate-pulse"
-              ></div>
-            </div>
-            <p class="mt-4 text-gray-600 font-medium">Carregando notícias...</p>
+            <div
+              class="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 border-t-[#bea55a]"
+              role="status"
+            ></div>
+            <p class="mt-3 text-sm text-gray-500">Carregando notícias...</p>
             <span class="sr-only">Carregando notícias...</span>
           </div>
 
-          <!-- Estado de erro -->
+          <!-- Erro -->
           <div
             v-else-if="error"
-            class="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 rounded-lg p-6 mb-8 shadow-sm"
+            class="flex gap-3 bg-red-50 border border-red-100 rounded-lg p-5"
             aria-live="assertive"
           >
-            <div class="flex items-start">
-              <svg
-                class="h-6 w-6 text-red-400 mt-1 mr-3 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div class="flex-1">
-                <h3 class="text-red-800 font-semibold text-lg">
-                  Erro ao carregar notícias
-                </h3>
-                <p class="text-red-700 mt-2">{{ error }}</p>
-                <div class="mt-4 flex flex-wrap gap-3">
-                  <button
-                    @click="fetchNoticias"
-                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 focus:outline-none transition-all duration-200 shadow-sm"
+            <svg
+              class="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-red-700 mb-1">
+                Erro ao carregar notícias
+              </p>
+              <p class="text-sm text-red-600 mb-3">{{ error }}</p>
+              <div class="flex gap-2">
+                <button
+                  @click="fetchNoticias"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-md hover:bg-red-700 transition-colors"
+                >
+                  <svg
+                    class="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      class="h-4 w-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Tentar novamente
-                  </button>
-                  <Link
-                    href="/noticias"
-                    class="inline-flex items-center px-4 py-2 bg-white text-red-600 text-sm font-medium rounded-lg border border-red-200 hover:bg-red-50 focus:ring-4 focus:ring-red-200 focus:outline-none transition-all duration-200"
-                  >
-                    Ver página de notícias
-                  </Link>
-                </div>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  Tentar novamente
+                </button>
+                <Link
+                  href="/noticias"
+                  class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"
+                >
+                  Ver todas as notícias
+                </Link>
               </div>
             </div>
           </div>
 
-          <!-- Sem resultados -->
+          <!-- Vazio -->
           <div
             v-else-if="noticias.length === 0"
-            class="text-center py-16 lg:py-24 bg-white rounded-xl shadow-sm border border-gray-100"
-            aria-live="polite"
+            class="flex flex-col items-center text-center py-14 bg-white rounded-lg border border-gray-200"
+            style="box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06)"
           >
-            <div class="mx-auto max-w-md">
+            <div
+              class="w-14 h-14 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-4"
+            >
               <svg
-                class="h-20 w-20 text-gray-300 mx-auto mb-6"
+                class="h-7 w-7 text-gray-300"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="1"
+                  stroke-width="1.5"
                   d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
                 />
               </svg>
-              <h3 class="text-xl font-semibold text-gray-900 mb-2">
-                Nenhuma notícia encontrada
-              </h3>
-              <p class="text-gray-500 mb-6">
-                Não há notícias publicadas no momento. Volte em breve para
-                conferir as novidades!
-              </p>
-              <Link
-                href="/noticias"
-                class="inline-flex items-center px-6 py-3 bg-[#bea55a] text-white font-medium rounded-lg hover:bg-[#887439] focus:outline-none transition-all duration-200 shadow-md"
-              >
-                Explorar arquivo de notícias
-              </Link>
             </div>
+            <p class="text-sm font-semibold text-gray-700 mb-1">
+              Nenhuma notícia encontrada
+            </p>
+            <p class="text-sm text-gray-400 mb-5">
+              Não há notícias publicadas no momento. Volte em breve!
+            </p>
+            <Link href="/noticias" class="btn-primary"
+              >Explorar arquivo de notícias</Link
+            >
           </div>
 
-          <!-- Grid de notícias -->
-          <div v-else class="space-y-4">
+          <!-- Lista de notícias -->
+          <div v-else class="space-y-3">
             <article
-              v-for="(noticia, index) in noticias"
+              v-for="noticia in noticias"
               :key="noticia.id"
-              class="group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+              class="news-card group"
             >
-              <div class="flex min-h-[120px]">
-                <div class="flex-1 p-4 flex flex-col min-w-0">
-                  <div class="block">
-                    <div class="flex items-center text-xs text-gray-500 mb-2">
-                      <svg
-                        class="h-3 w-3 mr-1 text-[#bea55a]"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <time :datetime="noticia.data_publicacao">{{
-                        noticia.data_publicacao
-                      }}</time>
-                    </div>
-
-                    <Link :href="`/noticias/${noticia.id}`">
-                      <h3
-                        :class="[
-                          'text-sm sm:text-base font-bold text-gray-900 leading-tight line-clamp-2 group-hover:text-[#bea55a] transition-colors duration-300',
-                          noticia.descricao_curta &&
-                          noticia.descricao_curta !== 'Descrição não disponível'
-                            ? 'mb-2'
-                            : 'mb-0',
-                        ]"
-                      >
-                        {{ noticia.titulo }}
-                      </h3>
-                    </Link>
-
-                    <p
-                      v-if="
-                        noticia.descricao_curta &&
-                        noticia.descricao_curta !== 'Descrição não disponível'
-                      "
-                      class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4"
-                    >
-                      <span class="sm:hidden">{{
-                        truncateText(noticia.descricao_curta, 100)
-                      }}</span>
-                      <span class="hidden sm:inline">{{
-                        truncateText(noticia.descricao_curta, 290)
-                      }}</span>
-                    </p>
-                  </div>
-
-                  <div class="mt-auto">
-                    <Link
-                      :href="`/noticias/${noticia.id}`"
-                      class="inline-flex items-center text-[#bea55a] hover:text-yellow-600 font-medium text-md group-hover:gap-2 gap-1 transition-all duration-300"
-                    >
-                      Leia mais
-                      <svg
-                        class="h-3 w-3 transform group-hover:translate-x-0.5 transition-transform duration-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M17 8l4 4m0 0l-4 4m4-4H3"
-                        />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
+              <div class="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+                <svg
+                  class="h-3 w-3 flex-shrink-0"
+                  style="color: #bea55a"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <time :datetime="noticia.data_publicacao">{{
+                  noticia.data_publicacao
+                }}</time>
               </div>
+
+              <Link :href="`/noticias/${noticia.id}`">
+                <h3 class="news-title">{{ noticia.titulo }}</h3>
+              </Link>
+
+              <p
+                v-if="
+                  noticia.descricao_curta &&
+                  noticia.descricao_curta !== 'Descrição não disponível'
+                "
+                class="news-desc"
+              >
+                <span class="sm:hidden">{{
+                  truncateText(noticia.descricao_curta, 100)
+                }}</span>
+                <span class="hidden sm:inline">{{
+                  truncateText(noticia.descricao_curta, 200)
+                }}</span>
+              </p>
+
+              <Link :href="`/noticias/${noticia.id}`" class="read-more-link">
+                Leia mais
+                <svg
+                  class="h-3 w-3 group-hover:translate-x-0.5 transition-transform duration-150"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </Link>
             </article>
           </div>
 
-          <div class="text-center pt-6" v-if="noticias.length > 0">
-            <Link
-              href="/noticias"
-              class="inline-flex w-40 h-14 items-center px-7 py-2.5 bg-gray-100 text-gray-800 font-bold rounded-full hover:from-yellow-600 hover:to-[#bea55a] border border-gray-800 focus:outline-none transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          <!-- Ver mais -->
+          <div v-if="noticias.length > 0" class="mt-6 flex justify-center">
+            <Link href="/noticias" class="btn-secondary"
+              >Ver todas as notícias</Link
             >
-              Mais Notícias
-            </Link>
           </div>
         </main>
 
@@ -414,85 +320,68 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Animações e transições suaves */
-.transform {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.section-accent {
+  @apply block w-1 h-5 rounded-full flex-shrink-0;
+  background-color: #bea55a;
+}
+.section-title {
+  @apply text-base font-semibold text-gray-700 uppercase tracking-wide;
 }
 
-/* Animação de carregamento melhorada */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.news-card {
+  @apply bg-white rounded-lg border border-gray-200 p-4 transition-colors duration-150;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.news-card:hover {
+  @apply border-gray-300;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.news-title {
+  @apply text-sm font-semibold text-gray-800 leading-snug line-clamp-2 mb-2;
+  @apply transition-colors duration-150;
+}
+.group:hover .news-title {
+  color: #bea55a;
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.news-desc {
+  @apply text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.read-more-link {
+  @apply inline-flex items-center gap-1 text-xs font-medium transition-colors duration-150;
+  color: #bea55a;
+}
+.read-more-link:hover {
+  color: #a38e4d;
 }
 
-/* Estilos para placeholder de imagem */
-.placeholder-image {
-  opacity: 0.8;
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  filter: grayscale(100%);
+.btn-primary {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold text-white transition-colors duration-150;
+  background-color: #bea55a;
+}
+.btn-primary:hover {
+  background-color: #a38e4d;
 }
 
-/*responsividade */
-@media (max-width: 640px) {
-  .aspect-video {
-    aspect-ratio: 16 / 9;
-  }
+.btn-secondary {
+  @apply inline-flex items-center px-5 py-2 rounded-md text-sm font-medium text-gray-600;
+  @apply bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors duration-150;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-@media (min-width: 1024px) {
-  .aspect-square {
-    aspect-ratio: 1 / 1;
-  }
-}
-
-/* Efeitos de hover */
-.group:hover .group-hover\:scale-105 {
-  transform: scale(1.05);
-}
-
-.group:hover .group-hover\:translate-x-1 {
-  transform: translateX(0.25rem);
-}
-
-.group:hover .group-hover\:gap-3 {
-  gap: 0.75rem;
-}
-
-/* Estados de foco  */
 a:focus-visible,
 button:focus-visible {
   outline: 2px solid #bea55a;
   outline-offset: 2px;
 }
 
-/* Gradientes */
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
-}
-
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+@media (prefers-reduced-motion: reduce) {
+  .news-card,
+  .read-more-link,
+  .btn-primary,
+  .btn-secondary {
+    @apply transition-none;
+  }
 }
 </style>

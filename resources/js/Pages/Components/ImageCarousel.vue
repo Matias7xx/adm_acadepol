@@ -230,6 +230,16 @@ onUnmounted(() => {
                 </svg>
               </button>
             </template>
+            <div class="zoom-hint">
+              <span class="text-xs sm:text-sm"
+                ><kbd class="kbd">ESC</kbd> fechar<template
+                  v-if="images.length > 1"
+                >
+                  • <kbd class="kbd">←</kbd>
+                  <kbd class="kbd">→</kbd> navegar</template
+                ></span
+              >
+            </div>
           </div>
         </div>
       </Transition>

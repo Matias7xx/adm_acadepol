@@ -1,23 +1,25 @@
-<!-- SocialShareCard.vue -->
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">
-      Compartilhe
-    </h3>
-
-    <div class="flex space-x-4 justify-center">
-      <a
-        v-for="network in socialNetworks"
-        :key="network.name"
-        :href="network.url"
-        :class="`inline-flex items-center justify-center rounded-full w-10 h-10 ${network.bgClass} ${network.hoverClass} transition duration-200`"
-        :title="`Compartilhar no ${network.displayName}`"
-        target="_blank"
-        rel="noopener noreferrer"
-        @click.prevent="shareOnSocial(network.name)"
-      >
-        <component :is="network.icon" class="w-5 h-5" />
-      </a>
+  <div class="share-card">
+    <div class="share-header">
+      <span class="share-accent"></span>
+      <h3 class="share-title">Compartilhar</h3>
+    </div>
+    <div class="share-body">
+      <div class="share-buttons">
+        <a
+          v-for="network in socialNetworks"
+          :key="network.name"
+          :href="network.url"
+          :title="`Compartilhar no ${network.displayName}`"
+          :class="['share-btn', network.colorClass]"
+          target="_blank"
+          rel="noopener noreferrer"
+          @click.prevent="shareOnSocial(network.name)"
+        >
+          <component :is="network.icon" class="w-4 h-4" />
+          <span class="share-btn-label">{{ network.displayName }}</span>
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -36,17 +38,16 @@ const props = defineProps({
   },
 });
 
-// Componentes de ícones definidos diretamente
-const XIcon = props =>
+const XIcon = p =>
   h(
     'svg',
     {
       xmlns: 'http://www.w3.org/2000/svg',
-      width: '20',
-      height: '20',
+      width: '16',
+      height: '16',
       fill: 'currentColor',
       viewBox: '0 0 24 24',
-      ...props,
+      ...p,
     },
     [
       h('path', {
@@ -55,16 +56,16 @@ const XIcon = props =>
     ]
   );
 
-const WhatsAppIcon = props =>
+const WhatsAppIcon = p =>
   h(
     'svg',
     {
       xmlns: 'http://www.w3.org/2000/svg',
-      width: '20',
-      height: '20',
+      width: '16',
+      height: '16',
       fill: 'currentColor',
       viewBox: '0 0 24 24',
-      ...props,
+      ...p,
     },
     [
       h('path', {
@@ -73,16 +74,16 @@ const WhatsAppIcon = props =>
     ]
   );
 
-const FacebookIcon = props =>
+const FacebookIcon = p =>
   h(
     'svg',
     {
       xmlns: 'http://www.w3.org/2000/svg',
-      width: '20',
-      height: '20',
+      width: '16',
+      height: '16',
       fill: 'currentColor',
       viewBox: '0 0 24 24',
-      ...props,
+      ...p,
     },
     [
       h('path', {
@@ -91,17 +92,17 @@ const FacebookIcon = props =>
     ]
   );
 
-const ShareIcon = props =>
+const ShareIcon = p =>
   h(
     'svg',
     {
       xmlns: 'http://www.w3.org/2000/svg',
-      width: '20',
-      height: '20',
+      width: '16',
+      height: '16',
       fill: 'none',
       viewBox: '0 0 24 24',
       stroke: 'currentColor',
-      ...props,
+      ...p,
     },
     [
       h('path', {
@@ -113,47 +114,37 @@ const ShareIcon = props =>
     ]
   );
 
-// Redes sociais com seus respectivos ícones
 const socialNetworks = ref([
   {
-    name: 'x',
-    displayName: 'X (Twitter)',
-    icon: XIcon,
-    bgClass: 'bg-gray-400',
-    hoverClass: 'hover:bg-gray-500',
-    textClass: 'text-white',
-    url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(props.courseUrl)}&text=${encodeURIComponent(props.courseTitle)}`,
+    name: 'whatsapp',
+    displayName: 'WhatsApp',
+    icon: WhatsAppIcon,
+    colorClass: 'btn-whatsapp',
+    url: `https://wa.me/?text=${encodeURIComponent(props.courseTitle + ' ' + props.courseUrl)}`,
   },
   {
     name: 'facebook',
     displayName: 'Facebook',
     icon: FacebookIcon,
-    bgClass: 'bg-blue-600',
-    hoverClass: 'hover:bg-blue-700',
-    textClass: 'text-white',
+    colorClass: 'btn-facebook',
     url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(props.courseUrl)}`,
   },
   {
-    name: 'whatsapp',
-    displayName: 'WhatsApp',
-    icon: WhatsAppIcon,
-    bgClass: 'bg-green-500',
-    hoverClass: 'hover:bg-green-600',
-    textClass: 'text-white',
-    url: `https://wa.me/?text=${encodeURIComponent(props.courseTitle + ' ' + props.courseUrl)}`,
+    name: 'x',
+    displayName: 'X',
+    icon: XIcon,
+    colorClass: 'btn-x',
+    url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(props.courseUrl)}&text=${encodeURIComponent(props.courseTitle)}`,
   },
   {
     name: 'share',
-    displayName: 'Compartilhar',
+    displayName: 'Copiar link',
     icon: ShareIcon,
-    bgClass: 'bg-gray-400',
-    hoverClass: 'hover:bg-gray-500',
-    textClass: 'text-white',
+    colorClass: 'btn-share',
     url: '#',
   },
 ]);
 
-// Método para compartilhar nas redes sociais
 const shareOnSocial = async network => {
   const url = props.courseUrl;
   const title = props.courseTitle;
@@ -167,7 +158,6 @@ const shareOnSocial = async network => {
           'width=600,height=400'
         );
         break;
-
       case 'facebook':
         window.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
@@ -175,24 +165,17 @@ const shareOnSocial = async network => {
           'width=600,height=400'
         );
         break;
-
       case 'whatsapp':
         window.open(
           `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`,
           '_blank'
         );
         break;
-
       case 'share':
         if (navigator.share) {
-          await navigator.share({
-            title: title,
-            url: url,
-          });
+          await navigator.share({ title, url });
         } else {
           await navigator.clipboard.writeText(url);
-          // Aqui seria melhor usar seu sistema de toast
-          toast.success('Link copiado para a área de transferência!');
         }
         break;
     }
@@ -201,3 +184,58 @@ const shareOnSocial = async network => {
   }
 };
 </script>
+
+<style scoped>
+.share-card {
+  @apply bg-white rounded-lg overflow-hidden border border-gray-200;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.share-header {
+  @apply flex items-center px-5 py-4 border-b border-gray-100;
+}
+
+.share-title {
+  @apply text-lg font-bold text-gray-800 tracking-wide uppercase;
+}
+
+.share-body {
+  @apply p-6;
+}
+
+.share-buttons {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.share-btn {
+  @apply flex items-center gap-2 px-3 py-2 rounded-md text-white text-xs font-medium;
+  @apply transition-opacity duration-150;
+}
+
+.share-btn:hover {
+  @apply opacity-90;
+}
+
+.share-btn-label {
+  @apply text-xs font-medium;
+}
+
+.btn-whatsapp {
+  background-color: #25d366;
+}
+.btn-facebook {
+  background-color: #1877f2;
+}
+.btn-x {
+  background-color: #18181b;
+}
+.btn-share {
+  background-color: #6b7280;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-btn {
+    @apply transition-none;
+  }
+}
+</style>

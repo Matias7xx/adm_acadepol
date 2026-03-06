@@ -441,13 +441,13 @@
           <div
             class="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2"
           >
-            <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex-1">
+            <!-- <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex-1">
               {{ fotoSelecionada.titulo }}
-            </h3>
-            <span
+            </h3> -->
+            <!-- <span
               class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium flex-shrink-0"
               >{{ fotoSelecionada.categoria }}</span
-            >
+            > -->
           </div>
           <p class="text-gray-700 mb-4 text-sm sm:text-base">
             {{ fotoSelecionada.descricao }}

@@ -39,5 +39,5 @@ Em caso de dúvidas ou necessidade de reagendamento, entre em contato conosco.
 Aguardamos sua chegada!
 
 Atenciosamente,<br>
-**Equipe ACADEPOL**
+**ACADEPOL**
 @endcomponent

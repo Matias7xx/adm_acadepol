@@ -6,7 +6,6 @@ import Header from '../Components/Header.vue';
 import SiteNavbar from '../Components/SiteNavbar.vue';
 import Footer from '../Components/Footer.vue';
 
-// Props
 const props = defineProps({
   user: Object,
   assuntos: {
@@ -22,10 +21,7 @@ const props = defineProps({
   },
 });
 
-// Toast notification
 const { toast } = useToast();
-
-// Estado do formulário
 const isSubmitting = ref(false);
 
 const formData = ref({
@@ -36,50 +32,31 @@ const formData = ref({
   mensagem: '',
 });
 
-// Função para enviar o formulário
 const submeterContato = () => {
-  // Validar campos obrigatórios
   for (const campo of ['nome', 'email', 'assunto', 'mensagem']) {
     if (!formData.value[campo]) {
       toast.error(`Por favor, preencha o campo ${campo.replace('_', ' ')}`);
       return;
     }
   }
-
-  // Validar email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(formData.value.email)) {
     toast.error('Por favor, informe um email válido');
     return;
   }
-
   isSubmitting.value = true;
-
-  // Usar o Inertia form helper
-  const form = useForm({
-    nome: formData.value.nome,
-    email: formData.value.email,
-    telefone: formData.value.telefone,
-    assunto: formData.value.assunto,
-    mensagem: formData.value.mensagem,
-  });
-
+  const form = useForm({ ...formData.value });
   form.post(route('contato.store'), {
     preserveScroll: false,
     onSuccess: () => {
       isSubmitting.value = false;
-      // Não precisa exibir toast aqui pois será redirecionado para página de confirmação
     },
     onError: errors => {
       isSubmitting.value = false;
-      console.error(errors);
-      if (errors.message) {
-        toast.error(errors.message);
-      } else {
-        toast.error(
+      toast.error(
+        errors.message ||
           'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.'
-        );
-      }
+      );
     },
   });
 };
@@ -87,42 +64,25 @@ const submeterContato = () => {
 
 <template>
   <Head title="Fale Conosco" />
-  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <div class="min-h-screen bg-gray-50">
     <Header />
     <SiteNavbar />
 
-    <!-- Cabeçalho -->
-    <div
-      class="bg-gradient-to-r from-black to-gray-900 text-white py-5 shadow-md"
-    >
-      <div class="container mx-auto flex justify-between items-center px-4">
-        <div class="flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 text-[#bea55a] mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-          <h1 class="text-2xl font-bold">Fale Conosco</h1>
+    <!-- Header da página -->
+    <div class="page-header">
+      <div
+        class="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <span class="page-header-accent"></span>
+          <h1 class="page-header-title">Fale Conosco</h1>
         </div>
-        <Link
-          :href="route('home')"
-          class="flex items-center text-amber-400 hover:text-amber-300 transition"
-        >
+        <Link :href="route('home')" class="back-link">
           <svg
-            class="h-4 w-4 mr-2"
+            class="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -131,164 +91,95 @@ const submeterContato = () => {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span>Voltar</span>
+          Voltar
         </Link>
       </div>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <div class="container mx-auto py-8 px-4">
-      <div
-        class="bg-white rounded-lg shadow-lg p-6 mb-6 border border-gray-200"
-      >
-        <div
-          class="flex items-center justify-between mb-6 pb-3 border-b border-amber-200"
-        >
-          <div class="flex items-center">
-            <div class="bg-amber-100 p-3 rounded-full mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-amber-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-800">Entre em Contato</h2>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="form-card">
+        <!-- Card header -->
+        <div class="form-card-header">
+          <div class="form-card-header-left">
+            <span class="form-card-accent"></span>
+            <h2 class="form-card-title">Entre em Contato</h2>
           </div>
-          <div class="text-sm text-gray-500">* Campos obrigatórios</div>
+          <span class="form-required-note">* Campos obrigatórios</span>
         </div>
 
-        <!-- Aviso Importante -->
-        <div
-          class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-amber-500 p-4 mb-6 shadow-sm"
-        >
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg
-                class="h-6 w-6 text-amber-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-amber-800">
-                Informações Importantes
-              </h3>
-              <p class="mt-1 text-sm text-amber-700">
-                Preencha corretamente todos os campos para que possamos
-                responder sua solicitação adequadamente. Nossa equipe responderá
-                sua mensagem o mais breve possível.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <form @submit.prevent="submeterContato" class="space-y-8">
-          <!-- Informações Pessoais -->
-          <div
-            class="bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-sm"
+        <!-- Aviso -->
+        <div class="warning-box mx-6 mt-5">
+          <svg
+            class="warning-icon h-5 w-5 flex-shrink-0"
+            viewBox="0 0 20 20"
+            fill="currentColor"
           >
-            <h3
-              class="text-lg font-semibold text-gray-700 mb-4 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-2 text-amber-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Seus Dados
-            </h3>
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <div>
+            <p class="warning-title">Informações Importantes</p>
+            <p class="warning-text">
+              Preencha corretamente todos os campos para que possamos responder
+              sua solicitação. Nossa equipe responderá o mais breve possível.
+            </p>
+          </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <!-- Nome Completo -->
-              <div>
-                <label
-                  for="nome"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Nome Completo *
-                </label>
+        <form @submit.prevent="submeterContato" class="form-body">
+          <!-- Seus dados -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <span class="form-section-accent"></span>
+              <h3 class="form-section-title">Seus Dados</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-field">
+                <label for="nome" class="form-label">Nome Completo *</label>
                 <input
                   id="nome"
                   v-model="formData.nome"
                   type="text"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
-                  :class="{ 'bg-slate-100': user }"
                   required
+                  class="form-input"
+                  :class="{ 'form-input-readonly': !!user }"
                   :disabled="!!user"
                 />
               </div>
-
-              <!-- Email -->
-              <div>
-                <label
-                  for="email"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  E-mail *
-                </label>
+              <div class="form-field">
+                <label for="email" class="form-label">E-mail *</label>
                 <input
                   id="email"
                   v-model="formData.email"
                   type="email"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
-                  :class="{ 'bg-slate-100': user }"
                   required
+                  class="form-input"
+                  :class="{ 'form-input-readonly': !!user }"
                   :disabled="!!user"
                 />
               </div>
-
-              <!-- Telefone -->
-              <div>
-                <label
-                  for="telefone"
-                  class="block text-sm font-medium text-gray-700 mb-1"
+              <div class="form-field">
+                <label for="telefone" class="form-label"
+                  >Telefone de Contato</label
                 >
-                  Telefone de Contato
-                </label>
                 <input
                   id="telefone"
                   v-model="formData.telefone"
                   type="tel"
                   placeholder="(00) 00000-0000"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
+                  class="form-input"
                 />
               </div>
-
-              <!-- Assunto -->
-              <div>
-                <label
-                  for="assunto"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Assunto *
-                </label>
+              <div class="form-field">
+                <label for="assunto" class="form-label">Assunto *</label>
                 <select
                   id="assunto"
                   v-model="formData.assunto"
-                  class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
                   required
+                  class="form-input"
                 >
                   <option value="">Selecione um assunto</option>
                   <option
@@ -304,51 +195,35 @@ const submeterContato = () => {
           </div>
 
           <!-- Mensagem -->
-          <div class="mb-6">
-            <h3
-              class="text-lg font-semibold text-gray-700 mb-3 flex items-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-2 text-amber-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Sua Mensagem
-            </h3>
-
-            <div>
-              <label
-                for="mensagem"
-                class="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Mensagem *
-              </label>
+          <div class="form-section">
+            <div class="form-section-header">
+              <span class="form-section-accent"></span>
+              <h3 class="form-section-title">Sua Mensagem</h3>
+            </div>
+            <div class="form-field">
+              <label for="mensagem" class="form-label">Mensagem *</label>
               <textarea
                 id="mensagem"
                 v-model="formData.mensagem"
-                rows="6"
-                class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring focus:ring-amber-200"
-                placeholder="Escreva sua mensagem aqui..."
+                rows="5"
                 required
+                class="form-input"
+                placeholder="Escreva sua mensagem aqui..."
               ></textarea>
-              <p class="mt-1 text-sm text-gray-500">
-                Por favor, seja o mais específico possível para que possamos
-                melhor atender sua solicitação.
+              <p class="form-hint">
+                Seja o mais específico possível para que possamos melhor atender
+                sua solicitação.
               </p>
             </div>
           </div>
 
-          <!-- Política de Privacidade -->
-          <div class="bg-gray-50 p-4 rounded-lg mb-6 text-sm border">
-            <h4 class="font-bold mb-2">Política de Privacidade</h4>
-            <p class="mb-3">
+          <!-- Política -->
+          <div class="form-section">
+            <div class="form-section-header">
+              <span class="form-section-accent"></span>
+              <h3 class="form-section-title">Política de Privacidade</h3>
+            </div>
+            <p class="text-sm text-gray-500 leading-relaxed">
               Ao enviar este formulário, você concorda com nossa política de
               privacidade. Seus dados serão utilizados exclusivamente para
               responder à sua solicitação e não serão compartilhados com
@@ -356,19 +231,12 @@ const submeterContato = () => {
             </p>
           </div>
 
-          <!-- Botões de Ação -->
-          <div
-            class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-8 pt-6 border-t border-gray-200"
-          >
-            <button
-              type="submit"
-              class="bg-[#bea55a] text-white py-3 px-8 rounded-md font-medium transition-all duration-300 shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-300 flex items-center justify-center"
-              :disabled="isSubmitting"
-            >
+          <!-- Ações -->
+          <div class="form-actions">
+            <button type="submit" class="btn-submit" :disabled="isSubmitting">
               <svg
                 v-if="!isSubmitting"
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-2"
+                class="h-4 w-4"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -379,9 +247,8 @@ const submeterContato = () => {
                 />
               </svg>
               <svg
-                v-if="isSubmitting"
-                class="animate-spin h-5 w-5 mr-2"
-                xmlns="http://www.w3.org/2000/svg"
+                v-else
+                class="animate-spin h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -392,34 +259,16 @@ const submeterContato = () => {
                   r="10"
                   stroke="currentColor"
                   stroke-width="4"
-                ></circle>
+                />
                 <path
                   class="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span v-if="isSubmitting">Enviando...</span>
-              <span v-else>Enviar Mensagem</span>
-            </button>
-            <Link
-              :href="route('home')"
-              class="text-center border border-gray-300 bg-white text-gray-700 py-3 px-8 rounded-md font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 flex items-center justify-center"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clip-rule="evenodd"
                 />
               </svg>
-              Cancelar
-            </Link>
+              {{ isSubmitting ? 'Enviando...' : 'Enviar Mensagem' }}
+            </button>
+            <Link :href="route('home')" class="btn-cancel">Cancelar</Link>
           </div>
         </form>
       </div>
@@ -427,3 +276,118 @@ const submeterContato = () => {
     <Footer />
   </div>
 </template>
+
+<style scoped>
+.page-header {
+  @apply py-4 bg-white border-b border-gray-200;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.page-header-accent {
+  @apply block w-1 h-6 rounded-full flex-shrink-0;
+  background-color: #bea55a;
+}
+.page-header-title {
+  @apply text-base font-semibold text-gray-800;
+}
+.back-link {
+  @apply inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-150;
+  color: #bea55a;
+}
+.back-link:hover {
+  color: #a38e4d;
+}
+.form-card {
+  @apply bg-white rounded-lg border border-gray-200 overflow-hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.form-card-header {
+  @apply flex items-center justify-between px-6 py-4 border-b border-gray-100;
+}
+.form-card-header-left {
+  @apply flex items-center gap-3;
+}
+.form-card-accent {
+  @apply block w-1 h-5 rounded-full flex-shrink-0;
+  background-color: #bea55a;
+}
+.form-card-title {
+  @apply text-sm font-semibold text-gray-800 uppercase tracking-wide;
+}
+.form-required-note {
+  @apply text-xs text-gray-400;
+}
+.warning-box {
+  @apply flex gap-3 rounded-lg p-4 mb-0 border;
+  background-color: #fdfbf2;
+  border-color: #e5d5a0;
+}
+.warning-icon {
+  color: #bea55a;
+}
+.warning-title {
+  @apply text-sm font-semibold mb-1;
+  color: #92740e;
+}
+.warning-text {
+  @apply text-sm;
+  color: #a38e4d;
+}
+.form-body {
+  @apply p-6 space-y-6;
+}
+.form-section {
+  @apply pb-6 border-b border-gray-100 last:border-0 last:pb-0;
+}
+.form-section-header {
+  @apply flex items-center gap-2.5 mb-4;
+}
+.form-section-accent {
+  @apply block w-1 h-4 rounded-full flex-shrink-0;
+  background-color: #bea55a;
+}
+.form-section-title {
+  @apply text-sm font-semibold text-gray-700 uppercase tracking-wide;
+}
+.form-field {
+  @apply flex flex-col gap-1;
+}
+.form-label {
+  @apply text-sm font-medium text-gray-600;
+}
+.form-input {
+  @apply w-full text-sm border border-gray-200 rounded-md px-3 py-2.5 bg-white placeholder-gray-400 focus:outline-none focus:border-transparent transition-colors duration-150;
+}
+.form-input:focus {
+  box-shadow: 0 0 0 2px #bea55a40;
+  border-color: #bea55a;
+}
+.form-input-readonly {
+  @apply bg-gray-50 text-gray-500;
+}
+.form-hint {
+  @apply text-xs text-gray-400 mt-0.5;
+}
+.form-actions {
+  @apply flex flex-col sm:flex-row gap-3 pt-5 border-t border-gray-100;
+}
+.btn-submit {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-md text-sm font-semibold text-white transition-colors duration-150;
+  background-color: #bea55a;
+}
+.btn-submit:hover:not(:disabled) {
+  background-color: #a38e4d;
+}
+.btn-submit:disabled {
+  @apply opacity-60 cursor-not-allowed;
+}
+.btn-cancel {
+  @apply inline-flex items-center justify-center px-6 py-2.5 rounded-md text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors duration-150;
+}
+@media (prefers-reduced-motion: reduce) {
+  .form-input,
+  .btn-submit,
+  .btn-cancel {
+    @apply transition-none;
+  }
+}
+</style>
