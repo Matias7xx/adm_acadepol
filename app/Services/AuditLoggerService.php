@@ -2,209 +2,213 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class AuditLoggerService
 {
-  /**
-   * Request atual
-   * @var Request
-   */
-  protected $request;
+  protected Request $request;
 
-  /**
-   * Construtor - injeta a request atual
-   */
   public function __construct(Request $request)
   {
     $this->request = $request;
   }
 
   /**
-   * Registra ação do usuário em log de auditoria
-   *
-   * @param string $acao Descrição da ação realizada
-   * @param string $modulo Módulo do sistema (matricula, curso, alojamento, etc)
-   * @param array $dados Dados adicionais para o log
-   * @param string $status Status da ação (success, error, warning)
-   * @return void
+   * Registra uma ação no banco de dados e no arquivo de log.
    */
   public function registrarAcao(
     string $acao,
     string $modulo,
     array $dados = [],
     string $status = 'success',
-  ): void {
-    // Dados básicos do log
-    $logData = [
-      'timestamp' => now()->toIso8601String(),
-      'user_id' => Auth::id() ?? 'guest',
-      'user_name' => Auth::user()->name ?? 'guest',
+    ?string $descricao = null,
+  ): ?AuditLog {
+    $user = Auth::user();
+
+    // Montar payload base
+    $payload = [
+      'modulo' => $modulo,
+      'acao' => $acao,
+      'descricao' =>
+        $descricao ?? $this->gerarDescricao($acao, $modulo, $dados),
+      'status' => $status,
+      'user_id' => $user?->id,
+      'user_name' => $user?->name ?? 'guest',
+      'user_matricula' => $user?->matricula ?? null,
+      'user_email' => $user?->email ?? null,
       'ip' => $this->request->ip(),
       'user_agent' => $this->request->userAgent(),
       'url' => $this->request->fullUrl(),
       'method' => $this->request->method(),
-      'module' => $modulo,
-      'action' => $acao,
-      'status' => $status,
     ];
 
-    // Mesclar dados adicionais
-    $logData = array_merge($logData, $dados);
-
-    // Registrar no canal de logs adequado
-    switch ($status) {
-      case 'error':
-        Log::error('Audit Log: ' . $acao, $logData);
-        break;
-      case 'warning':
-        Log::warning('Audit Log: ' . $acao, $logData);
-        break;
-      case 'success':
-      default:
-        Log::info('Audit Log: ' . $acao, $logData);
-        break;
+    // Extrair campos especiais de $dados
+    if (isset($dados['model_type'])) {
+      $payload['model_type'] = $dados['model_type'];
+      unset($dados['model_type']);
     }
+    if (isset($dados['model_id'])) {
+      $payload['model_id'] = $dados['model_id'];
+      unset($dados['model_id']);
+    }
+    if (isset($dados['model_label'])) {
+      $payload['model_label'] = $dados['model_label'];
+      unset($dados['model_label']);
+    }
+    if (isset($dados['dados_anteriores'])) {
+      $payload['dados_anteriores'] = AuditLog::sanitizarDados(
+        $dados['dados_anteriores'],
+      );
+      unset($dados['dados_anteriores']);
+    }
+    if (isset($dados['dados_novos'])) {
+      $payload['dados_novos'] = AuditLog::sanitizarDados($dados['dados_novos']);
+      unset($dados['dados_novos']);
+    }
+
+    // Dados extras vão para a descrição / log file
+    $logData = array_merge($payload, $dados);
+
+    // 1. Gravar no banco
+    try {
+      $auditLog = AuditLog::create($payload);
+    } catch (\Throwable $e) {
+      Log::error('Falha ao gravar AuditLog no banco', [
+        'error' => $e->getMessage(),
+        'payload' => $payload,
+      ]);
+      $auditLog = null;
+    }
+
+    // 2. Gravar no arquivo de log (canal audit)
+    $this->gravarArquivoLog($status, $acao, $logData);
+
+    return $auditLog;
   }
 
-  /**
-   * Registra login bem-sucedido
-   *
-   * @return void
-   */
+  // =========================================================================
+  // ATALHOS POR EVENTO
+  // =========================================================================
+
   public function registrarLogin(): void
   {
-    $this->registrarAcao('Login realizado', 'auth');
-  }
-
-  /**
-   * Registra falha de login
-   *
-   * @param string $reason Motivo da falha
-   * @return void
-   */
-  public function registrarFalhaLogin(string $reason): void
-  {
     $this->registrarAcao(
-      'Falha no login',
+      'login',
       'auth',
-      ['reason' => $reason],
-      'warning',
+      [],
+      'success',
+      'Login realizado com sucesso',
     );
   }
 
-  /**
-   * Registra logout
-   *
-   * @return void
-   */
+  public function registrarFalhaLogin(string $reason = ''): void
+  {
+    $this->registrarAcao(
+      'falha_login',
+      'auth',
+      ['motivo' => $reason],
+      'warning',
+      'Tentativa de login falhou',
+    );
+  }
+
   public function registrarLogout(): void
   {
-    $this->registrarAcao('Logout realizado', 'auth');
+    $this->registrarAcao('logout', 'auth', [], 'success', 'Logout realizado');
   }
 
-  /**
-   * Registra tentativa de acesso não autorizado
-   *
-   * @param string $resource Recurso que tentou acessar
-   * @return void
-   */
-  public function registrarAcessoNaoAutorizado(string $resource): void
+  public function registrarAcessoNaoAutorizado(string $resource = ''): void
   {
     $this->registrarAcao(
-      'Tentativa de acesso não autorizado',
+      'acesso_negado',
       'auth',
-      ['resource' => $resource],
+      ['recurso' => $resource],
       'warning',
+      'Tentativa de acesso não autorizado',
     );
   }
 
   /**
-   * Registra ação específica de matrícula
-   *
-   * @param string $acao Descrição da ação
-   * @param int $matriculaId ID da matrícula
-   * @param array $dados Dados adicionais
-   * @return void
+   * Atalho para registrar CRUD de qualquer módulo de forma padronizada.
    */
-  public function registrarAcaoMatricula(
+  public function registrarCrud(
     string $acao,
-    int $matriculaId,
-    array $dados = [],
-  ): void {
-    $logData = ['matricula_id' => $matriculaId];
-
-    if (!empty($dados)) {
-      $logData = array_merge($logData, $dados);
-    }
-
-    $this->registrarAcao($acao, 'matricula', $logData);
-  }
-
-  /**
-   * Registra ação específica de alojamento
-   *
-   * @param string $acao Descrição da ação
-   * @param int $alojamentoId ID do alojamento
-   * @param array $dados Dados adicionais
-   * @return void
-   */
-  public function registrarAcaoAlojamento(
-    string $acao,
-    int $alojamentoId,
-    array $dados = [],
-  ): void {
-    $logData = ['alojamento_id' => $alojamentoId];
-
-    if (!empty($dados)) {
-      $logData = array_merge($logData, $dados);
-    }
-
-    $this->registrarAcao($acao, 'alojamento', $logData);
-  }
-
-  /**
-   * Registra ação específica de curso
-   *
-   * @param string $acao Descrição da ação
-   * @param int $cursoId ID do curso
-   * @param array $dados Dados adicionais
-   * @return void
-   */
-  public function registrarAcaoCurso(
-    string $acao,
-    int $cursoId,
-    array $dados = [],
-  ): void {
-    $logData = ['curso_id' => $cursoId];
-
-    if (!empty($dados)) {
-      $logData = array_merge($logData, $dados);
-    }
-
-    $this->registrarAcao($acao, 'curso', $logData);
-  }
-
-  /**
-   * Registra erro no sistema
-   *
-   * @param \Exception $exception Exceção ocorrida
-   * @param string $contexto Contexto onde ocorreu o erro
-   * @return void
-   */
-  public function registrarErro(\Exception $exception, string $contexto): void
-  {
-    $logData = [
-      'exception' => get_class($exception),
-      'message' => $exception->getMessage(),
-      'file' => $exception->getFile(),
-      'line' => $exception->getLine(),
-      'trace' => $exception->getTraceAsString(),
-      'context' => $contexto,
+    string $modulo,
+    $model,
+    ?string $label = null,
+    array $dadosExtras = [],
+    array $dadosAnteriores = [],
+    array $dadosNovos = [],
+  ): ?AuditLog {
+    $dados = [
+      'model_type' => get_class($model),
+      'model_id' => $model->id ?? null,
+      'model_label' =>
+        $label ??
+        ($model->nome ??
+          ($model->titulo ?? ($model->name ?? (string) ($model->id ?? '')))),
+      'dados_anteriores' => $dadosAnteriores,
+      'dados_novos' => $dadosNovos,
     ];
 
-    $this->registrarAcao('Erro no sistema', 'system', $logData, 'error');
+    return $this->registrarAcao(
+      $acao,
+      $modulo,
+      array_merge($dados, $dadosExtras),
+    );
+  }
+
+  public function registrarErro(
+    \Throwable $exception,
+    string $contexto = '',
+  ): void {
+    $this->registrarAcao(
+      'erro',
+      'sistema',
+      [
+        'exception' => get_class($exception),
+        'mensagem' => $exception->getMessage(),
+        'arquivo' => $exception->getFile(),
+        'linha' => $exception->getLine(),
+        'contexto' => $contexto,
+      ],
+      'error',
+      'Erro no sistema: ' . $exception->getMessage(),
+    );
+  }
+
+  // =========================================================================
+  // INTERNOS
+  // =========================================================================
+
+  private function gravarArquivoLog(
+    string $status,
+    string $acao,
+    array $dados,
+  ): void {
+    $mensagem = "Audit [{$acao}]";
+
+    match ($status) {
+      'error' => Log::channel('audit')->error($mensagem, $dados),
+      'warning' => Log::channel('audit')->warning($mensagem, $dados),
+      default => Log::channel('audit')->info($mensagem, $dados),
+    };
+  }
+
+  private function gerarDescricao(
+    string $acao,
+    string $modulo,
+    array $dados,
+  ): string {
+    $moduloLabel = AuditLog::MODULOS[$modulo] ?? ucfirst($modulo);
+    $acaoLabel = AuditLog::ACOES[$acao] ?? ucfirst($acao);
+    $label = $dados['model_label'] ?? '';
+
+    return trim(
+      "{$acaoLabel} em {$moduloLabel}" . ($label ? ": {$label}" : ''),
+    );
   }
 }

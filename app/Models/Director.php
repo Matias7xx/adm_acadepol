@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Helpers\UploadHelper;
+use App\Traits\Auditable;
 
 class Director extends Model
 {
-  use HasFactory;
+  use HasFactory, Auditable;
+
+  protected string $auditModulo = 'director';
+  protected string $auditLabel = 'nome';
 
   protected $table = 'directors';
 

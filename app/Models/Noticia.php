@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Helpers\UploadHelper;
+use App\Traits\Auditable;
 
 class Noticia extends Model
 {
-  use HasFactory, SoftDeletes;
+  use HasFactory, SoftDeletes, Auditable;
+
+  protected string $auditModulo = 'noticia';
+  protected string $auditLabel = 'titulo';
+  protected array $auditExclude = ['visualizacoes'];
 
   protected $table = 'noticias';
 
@@ -55,7 +60,9 @@ class Noticia extends Model
    */
   public function incrementarVisualizacoes()
   {
-    $this->increment('visualizacoes');
+    static::withoutEvents(function () {
+      $this->increment('visualizacoes');
+    });
     return $this;
   }
 

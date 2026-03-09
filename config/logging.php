@@ -57,6 +57,13 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'audit' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/audit.log'),
+            'level'  => 'info',
+            'days'   => 90,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

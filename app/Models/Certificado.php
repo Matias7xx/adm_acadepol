@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\StorageHelper;
+use App\Traits\Auditable;
 
 class Certificado extends Model
 {
-  use HasFactory;
+  use HasFactory, Auditable;
+
+  protected string $auditModulo = 'certificado';
+  protected string $auditLabel = 'nome_aluno';
 
   protected $fillable = [
     'matricula_id',

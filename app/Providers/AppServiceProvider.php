@@ -11,6 +11,11 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Http\Request;
 use App\Models\Noticia;
 use App\Observers\NoticiaObserver;
+use App\Observers\ExternalModelAuditObserver;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use BalajiDharma\LaravelMenu\Models\Menu;
+use BalajiDharma\LaravelMenu\Models\MenuItem;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -75,6 +80,12 @@ class AppServiceProvider extends ServiceProvider
 
     // Registrar o Observer para Notícia
     Noticia::observe(NoticiaObserver::class);
+
+    // Auditoria: models de pacotes externos (Role, Permission, Menu, MenuItem)
+    Role::observe(ExternalModelAuditObserver::class);
+    Permission::observe(ExternalModelAuditObserver::class);
+    Menu::observe(ExternalModelAuditObserver::class);
+    MenuItem::observe(ExternalModelAuditObserver::class);
   }
 
   /**

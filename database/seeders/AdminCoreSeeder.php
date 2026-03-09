@@ -76,7 +76,8 @@ class AdminCoreSeeder extends Seeder
             'noticia list',
             'noticia create',
             'noticia edit',
-            'noticia delete'
+            'noticia delete',
+            'audit_log list',
         ];
 
         foreach ($permissions as $permission) {
@@ -234,6 +235,13 @@ class AdminCoreSeeder extends Seeder
                 'enabled' => 1,
                 'weight' => 12,
                 'icon' => 'M4,2A2,2 0 0,0 2,4V16A2,2 0 0,0 4,18H8L12,22L16,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2H4M12,6A2,2 0 0,1 14,8A2,2 0 0,1 12,10A2,2 0 0,1 10,8A2,2 0 0,1 12,6M12,11C13.11,11 15,11.66 15,12.5V14H9V12.5C9,11.66 10.89,11 12,11Z'
+            ],
+            [
+                'name'    => 'Logs',
+                'uri'     => '/<admin>/audit-logs',
+                'enabled' => 1,
+                'weight'  => 13,
+                'icon'    => 'M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z',
             ],
         ];
 

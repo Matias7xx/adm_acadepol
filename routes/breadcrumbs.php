@@ -4,6 +4,15 @@ use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 use Illuminate\Support\Facades\Route;
 use App\Helpers\BreadcrumbsHelper;
+Breadcrumbs::for('admin.audit-logs.index', function (BreadcrumbTrail $trail) {
+      $trail->parent('admin.dashboard');
+      $trail->push('Logs de Auditoria', route('admin.audit-logs.index'));
+  });
+
+  Breadcrumbs::for('admin.audit-logs.show', function (BreadcrumbTrail $trail, $log) {
+      $trail->parent('admin.audit-logs.index');
+      $trail->push('Log #' . $log->id);
+  });
 
 // admin dashboard
 Breadcrumbs::for('admin.dashboard', function (BreadcrumbTrail $trail) {

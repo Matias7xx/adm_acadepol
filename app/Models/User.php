@@ -8,10 +8,20 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\CustomResetPassword;
+use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
-  use HasFactory, HasRoles, Notifiable, LaravelCategories;
+  use HasFactory, HasRoles, Notifiable, LaravelCategories, Auditable;
+
+  protected string $auditModulo = 'usuario';
+  protected string $auditLabel = 'name';
+  protected array $auditExclude = [
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+  ];
 
   /**
    * The attributes that are mass assignable.

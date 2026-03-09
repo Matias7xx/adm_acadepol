@@ -47,6 +47,7 @@ class AuthServiceProvider extends ServiceProvider
     'App\Models\Contato' => 'App\Policies\ContatoPolicy',
     'App\Models\Visitante' => 'App\Policies\VisitantePolicy',
     'App\Models\Certificado' => 'App\Policies\CertificadoPolicy',
+    'App\Models\AuditLog' => 'App\Policies\AuditLogPolicy',
   ];
 
   /**
