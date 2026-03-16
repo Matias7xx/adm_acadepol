@@ -891,27 +891,25 @@ class NoticiaController extends Controller
    * Atualizar ordem dos destaques
    */
   public function atualizarOrdemDestaques(Request $request)
-  {
+{
     $this->authorize('adminUpdate', Noticia::class);
 
     $validated = $request->validate([
-      'destaques' => 'required|array|max:2',
-      'destaques.*.id' => 'required|exists:noticias,id',
-      'destaques.*.ordem' => 'required|integer|min:1|max:2',
+        'destaques' => 'required|array|max:2',
+        'destaques.*.id' => 'required|exists:noticias,id',
+        'destaques.*.ordem' => 'required|integer|min:1|max:2',
     ]);
 
     foreach ($validated['destaques'] as $destaque) {
-      Noticia::where('id', $destaque['id'])->update([
-        'ordem_destaque' => $destaque['ordem'],
-      ]);
+        Noticia::where('id', $destaque['id'])->update([
+            'ordem_destaque' => $destaque['ordem'],
+        ]);
     }
 
     $this->invalidateAllNoticiasCache();
 
-    return redirect()
-      ->back()
-      ->with('message', 'Ordem dos destaques atualizada com sucesso!');
-  }
+    return response()->json(['message' => 'Ordem dos destaques atualizada com sucesso!']); // ← trocar redirect por json
+}
 
   /**
    * Buscar destaques atuais

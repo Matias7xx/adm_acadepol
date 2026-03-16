@@ -25,6 +25,7 @@ class Noticia extends Model
     'imagem',
     'carousel_images',
     'destaque',
+    'ordem_destaque',
     'data_publicacao',
     'status',
     'visualizacoes',

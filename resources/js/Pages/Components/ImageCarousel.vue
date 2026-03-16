@@ -262,7 +262,7 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   aspect-ratio: 16/9;
-  background: #000;
+  background: #f9fafb;
   overflow: hidden;
 }
 .image-container {
@@ -313,8 +313,8 @@ onUnmounted(() => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  color: #1f2937;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
   padding: 0.75rem;
   border: none;
   border-radius: 9999px;
@@ -324,7 +324,7 @@ onUnmounted(() => {
   backdrop-filter: blur(4px);
 }
 .nav-button:hover {
-  background: #fff;
+  background: rgba(0, 0, 0, 0.75);
   transform: translateY(-50%) scale(1.1);
 }
 .nav-button-left {

@@ -22,13 +22,11 @@ class NoticiaController extends Controller
         if (!empty($searchTerm)) {
           $query->where(function ($q) use ($searchTerm) {
             // Converter tanto o termo de busca quanto os campos para minúsculas
-            $searchLower = strtolower($searchTerm);
-
-            $q->whereRaw('LOWER(titulo) LIKE ?', [
-              "%{$searchLower}%",
-            ])->orWhereRaw('LOWER(descricao_curta) LIKE ?', [
-              "%{$searchLower}%",
-            ]);
+            $q->where('titulo', 'ilike', "%{$searchTerm}%")->orWhere(
+              'descricao_curta',
+              'ilike',
+              "%{$searchTerm}%",
+            );
           });
         }
       })
@@ -208,13 +206,11 @@ class NoticiaController extends Controller
         if (!empty($searchTerm)) {
           $query->where(function ($q) use ($searchTerm) {
             // Converter tanto o termo de busca quanto os campos para minúsculas
-            $searchLower = strtolower($searchTerm);
-
-            $q->whereRaw('LOWER(titulo) LIKE ?', [
-              "%{$searchLower}%",
-            ])->orWhereRaw('LOWER(descricao_curta) LIKE ?', [
-              "%{$searchLower}%",
-            ]);
+            $q->where('titulo', 'ilike', "%{$searchTerm}%")->orWhere(
+              'descricao_curta',
+              'ilike',
+              "%{$searchTerm}%",
+            );
           });
         }
       })
@@ -278,36 +274,8 @@ class NoticiaController extends Controller
   public static function invalidarTodosOsCaches()
   {
     try {
-      \Cache::forget('noticias_destaque_banner'); // Banner
-      \Cache::forget('noticias_home_lista'); // Lista da home
-
-      // Invalidar caches da API paginada
-      for ($page = 1; $page <= 20; $page++) {
-        for ($perPage = 3; $perPage <= 10; $perPage++) {
-          // Diferentes combinações de chave de cache
-          $patterns = [
-            'noticias_api_' . md5($perPage . '__' . $page),
-            'noticias_api_' . md5($perPage . '_' . '' . '_' . $page),
-            'noticias_api_' . md5($perPage . '_' . $page),
-          ];
-
-          foreach ($patterns as $pattern) {
-            \Cache::forget($pattern);
-          }
-        }
-      }
-
-      // Invalidar caches com termos de busca comuns
-      $searchTerms = ['', 'noticia', 'novo', 'curso', 'treinamento', 'edital'];
-      foreach ($searchTerms as $term) {
-        for ($page = 1; $page <= 10; $page++) {
-          for ($perPage = 3; $perPage <= 10; $perPage++) {
-            $cacheKey =
-              'noticias_api_' . md5($perPage . '_' . $term . '_' . $page);
-            \Cache::forget($cacheKey);
-          }
-        }
-      }
+      \Cache::forget('noticias_destaque_banner');
+      \Cache::forget('noticias_home_lista');
 
       Log::info('Todos os caches de notícias invalidados');
     } catch (\Exception $e) {

@@ -71,13 +71,16 @@ const zoomOut = () => {
 };
 
 // Estilo do iframe baseado no zoom
-const iframeStyle = computed(() => ({
-  transform: `scale(${zoomLevel.value / 100})`,
-  transformOrigin: 'top left',
-  width: '100%',
-  height: '100%',
-  transition: 'transform 0.2s ease',
-}));
+const iframeStyle = computed(() => {
+  const scale = zoomLevel.value / 100;
+  return {
+    transform: `scale(${scale})`,
+    transformOrigin: 'top left',
+    width: `${100 / scale}%`,
+    height: `${100 / scale}%`,
+    transition: 'transform 0.2s ease',
+  };
+});
 </script>
 
 <template>

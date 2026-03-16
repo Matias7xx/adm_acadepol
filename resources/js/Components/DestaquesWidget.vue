@@ -20,16 +20,16 @@ const destaquesOrdenados = computed(() =>
   [...destaques.value].sort((a, b) => a.ordem - b.ordem)
 );
 
-const loadDestaques = async () => {
+const loadDestaques = async (silent = false) => {
   try {
-    loading.value = true;
+    if (!silent) loading.value = true;  // ← spinner só no carregamento inicial
     const response = await fetch(route('admin.noticias.destaques-atuais'));
     if (!response.ok) throw new Error('Erro ao carregar destaques');
     destaques.value = await response.json();
   } catch (err) {
     error.value = err.message;
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
   }
 };
 
@@ -40,40 +40,40 @@ const removerDestaque = noticiaId => {
     {
       preserveScroll: true,
       onSuccess: () => {
-        loadDestaques();
+        loadDestaques(true);
       },
     }
   );
 };
 
-const trocarOrdem = () => {
+const trocarOrdem = async () => {
   if (destaques.value.length !== 2) return;
 
-  // Trocar ordens
   const temp = destaques.value[0].ordem;
   destaques.value[0].ordem = destaques.value[1].ordem;
   destaques.value[1].ordem = temp;
 
   isReordering.value = true;
 
-  router.post(
-    route('admin.noticias.atualizar-ordem-destaques'),
-    {
-      destaques: destaques.value.map(d => ({
-        id: d.id,
-        ordem: d.ordem,
-      })),
-    },
-    {
-      preserveScroll: true,
-      onSuccess: () => {
-        loadDestaques();
+  try {
+    const response = await fetch(route('admin.noticias.atualizar-ordem-destaques'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
       },
-      onFinish: () => {
-        isReordering.value = false;
-      },
-    }
-  );
+      body: JSON.stringify({
+        destaques: destaques.value.map(d => ({ id: d.id, ordem: d.ordem })),
+      }),
+    });
+
+    if (!response.ok) throw new Error('Erro ao atualizar ordem');
+    await loadDestaques(true);
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    isReordering.value = false;
+  }
 };
 
 const visualizarNoSite = noticiaId => {
@@ -100,15 +100,6 @@ watch(
     <!-- Cabeçalho -->
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center space-x-3">
-        <div class="bg-amber-500 p-2 rounded-lg">
-          <svg
-            class="w-6 h-6 text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path :d="mdiStar" />
-          </svg>
-        </div>
         <div>
           <h3 class="text-lg font-bold text-gray-800">
             Notícias em Destaque na Home
@@ -120,7 +111,7 @@ watch(
       </div>
 
       <!-- Botão de trocar ordem (só aparece se tiver 2) -->
-      <!-- <button
+      <button
         v-if="destaques.length === 2"
         @click="trocarOrdem"
         :disabled="isReordering"
@@ -131,7 +122,7 @@ watch(
           <path :d="mdiSwapVertical" />
         </svg>
         <span class="text-sm font-medium text-gray-700">Inverter Ordem</span>
-      </button> -->
+      </button>
     </div>
 
     <!-- Loading -->
@@ -176,7 +167,7 @@ watch(
           class="absolute top-2 left-2 z-10 px-3 py-1 rounded-full text-xs font-bold"
           :class="
             destaquesOrdenados[0]
-              ? 'bg-amber-500 text-white'
+              ? 'bg-yellow-600 text-white'
               : 'bg-gray-200 text-gray-500'
           "
         >
@@ -273,7 +264,7 @@ watch(
           class="absolute top-2 left-2 z-10 px-3 py-1 rounded-full text-xs font-bold"
           :class="
             destaquesOrdenados[1]
-              ? 'bg-amber-500 text-white'
+              ? 'bg-yellow-600 text-white'
               : 'bg-gray-200 text-gray-500'
           "
         >

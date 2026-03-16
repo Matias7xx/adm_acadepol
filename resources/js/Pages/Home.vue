@@ -14,7 +14,7 @@ import Header from './Components/Header.vue';
 </script>
 
 <template>
-  <Head title="Home" />
+  <Head title="Início" />
   <div class="min-h-screen flex flex-col">
     <!-- Header Section -->
     <header class="w-full">

@@ -324,7 +324,7 @@ const goToImage = index => {
             class="relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200"
           >
             <!-- Imagem principal -->
-            <div class="relative aspect-video bg-gray-900">
+            <div class="relative aspect-video bg-gray-100">
               <img
                 :src="carouselImages[currentImageIndex]"
                 :alt="`Imagem ${currentImageIndex + 1}`"
@@ -343,11 +343,11 @@ const goToImage = index => {
                 <!-- Anterior -->
                 <button
                   @click="previousImage"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 p-2 rounded-full shadow-lg transition-all"
                   aria-label="Imagem anterior"
                 >
                   <svg
-                    class="w-6 h-6 text-gray-800"
+                    class="w-6 h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -364,11 +364,11 @@ const goToImage = index => {
                 <!-- Próxima -->
                 <button
                   @click="nextImage"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 p-2 rounded-full shadow-lg transition-all"
                   aria-label="Próxima imagem"
                 >
                   <svg
-                    class="w-6 h-6 text-gray-800"
+                    class="w-6 h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
