@@ -24,6 +24,7 @@ createInertiaApp({
     ),
   setup({ el, App, props, plugin }) {
     axios.defaults.withCredentials = true;
+    axios.defaults.baseURL = window.location.origin;
     return createApp({ render: () => h(App, props) })
       .use(plugin)
       .use(ZiggyVue, Ziggy)
