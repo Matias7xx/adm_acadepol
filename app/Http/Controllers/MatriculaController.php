@@ -14,9 +14,17 @@ use Illuminate\Validation\Rule;
 use App\Mail\NovaMatricula;
 use App\Mail\MatriculaAprovada;
 use App\Mail\MatriculaRejeitada;
+use App\Services\DataSanitizerService;
 
 class MatriculaController extends Controller
 {
+
+    protected $sanitizer;
+    public function __construct(DataSanitizerService $sanitizer)
+    {
+        $this->sanitizer = $sanitizer;
+    }
+
   /**
    * Exibe o formulário de inscrição para um curso.
    *
@@ -190,88 +198,77 @@ class MatriculaController extends Controller
    * @return \Illuminate\Http\RedirectResponse
    */
   public function store(Request $request)
-  {
-    //Validação dos dados
-    $validator = Validator::make($request->all(), [
-      'curso_id' => ['required', 'exists:cursos,id'],
-      'dados_adicionais' => ['required', 'array'],
+{
+  $validator = Validator::make($request->all(), [
+    'curso_id'        => ['required', 'exists:cursos,id'],
+    'dados_adicionais' => ['required', 'array'],
+  ]);
+
+  if ($validator->fails()) {
+    return redirect()->back()->withErrors($validator)->withInput();
+  }
+
+  $validated = $validator->validated();
+
+  $user  = Auth::user();
+  $curso = Curso::findOrFail($validated['curso_id']);
+
+  Log::info('Tentativa de matrícula', [
+    'user_id' => $user->id,
+    'curso_id' => $curso->id,
+    'ip'      => $request->ip(),
+  ]);
+
+  if (Matricula::where('curso_id', $validated['curso_id'])->where('user_id', $user->id)->exists()) {
+    return redirect()->route('cursos')->with('message', 'Você já realizou sua inscrição neste curso.');
+  }
+
+  $matriculasAtivas = Matricula::where('curso_id', $validated['curso_id'])
+    ->whereIn('status', ['aprovada', 'pendente'])
+    ->count();
+
+  if ($matriculasAtivas >= $curso->capacidade_maxima) {
+    return redirect()->route('cursos')->with('message', 'O curso atingiu a capacidade máxima.');
+  }
+
+  try {
+    // Sanitizar respostas abertas do formulário antes de salvar
+    $dadosAdicionaisSanitizados = $this->sanitizer->sanitizeArray(
+      $validated['dados_adicionais']
+    );
+
+    $matricula = Matricula::create([
+      'curso_id'         => $validated['curso_id'],
+      'user_id'          => $user->id,
+      'dados_adicionais' => $dadosAdicionaisSanitizados,
+      'status'           => 'pendente',
     ]);
 
-    if ($validator->fails()) {
-      return redirect()->back()->withErrors($validator)->withInput();
-    }
+    session([
+      'detalhes_matricula' => [
+        'nome'       => $user->name,
+        'curso'      => $curso->nome,
+        'data_inicio' => new \DateTime($curso->data_inicio)->format('d/m/Y'),
+        'data_fim'   => new \DateTime($curso->data_fim)->format('d/m/Y'),
+        'id'         => $matricula->id,
+        'created_at' => now()->format('d/m/Y H:i'),
+      ],
+    ]);
 
-    $validated = $validator->validated();
+    return redirect()->route('confirmacao');
 
-    $user = Auth::user();
-    $curso = Curso::findOrFail($validated['curso_id']);
-
-    // Logs para auditoria
-    Log::info('Tentativa de matrícula', [
+  } catch (\Exception $e) {
+    Log::error('Erro ao realizar matrícula', [
+      'error'   => $e->getMessage(),
       'user_id' => $user->id,
       'curso_id' => $curso->id,
-      'ip' => $request->ip(),
     ]);
 
-    // Verifica se o usuário já está matriculado
-    if (
-      Matricula::where('curso_id', $validated['curso_id'])
-        ->where('user_id', $user->id)
-        ->exists()
-    ) {
-      return redirect()
-        ->route('cursos')
-        ->with('message', 'Você já realizou sua inscrição neste curso.');
-    }
-
-    // Verifica a capacidade do curso
-    $matriculasAtivas = Matricula::where('curso_id', $validated['curso_id'])
-      ->whereIn('status', ['aprovada', 'pendente'])
-      ->count();
-
-    if ($matriculasAtivas >= $curso->capacidade_maxima) {
-      return redirect()
-        ->route('cursos')
-        ->with('message', 'O curso atingiu a capacidade máxima.');
-    }
-
-    try {
-      // Criar a matrícula
-      $matricula = Matricula::create([
-        'curso_id' => $validated['curso_id'],
-        'user_id' => $user->id,
-        'dados_adicionais' => $validated['dados_adicionais'],
-        'status' => 'pendente',
-      ]);
-
-      session([
-        'detalhes_matricula' => [
-          'nome' => $user->name,
-          'curso' => $curso->nome,
-          'data_inicio' => new \DateTime($curso->data_inicio)->format('d/m/Y'),
-          'data_fim' => new \DateTime($curso->data_fim)->format('d/m/Y'),
-          'id' => $matricula->id,
-          'created_at' => now()->format('d/m/Y H:i'),
-        ],
-      ]);
-
-      return redirect()->route('confirmacao');
-    } catch (\Exception $e) {
-      Log::error('Erro ao realizar matrícula', [
-        'error' => $e->getMessage(),
-        'user_id' => $user->id,
-        'curso_id' => $curso->id,
-      ]);
-
-      return redirect()
-        ->back()
-        ->with(
-          'error',
-          'Ocorreu um erro ao processar sua inscrição. Por favor, tente novamente.',
-        )
-        ->withInput();
-    }
+    return redirect()->back()
+      ->with('error', 'Ocorreu um erro ao processar sua inscrição. Por favor, tente novamente.')
+      ->withInput();
   }
+}
 
   /**
    * Aprovar uma matrícula.

@@ -152,7 +152,7 @@ Route::get('/api/noticias', [NoticiaController::class, 'apiNoticias'])
 
 Route::controller(ContatoController::class)->prefix('fale-conosco')->name('contato.')->group(function () {
     Route::get('/', 'create')->name('create');
-    Route::post('/', 'store')->name('store');
+    Route::post('/', 'store')->name('store')->middleware('throttle:5,60'); // máx. 5 envios por IP a cada 60 min
     Route::get('/confirmacao', 'confirmacao')->name('confirmacao');
 });
 

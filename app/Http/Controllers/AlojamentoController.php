@@ -17,16 +17,19 @@ use Dompdf\Options;
 use Illuminate\Support\Facades\DB;
 use App\Models\Dormitorio;
 use App\Models\Ocupacao;
+use App\Services\DataSanitizerService;
 
 class AlojamentoController extends Controller
 {
   /**
    * Constructor para aplicar middleware de autenticação
    */
-  public function __construct()
-  {
-    //$this->middleware('auth');
-  }
+  protected $sanitizer;
+    public function __construct(DataSanitizerService $sanitizer)
+    {
+        $this->sanitizer = $sanitizer;
+        //$this->middleware('auth');
+    }
 
   /**
    * Exibe o formulário de pré-reserva de alojamento
@@ -61,40 +64,38 @@ class AlojamentoController extends Controller
    */
   public function store(Request $request)
   {
-    // Verificar autenticação
     if (!Auth::check()) {
       return redirect()->route('login');
     }
 
-    // Validar os dados do formulário
     $validated = $request->validate([
-      'data_inicial' => 'required|date|after_or_equal:today',
-      'data_final' => 'required|date|after_or_equal:data_inicial',
-      'motivo' => 'required|string',
-      'condicao' => 'required|string|max:255',
-      'aceita_termos' => 'required|boolean|accepted',
-      'documento_comprobatorio' => 'nullable|file|mimes:pdf|max:10240',
-      'nome' => 'required|string|max:255',
-      'cargo' => 'required|string|max:255',
-      'matricula' => 'required|string|max:255',
-      'orgao' => 'required|string|max:255',
-      'cpf' => 'required|string|max:20',
-      'data_nascimento' => 'nullable|date',
-      'rg' => 'nullable|string|max:20',
-      'orgao_expedidor' => 'nullable|string|max:20',
-      'sexo' => 'nullable|string|in:masculino,feminino',
-      'uf' => 'nullable|string|max:2',
-      'email' => 'required|email|max:255',
-      'telefone' => 'required|string|max:20',
-      'endereco' => 'required|array',
-      'endereco.rua' => 'nullable|string|max:255',
-      'endereco.numero' => 'nullable|string|max:10',
-      'endereco.bairro' => 'required|string|max:100',
-      'endereco.cidade' => 'required|string|max:100',
-      'endereco.cep' => 'nullable|string|max:10',
+      'data_inicial'             => 'required|date|after_or_equal:today',
+      'data_final'               => 'required|date|after_or_equal:data_inicial',
+      'motivo'                   => 'required|string',
+      'condicao'                 => 'required|string|max:255',
+      'aceita_termos'            => 'required|boolean|accepted',
+      'documento_comprobatorio'  => 'nullable|file|mimes:pdf|max:10240',
+      'nome'                     => 'required|string|max:255',
+      'cargo'                    => 'required|string|max:255',
+      'matricula'                => 'required|string|max:255',
+      'orgao'                    => 'required|string|max:255',
+      'cpf'                      => 'required|string|max:20',
+      'data_nascimento'          => 'nullable|date',
+      'rg'                       => 'nullable|string|max:20',
+      'orgao_expedidor'          => 'nullable|string|max:20',
+      'sexo'                     => 'nullable|string|in:masculino,feminino',
+      'uf'                       => 'nullable|string|max:2',
+      'email'                    => 'required|email|max:255',
+      'telefone'                 => 'required|string|max:20',
+      'endereco'                 => 'required|array',
+      'endereco.rua'             => 'nullable|string|max:255',
+      'endereco.numero'          => 'nullable|string|max:10',
+      'endereco.bairro'          => 'required|string|max:100',
+      'endereco.cidade'          => 'required|string|max:100',
+      'endereco.cep'             => 'nullable|string|max:10',
     ]);
 
-    $user = Auth::user();
+    $user   = Auth::user();
     $userId = $user->id;
 
     //VERIFICAR RESERVAS APROVADAS NO PERÍODO
@@ -102,14 +103,8 @@ class AlojamentoController extends Controller
       ->where('status', 'aprovada')
       ->where(function ($query) use ($request) {
         $query
-          ->whereBetween('data_inicial', [
-            $request->data_inicial,
-            $request->data_final,
-          ])
-          ->orWhereBetween('data_final', [
-            $request->data_inicial,
-            $request->data_final,
-          ])
+          ->whereBetween('data_inicial', [$request->data_inicial, $request->data_final])
+          ->orWhereBetween('data_final', [$request->data_inicial, $request->data_final])
           ->orWhere(function ($query) use ($request) {
             $query
               ->where('data_inicial', '<=', $request->data_inicial)
@@ -152,50 +147,75 @@ class AlojamentoController extends Controller
     try {
       DB::beginTransaction();
 
+      // Sanitizar campos de texto livre antes de salvar
+      $s = $this->sanitizer->sanitizeForm($request->only([
+        'nome', 'cargo', 'matricula', 'orgao',
+        'rg', 'orgao_expedidor', 'uf', 'email', 'telefone',
+      ]), [
+        'nome'            => 'string',
+        'cargo'           => 'string',
+        'matricula'       => 'string',
+        'orgao'           => 'string',
+        'rg'              => 'string',
+        'orgao_expedidor' => 'string',
+        'uf'              => 'string',
+        'email'           => 'email',
+        'telefone'        => 'string',
+      ]);
+
+      $enderecoSanitizado = $this->sanitizer->sanitizeArray(
+        $request->endereco ?? [],
+        [
+          'rua'    => 'string',
+          'numero' => 'string',
+          'bairro' => 'string',
+          'cidade' => 'string',
+          'cep'    => 'string',
+        ]
+      );
+
       //ATUALIZAR PERFIL DO USUÁRIO com dados do formulário
       $user->update([
-        'name' => $request->nome,
-        'cargo' => $request->cargo,
-        'matricula' => $request->matricula,
-        'orgao' => $request->orgao,
-        'cpf' => preg_replace('/[^0-9]/', '', $request->cpf),
+        'name'            => $s['nome'],
+        'cargo'           => $s['cargo'],
+        'matricula'       => $s['matricula'],
+        'orgao'           => $s['orgao'],
+        'cpf'             => preg_replace('/[^0-9]/', '', $request->cpf),
         'data_nascimento' => $request->data_nascimento,
-        'rg' => $request->rg,
-        'orgao_expedidor' => $request->orgao_expedidor,
-        'sexo' => $request->sexo,
-        'uf' => $request->uf,
-        'email' => $request->email,
-        'telefone' => $request->telefone,
-        'endereco' => $request->endereco,
+        'rg'              => $s['rg'] ?? null,
+        'orgao_expedidor' => $s['orgao_expedidor'] ?? null,
+        'sexo'            => $request->sexo,
+        'uf'              => $s['uf'] ?? null,
+        'email'           => $s['email'],
+        'telefone'        => $s['telefone'],
+        'endereco'        => $enderecoSanitizado,
       ]);
 
       //CRIAR RESERVA (sem duplicar dados pessoais)
-      $alojamento = new Alojamento();
+      $alojamento          = new Alojamento();
       $alojamento->user_id = $userId;
 
-      // Dados básicos da reserva referenciando o usuário
-      $alojamento->nome = $user->name;
-      $alojamento->cargo = $user->cargo;
-      $alojamento->matricula = $user->matricula;
-      $alojamento->orgao = $user->orgao;
-      $alojamento->cpf = $user->cpf;
+      $alojamento->nome            = $user->name;
+      $alojamento->cargo           = $user->cargo;
+      $alojamento->matricula       = $user->matricula;
+      $alojamento->orgao           = $user->orgao;
+      $alojamento->cpf             = $user->cpf;
       $alojamento->data_nascimento = $user->data_nascimento;
-      $alojamento->rg = $user->rg;
+      $alojamento->rg              = $user->rg;
       $alojamento->orgao_expedidor = $user->orgao_expedidor;
-      $alojamento->sexo = $user->sexo;
-      $alojamento->uf = $user->uf;
-      $alojamento->email = $user->email;
-      $alojamento->telefone = $user->telefone;
-      $alojamento->endereco = json_encode($user->endereco);
+      $alojamento->sexo            = $user->sexo;
+      $alojamento->uf              = $user->uf;
+      $alojamento->email           = $user->email;
+      $alojamento->telefone        = $user->telefone;
+      $alojamento->endereco        = json_encode($user->endereco);
 
       // Dados específicos da reserva
-      $alojamento->motivo = $request->motivo;
-      $alojamento->condicao = $request->condicao;
+      $alojamento->motivo      = $this->sanitizer->sanitizeString($request->motivo);
+      $alojamento->condicao    = $request->condicao;
       $alojamento->data_inicial = $request->data_inicial;
-      $alojamento->data_final = $request->data_final;
-      $alojamento->status = 'pendente';
+      $alojamento->data_final  = $request->data_final;
+      $alojamento->status      = 'pendente';
 
-      // Processar upload de documento se fornecido
       if ($request->hasFile('documento_comprobatorio')) {
         $path = $request
           ->file('documento_comprobatorio')
@@ -205,38 +225,22 @@ class AlojamentoController extends Controller
 
       $alojamento->save();
 
-      // Logs
       \Log::info('Nova reserva de alojamento criada e perfil atualizado', [
         'reserva_id' => $alojamento->id,
-        'user_id' => $userId,
-        'nome' => $user->name,
+        'user_id'    => $userId,
+        'nome'       => $user->name,
       ]);
 
-      // Enviar emails
-      /* $administradorEmail = config(
-        'alojamento.admin_email',
-        'matiasnobrega7@gmail.com',
-      );
-      Mail::to($administradorEmail)->send(
-        new NovaReservaAlojamento($alojamento),
-      ); */
+      $emailInstitucional = config('alojamento.institutional_email', 'acadepol@gmail.com');
+      Mail::to($emailInstitucional)->send(new NovaReservaAlojamento($alojamento));
 
-      $emailInstitucional = config(
-        'alojamento.institutional_email',
-        'acadepol@gmail.com',
-      );
-      Mail::to($emailInstitucional)->send(
-        new NovaReservaAlojamento($alojamento),
-      );
-
-      // Session
       session([
         'detalhes_reserva' => [
-          'nome' => $alojamento->nome,
+          'nome'        => $alojamento->nome,
           'data_inicial' => $alojamento->data_inicial->format('d/m/Y'),
-          'data_final' => $alojamento->data_final->format('d/m/Y'),
-          'id' => $alojamento->id,
-          'created_at' => $alojamento->created_at->format('d/m/Y H:i'),
+          'data_final'  => $alojamento->data_final->format('d/m/Y'),
+          'id'          => $alojamento->id,
+          'created_at'  => $alojamento->created_at->format('d/m/Y H:i'),
         ],
       ]);
 
@@ -244,21 +248,18 @@ class AlojamentoController extends Controller
 
       return redirect()
         ->route('alojamento.confirmacao')
-        ->with(
-          'message',
-          'Sua solicitação de pré-reserva foi enviada com sucesso e será analisada em breve.',
-        );
+        ->with('message', 'Sua solicitação de pré-reserva foi enviada com sucesso e será analisada em breve.');
+
     } catch (\Exception $e) {
       DB::rollBack();
 
       \Log::error('Erro ao criar reserva de alojamento: ' . $e->getMessage(), [
         'user_id' => $userId,
-        'trace' => $e->getTraceAsString(),
+        'trace'   => $e->getTraceAsString(),
       ]);
 
       throw ValidationException::withMessages([
-        'message' =>
-          'Ocorreu um erro ao processar sua solicitação. Tente novamente.',
+        'message' => 'Ocorreu um erro ao processar sua solicitação. Tente novamente.',
       ]);
     }
   }

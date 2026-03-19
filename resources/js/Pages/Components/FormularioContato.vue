@@ -30,6 +30,7 @@ const formData = ref({
   telefone: props.user?.telefone || '',
   assunto: '',
   mensagem: '',
+  website: '', // campo honeypot — invisível para humanos, bots preenchem automaticamente
 });
 
 const submeterContato = () => {
@@ -130,6 +131,11 @@ const submeterContato = () => {
         </div>
 
         <form @submit.prevent="submeterContato" class="form-body">
+          <!-- Honeypot: invisível para humanos, bots preenchem automaticamente -->
+          <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
+            <label for="website">Não preencha este campo</label>
+            <input id="website" v-model="formData.website" type="text" name="website" autocomplete="off" tabindex="-1" />
+          </div>
           <!-- Seus dados -->
           <div class="form-section">
             <div class="form-section-header">

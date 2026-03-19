@@ -55,13 +55,18 @@ class ContatoController extends Controller
    */
   public function store(Request $request)
   {
+    // Rejeitar honeypot preenchido — bots preenchem, humanos não veem o campo
+    if ($request->filled('website')) {
+      return redirect()->route('contato.confirmacao');
+    }
+
     // Validação dos dados
     $validator = Validator::make($request->all(), [
-      'nome' => 'required|string|max:255',
-      'email' => 'required|email|max:255',
+      'nome'     => 'required|string|max:255',
+      'email'    => 'required|email|max:255',
       'telefone' => 'nullable|string|max:20',
-      'assunto' => 'required|string|max:255',
-      'mensagem' => 'required|string|min:10',
+      'assunto'  => ['required', 'string', Rule::in(config('contato.assuntos'))], // apenas valores da lista predefinida
+      'mensagem' => 'required|string|min:10|max:5000',
     ]);
 
     if ($validator->fails()) {
@@ -70,17 +75,17 @@ class ContatoController extends Controller
 
     // Sanitização de dados
     $dados = $this->sanitizer->sanitizeForm($request->all(), [
-      'nome' => 'string',
-      'email' => 'email',
+      'nome'     => 'string',
+      'email'    => 'email',
       'telefone' => 'string',
-      'assunto' => 'string',
+      'assunto'  => 'string',
       'mensagem' => 'string',
     ]);
 
     // Adicionar informações adicionais
-    $dados['ip'] = $request->ip();
-    $dados['user_agent'] = $request->userAgent();
-    $dados['user_id'] = Auth::id(); // será null se não estiver logado
+    $dados['ip']         = $request->ip();
+    $dados['user_agent'] = $this->sanitizer->sanitizeString($request->userAgent()); // sanitizado antes de salvar
+    $dados['user_id']    = Auth::id(); // será null se não estiver logado
 
     // Salvar no banco de dados
     $contato = Contato::create($dados);
@@ -107,7 +112,11 @@ class ContatoController extends Controller
       'contato.institutional_email',
       'acadepol@gmail.com',
     );
-    Mail::to($emailInstitucional)->send(new NovoContato($contato));
+    try {
+      Mail::to($emailInstitucional)->send(new NovoContato($contato));
+    } catch (\Exception $e) {
+      \Log::error('Falha ao enviar e-mail de novo contato: ' . $e->getMessage());
+    }
 
     // Armazenar detalhes na sessão para a página de confirmação
     session([
@@ -148,13 +157,15 @@ class ContatoController extends Controller
   {
     $this->authorize('adminViewAny', Contato::class);
 
+    $search = substr($request->search ?? '', 0, 100); // limita tamanho
+
     $contatos = Contato::with(['usuario', 'respondente'])
-      ->when($request->search, function ($query, $search) {
-        $query->where(function ($q) use ($search) {
-          $q->where('nome', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhere('assunto', 'like', "%{$search}%")
-            ->orWhere('mensagem', 'like', "%{$search}%");
+      ->when($search, function ($query, $s) {
+        $query->where(function ($q) use ($s) {
+          $q->where('nome', 'like', "%{$s}%")
+            ->orWhere('email', 'like', "%{$s}%")
+            ->orWhere('assunto', 'like', "%{$s}%")
+            ->orWhere('mensagem', 'like', "%{$s}%");
         });
       })
       ->when($request->status, function ($query, $status) {
@@ -200,7 +211,7 @@ class ContatoController extends Controller
     $this->authorize('responder', $contato);
 
     $validator = Validator::make($request->all(), [
-      'resposta' => 'required|string|min:10',
+      'resposta' => 'required|string|min:10|max:10000',
     ]);
 
     if ($validator->fails()) {
@@ -268,7 +279,7 @@ class ContatoController extends Controller
         'required',
         Rule::in(['pendente', 'respondido', 'arquivado']),
       ],
-      'resposta' => 'required_if:status,respondido|nullable|string|min:5',
+      'resposta' => 'required_if:status,respondido|nullable|string|min:5|max:10000',
     ]);
 
     if ($validator->fails()) {

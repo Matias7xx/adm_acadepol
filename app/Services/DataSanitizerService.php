@@ -107,7 +107,7 @@ class DataSanitizerService
   }
 
   /**
-   * Sanitiza HTML permitindo apenas tags seguras
+   * Sanitiza HTML permitindo apenas tags e atributos seguros.
    *
    * @param string|null $input HTML a ser sanitizado
    * @return string|null
@@ -118,28 +118,68 @@ class DataSanitizerService
       return null;
     }
 
-    // Lista de tags permitidas
-    $allowedTags =
-      '<p><br><b><i><strong><em><u><ul><ol><li><h1><h2><h3><h4><h5><h6><a><hr>';
-
-    // Remove tags não permitidas
+    // Passo 1: remover tags não permitidas
+    $allowedTags = '<p><br><b><i><strong><em><u><ul><ol><li><h1><h2><h3><h4><h5><h6><a><hr>';
     $output = strip_tags($input, $allowedTags);
 
-    // Remove atributos de script e onclick/onmouseover etc
-    $output = preg_replace(
-      '/(<[^>]+)(?:on\w+|style|class|id)=("[^"]*"|\'[^\']*\'|[^\s>])/i',
-      '$1',
-      $output,
+    // Passo 2: usar DOMDocument para limpar atributos perigosos
+    $dom = new \DOMDocument();
+    @$dom->loadHTML(
+      mb_convert_encoding('<div>' . $output . '</div>', 'HTML-ENTITIES', 'UTF-8'),
+      LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
     );
 
-    // Remove href="javascript:"
-    $output = preg_replace(
-      '/href=("|\')javascript:(.*)("|\')/',
-      'href="$2"',
-      $output,
-    );
+    $xpath    = new \DOMXPath($dom);
+    $allNodes = $xpath->query('//*');
 
-    return $output;
+    if ($allNodes) {
+      foreach ($allNodes as $node) {
+        /** @var \DOMElement $node */
+        $attributesToRemove = [];
+
+        for ($i = 0; $i < $node->attributes->length; $i++) {
+          $attr      = $node->attributes->item($i);
+          $attrName  = strtolower($attr->nodeName);
+          $attrValue = strtolower(preg_replace('/[\x00-\x1F\x7F\s]/u', '', $attr->nodeValue));
+
+          // Remover qualquer event handler (onclick, onload, onmouseover...)
+          if (str_starts_with($attrName, 'on')) {
+            $attributesToRemove[] = $attr->nodeName;
+            continue;
+          }
+
+          // Remover style, class, id (vetores de data exfiltration via CSS)
+          if (in_array($attrName, ['style', 'class', 'id'])) {
+            $attributesToRemove[] = $attr->nodeName;
+            continue;
+          }
+
+          // Remover href/src com javascript: ou vbscript: (mesmo com encoding tricks)
+          if (in_array($attrName, ['href', 'src', 'action', 'formaction'])) {
+            if (str_starts_with($attrValue, 'javascript:') || str_starts_with($attrValue, 'vbscript:')) {
+              $attributesToRemove[] = $attr->nodeName;
+            }
+          }
+        }
+
+        foreach ($attributesToRemove as $name) {
+          $node->removeAttribute($name);
+        }
+      }
+    }
+
+    // Extrair apenas o conteúdo interno do <div> temporário
+    $innerDiv = $dom->getElementsByTagName('div')->item(0);
+    if (!$innerDiv) {
+      return '';
+    }
+
+    $cleaned = '';
+    foreach ($innerDiv->childNodes as $child) {
+      $cleaned .= $dom->saveHTML($child);
+    }
+
+    return $cleaned;
   }
 
   /**
