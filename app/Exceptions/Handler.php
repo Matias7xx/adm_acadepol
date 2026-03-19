@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -45,6 +46,15 @@ class Handler extends ExceptionHandler
   {
     $this->reportable(function (Throwable $e) {
       //
+    });
+
+    // Interceptar 429 em requisições Inertia e redirecionar com toast
+    $this->renderable(function (ThrottleRequestsException $e, $request) {
+    if ($request->inertia()) {
+        throw \Illuminate\Validation\ValidationException::withMessages([
+        'mensagem' => 'Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de enviar novamente.',
+        ]);
+    }
     });
   }
 }

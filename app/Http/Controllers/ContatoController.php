@@ -13,6 +13,7 @@ use App\Services\DataSanitizerService;
 use App\Services\AuditLoggerService;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ContatoController extends Controller
 {
@@ -55,6 +56,20 @@ class ContatoController extends Controller
    */
   public function store(Request $request)
   {
+     // Rate limiting manual — 5 tentativas por hora por IP
+  $key = 'contato:' . $request->ip();
+
+  if (RateLimiter::tooManyAttempts($key, 5)) {
+    $segundos = RateLimiter::availableIn($key);
+    $minutos  = ceil($segundos / 60);
+
+    throw \Illuminate\Validation\ValidationException::withMessages([
+      'mensagem' => "Muitas tentativas em pouco tempo. Tente novamente em {$minutos} minuto(s).",
+    ]);
+  }
+
+  RateLimiter::hit($key, 1800); // janela de 1 hora
+
     // Rejeitar honeypot preenchido — bots preenchem, humanos não veem o campo
     if ($request->filled('website')) {
       return redirect()->route('contato.confirmacao');
@@ -62,11 +77,20 @@ class ContatoController extends Controller
 
     // Validação dos dados
     $validator = Validator::make($request->all(), [
-      'nome'     => 'required|string|max:255',
-      'email'    => 'required|email|max:255',
-      'telefone' => 'nullable|string|max:20',
-      'assunto'  => ['required', 'string', Rule::in(config('contato.assuntos'))], // apenas valores da lista predefinida
-      'mensagem' => 'required|string|min:10|max:5000',
+    'nome'     => 'required|string|max:255',
+    'email'    => 'required|email|max:255',
+    'telefone' => 'nullable|string|max:20',
+    'assunto'  => ['required', 'string', Rule::in(config('contato.assuntos'))],
+    'mensagem' => 'required|string|min:10|max:5000',
+    ], [
+    'nome.required'     => 'Por favor, informe seu nome.',
+    'email.required'    => 'Por favor, informe seu e-mail.',
+    'email.email'       => 'O e-mail informado não é válido.',
+    'assunto.required'  => 'Selecione um assunto.',
+    'assunto.in'        => 'Selecione um assunto válido da lista.',
+    'mensagem.required' => 'Por favor, escreva sua mensagem.',
+    'mensagem.min'      => 'A mensagem deve ter pelo menos 10 caracteres.',
+    'mensagem.max'      => 'A mensagem não pode ultrapassar 5000 caracteres.',
     ]);
 
     if ($validator->fails()) {

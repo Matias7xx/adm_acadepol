@@ -53,11 +53,11 @@ const submeterContato = () => {
       isSubmitting.value = false;
     },
     onError: errors => {
-      isSubmitting.value = false;
-      toast.error(
-        errors.message ||
-          'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.'
-      );
+    isSubmitting.value = false;
+    toast.warning(
+        errors.mensagem ||
+        'Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.'
+    );
     },
   });
 };
